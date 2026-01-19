@@ -126,6 +126,7 @@ const Search = () => {
                     <SelectItem value="traditionnel_africain">Médecine Traditionnelle Africaine</SelectItem>
                     <SelectItem value="bien_etre">Bien-être & Beauté</SelectItem>
                     <SelectItem value="service_domicile">Service à Domicile</SelectItem>
+                    <SelectItem value="materiel_medical">Matériel Médical</SelectItem>
                   </SelectContent>
                 </Select>
 
