@@ -308,7 +308,10 @@ async def search_doctors(
     specialty: Optional[str] = None,
     medical_type: Optional[str] = None,
     location: Optional[str] = None,
-    min_rating: Optional[float] = None
+    min_rating: Optional[float] = None,
+    home_service: Optional[bool] = None,
+    structure_type: Optional[str] = None,
+    keyword: Optional[str] = None
 ):
     query = {}
     if specialty:
@@ -319,6 +322,18 @@ async def search_doctors(
         query["location"] = {"$regex": location, "$options": "i"}
     if min_rating:
         query["rating"] = {"$gte": min_rating}
+    if home_service is not None:
+        query["home_service"] = home_service
+    if structure_type:
+        query["structure_type"] = structure_type
+    
+    # Recherche par mots-clés dans nom, bio, spécialités
+    if keyword:
+        query["$or"] = [
+            {"name": {"$regex": keyword, "$options": "i"}},
+            {"bio": {"$regex": keyword, "$options": "i"}},
+            {"specialties": {"$regex": keyword, "$options": "i"}}
+        ]
     
     doctors = await db.doctor_profiles.find(query, {"_id": 0}).to_list(100)
     for doctor in doctors:
