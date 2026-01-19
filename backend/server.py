@@ -251,6 +251,109 @@ async def login(credentials: UserLogin):
 async def get_me(current_user: User = Depends(get_current_user)):
     return current_user
 
+@api_router.get("/packs/wellness")
+async def get_wellness_packs():
+    """Récupère les packs bien-être thématiques prédéfinis"""
+    packs = [
+        {
+            "id": "pack_relaxation",
+            "name": "Pack Relaxation Complète",
+            "description": "Tout pour créer votre oasis de détente à la maison",
+            "products": [
+                "Huiles Essentielles (Lavande, Ylang-Ylang)",
+                "Diffuseur d'Arômes",
+                "Bougies Parfumées",
+                "Sels de Bain"
+            ],
+            "original_price": 89.99,
+            "pack_price": 64.99,
+            "discount": 28,
+            "image": "https://images.unsplash.com/photo-1600334129128-685c5582fd35?crop=entropy&cs=srgb&fm=jpg&q=85",
+            "benefits": ["Réduit le stress", "Améliore le sommeil", "Détente profonde"]
+        },
+        {
+            "id": "pack_meditation",
+            "name": "Pack Méditation & Pleine Conscience",
+            "description": "L'essentiel pour débuter ou approfondir votre pratique méditative",
+            "products": [
+                "Coussin de Méditation Zafu",
+                "Encens & Fumigation",
+                "Journal de Pleine Conscience",
+                "Livre Développement Personnel"
+            ],
+            "original_price": 79.99,
+            "pack_price": 59.99,
+            "discount": 25,
+            "image": "https://images.unsplash.com/photo-1506126613408-eca07ce68773?crop=entropy&cs=srgb&fm=jpg&q=85",
+            "benefits": ["Concentration améliorée", "Paix intérieure", "Réduction anxiété"]
+        },
+        {
+            "id": "pack_beaute_naturelle",
+            "name": "Pack Beauté Naturelle",
+            "description": "Des soins bio pour rayonner de l'intérieur",
+            "products": [
+                "Cosmétiques Naturels & Bio",
+                "Savons Artisanaux",
+                "Huiles Essentielles (Rose, Tea Tree)",
+                "Soins Peau Corps Cheveux"
+            ],
+            "original_price": 94.99,
+            "pack_price": 69.99,
+            "discount": 26,
+            "image": "https://images.unsplash.com/photo-1556228578-8c89e6adf883?crop=entropy&cs=srgb&fm=jpg&q=85",
+            "benefits": ["Peau éclatante", "100% naturel", "Routine beauté complète"]
+        },
+        {
+            "id": "pack_energie_vitalite",
+            "name": "Pack Énergie & Vitalité",
+            "description": "Boostez votre énergie naturellement",
+            "products": [
+                "Tisanes & Infusions Énergisantes",
+                "Compléments Naturels",
+                "Pierres & Cristaux (Citrine, Cornaline)",
+                "Huiles Essentielles (Menthe, Citron)"
+            ],
+            "original_price": 74.99,
+            "pack_price": 54.99,
+            "discount": 27,
+            "image": "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?crop=entropy&cs=srgb&fm=jpg&q=85",
+            "benefits": ["Plus d'énergie", "Système immunitaire renforcé", "Vitalité retrouvée"]
+        },
+        {
+            "id": "pack_sommeil",
+            "name": "Pack Sommeil Réparateur",
+            "description": "Pour des nuits paisibles et un sommeil profond",
+            "products": [
+                "Huiles Essentielles (Lavande, Camomille)",
+                "Tisanes & Infusions Relaxantes",
+                "Bougies Parfumées",
+                "Sels de Bain"
+            ],
+            "original_price": 69.99,
+            "pack_price": 49.99,
+            "discount": 29,
+            "image": "https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?crop=entropy&cs=srgb&fm=jpg&q=85",
+            "benefits": ["Endormissement rapide", "Sommeil profond", "Réveil en forme"]
+        },
+        {
+            "id": "pack_yoga_fitness",
+            "name": "Pack Yoga & Fitness",
+            "description": "Équipez-vous pour votre pratique quotidienne",
+            "products": [
+                "Tapis de Yoga Premium",
+                "Outils de Massage",
+                "Tisanes & Infusions",
+                "Bijoux Énergétiques (Bracelet Mala)"
+            ],
+            "original_price": 99.99,
+            "pack_price": 74.99,
+            "discount": 25,
+            "image": "https://images.unsplash.com/photo-1599901860904-17e6ed7083a0?crop=entropy&cs=srgb&fm=jpg&q=85",
+            "benefits": ["Pratique confortable", "Récupération optimale", "Alignement corps-esprit"]
+        }
+    ]
+    return packs
+
 @api_router.get("/specialties")
 async def get_specialties():
     moderne_specialties = [
