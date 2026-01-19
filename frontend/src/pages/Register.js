@@ -178,39 +178,48 @@ const Register = ({ setUser }) => {
             {formData.user_type === 'doctor' && (
               <>
                 <div className="space-y-2">
-                  <Label>Type de médecine</Label>
-                  <Select value={formData.medical_type} onValueChange={(value) => setFormData({ ...formData, medical_type: value, specialties: [] })}>
-                    <SelectTrigger className="bg-white border-stone-200 rounded-lg h-12" data-testid="medical-type-select">
+                  <Label>Type de médecine *</Label>
+                  <Select 
+                    value={formData.medical_type} 
+                    onValueChange={(value) => setFormData({ ...formData, medical_type: value, specialties: [] })}
+                    required
+                  >
+                    <SelectTrigger className="bg-white border-stone-200 focus:border-green-800 focus:ring-1 focus:ring-green-800 rounded-lg h-12" data-testid="medical-type-select">
                       <SelectValue placeholder="Sélectionnez un type" />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="moderne">Médecine Moderne</SelectItem>
-                      <SelectItem value="traditionnel">Médecine Traditionnelle</SelectItem>
+                    <SelectContent className="bg-white">
+                      <SelectItem value="moderne" className="cursor-pointer hover:bg-stone-100">Médecine Moderne</SelectItem>
+                      <SelectItem value="traditionnel" className="cursor-pointer hover:bg-stone-100">Médecine Traditionnelle</SelectItem>
                     </SelectContent>
                   </Select>
+                  <p className="text-xs text-stone-500">Choisissez votre type de pratique médicale</p>
                 </div>
 
                 {formData.medical_type && (
                   <div className="space-y-2">
-                    <Label>Spécialités</Label>
-                    <div className="grid grid-cols-2 gap-3 max-h-48 overflow-y-auto p-4 bg-stone-50 rounded-lg">
+                    <Label>Spécialités * (sélectionnez au moins une)</Label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-64 overflow-y-auto p-4 bg-stone-50 rounded-lg border border-stone-200">
                       {filteredSpecialties.map((specialty) => (
-                        <div key={specialty.id} className="flex items-center space-x-2">
+                        <div key={specialty.id} className="flex items-start space-x-3 p-2 hover:bg-white rounded transition-colors">
                           <Checkbox
                             id={specialty.id}
                             checked={formData.specialties.includes(specialty.name)}
                             onCheckedChange={() => handleSpecialtyToggle(specialty.name)}
                             data-testid={`specialty-checkbox-${specialty.id}`}
+                            className="mt-0.5"
                           />
                           <label
                             htmlFor={specialty.id}
-                            className="text-sm text-stone-700 cursor-pointer"
+                            className="text-sm text-stone-700 cursor-pointer flex-1 select-none"
                           >
                             {specialty.name}
                           </label>
                         </div>
                       ))}
                     </div>
+                    <p className="text-xs text-stone-500">
+                      {formData.specialties.length} spécialité(s) sélectionnée(s)
+                    </p>
                   </div>
                 )}
               </>
