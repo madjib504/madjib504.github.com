@@ -40,16 +40,23 @@ const Home = () => {
     {
       type: 'moderne',
       title: 'Médecine Moderne',
-      description: 'Cardiologues, Gynécologues, Ophtalmologues, Chirurgiens et plus',
+      description: 'Cardiologues, Gynécologues, Ophtalmologues, Chirurgiens, Pharmaciens et plus',
       image: 'https://images.unsplash.com/photo-1645066928295-2506defde470?crop=entropy&cs=srgb&fm=jpg&q=85',
       color: 'sky'
     },
     {
-      type: 'traditionnel',
-      title: 'Médecine Traditionnelle',
-      description: 'Phytothérapie, Acupuncture, Naturopathie, Médecine Ayurvédique',
+      type: 'traditionnel_africain',
+      title: 'Médecine Traditionnelle Africaine',
+      description: 'Tradipraticiens, Phytothérapeutes, Guérisseurs, Herboristes Africains',
       image: 'https://images.unsplash.com/photo-1488820098099-8d4a4723a490?crop=entropy&cs=srgb&fm=jpg&q=85',
       color: 'green'
+    },
+    {
+      type: 'bien_etre',
+      title: 'Bien-être & Beauté',
+      description: 'Kinés, Ostéopathes, Nutritionnistes, Coachs, Esthéticiens, Spa et plus',
+      image: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?crop=entropy&cs=srgb&fm=jpg&q=85',
+      color: 'purple'
     }
   ];
 
