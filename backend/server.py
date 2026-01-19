@@ -92,6 +92,10 @@ class DoctorProfile(BaseModel):
     service_type: Optional[str] = None  # 'cabinet', 'clinique', 'domicile', 'both'
     home_service: bool = False  # Service à domicile disponible
     structure_type: Optional[str] = None  # 'cabinet', 'clinique', 'hopital', 'centre'
+    is_pack: bool = False  # Si c'est un pack bien-être
+    pack_products: Optional[List[str]] = None  # Liste des produits dans le pack
+    pack_original_price: Optional[float] = None  # Prix si acheté séparément
+    pack_discount_percentage: Optional[int] = None  # Pourcentage de réduction
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class DoctorProfileCreate(BaseModel):
