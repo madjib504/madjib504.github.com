@@ -127,6 +127,7 @@ const Search = () => {
                     <SelectItem value="bien_etre">Bien-être & Beauté</SelectItem>
                     <SelectItem value="service_domicile">Service à Domicile</SelectItem>
                     <SelectItem value="materiel_medical">Matériel Médical</SelectItem>
+                    <SelectItem value="boutique_bien_etre">Boutique Bien-être</SelectItem>
                   </SelectContent>
                 </Select>
 
