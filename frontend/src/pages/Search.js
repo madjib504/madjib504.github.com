@@ -257,6 +257,20 @@ const Search = () => {
                         </span>
                       )}
                     </div>
+                    {doctor.home_service && (
+                      <div className="mb-2">
+                        <span className="bg-blue-50 text-blue-700 text-xs px-3 py-1 rounded-full font-medium">
+                          🏠 Service à domicile
+                        </span>
+                      </div>
+                    )}
+                    {doctor.structure_type && (
+                      <div className="mb-3">
+                        <span className="bg-purple-50 text-purple-700 text-xs px-3 py-1 rounded-full capitalize">
+                          {doctor.structure_type}
+                        </span>
+                      </div>
+                    )}
                     <div className="space-y-2 mb-4">
                       {doctor.location && (
                         <div className="flex items-center text-sm text-stone-600">
