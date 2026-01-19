@@ -140,7 +140,7 @@ const Home = () => {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8">
+          <div className="grid md:grid-cols-3 gap-8">
             {medicalTypes.map((type, idx) => (
               <Link
                 key={type.type}
