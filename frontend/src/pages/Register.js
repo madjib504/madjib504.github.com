@@ -63,11 +63,14 @@ const Register = ({ setUser }) => {
       setUser(response.data.user);
       toast.success('Inscription réussie !');
       
-      if (response.data.user.user_type === 'patient') {
-        navigate('/patient/dashboard');
-      } else {
-        navigate('/doctor/dashboard');
-      }
+      // Small delay to ensure state is updated
+      setTimeout(() => {
+        if (response.data.user.user_type === 'patient') {
+          navigate('/patient/dashboard');
+        } else {
+          navigate('/doctor/dashboard');
+        }
+      }, 100);
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Erreur lors de l\'inscription');
     } finally {
