@@ -120,13 +120,13 @@ const Home = () => {
             <div className="relative lg:block hidden">
               <div className="grid grid-cols-2 gap-4">
                 <img
-                  src="https://images.unsplash.com/photo-1645066928295-2506defde470?crop=entropy&cs=srgb&fm=jpg&q=85"
-                  alt="Médecin moderne"
+                  src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?crop=entropy&cs=srgb&fm=jpg&q=85"
+                  alt="Médecin africain moderne"
                   className="rounded-2xl shadow-lg h-64 w-full object-cover hover-lift"
                 />
                 <img
-                  src="https://images.unsplash.com/photo-1488820098099-8d4a4723a490?crop=entropy&cs=srgb&fm=jpg&q=85"
-                  alt="Médecine traditionnelle"
+                  src="https://images.unsplash.com/photo-1678225894265-3c558f38724b?crop=entropy&cs=srgb&fm=jpg&q=85"
+                  alt="Médecine traditionnelle africaine"
                   className="rounded-2xl shadow-lg h-64 w-full object-cover hover-lift mt-8"
                 />
               </div>
