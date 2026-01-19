@@ -26,6 +26,9 @@ const Navbar = ({ user, setUser }) => {
             <Link to="/search" className="text-stone-600 hover:text-green-900 font-medium transition-colors" data-testid="nav-search-link">
               Rechercher
             </Link>
+            <Link to="/wellness-packs" className="text-stone-600 hover:text-green-900 font-medium transition-colors" data-testid="nav-packs-link">
+              Packs Bien-être
+            </Link>
             
             {user ? (
               <>
