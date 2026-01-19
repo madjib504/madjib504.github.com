@@ -46,6 +46,9 @@ const Search = () => {
       if (filters.medical_type) params.append('medical_type', filters.medical_type);
       if (filters.location) params.append('location', filters.location);
       if (filters.min_rating) params.append('min_rating', filters.min_rating);
+      if (filters.home_service) params.append('home_service', filters.home_service);
+      if (filters.structure_type) params.append('structure_type', filters.structure_type);
+      if (filters.keyword) params.append('keyword', filters.keyword);
 
       const response = await axios.get(`${API}/doctors/search?${params.toString()}`);
       setDoctors(response.data);
