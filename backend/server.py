@@ -89,6 +89,9 @@ class DoctorProfile(BaseModel):
     documents_verified: bool = False
     rating: float = 0.0
     total_reviews: int = 0
+    service_type: Optional[str] = None  # 'cabinet', 'clinique', 'domicile', 'both'
+    home_service: bool = False  # Service à domicile disponible
+    structure_type: Optional[str] = None  # 'cabinet', 'clinique', 'hopital', 'centre'
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class DoctorProfileCreate(BaseModel):
@@ -99,6 +102,9 @@ class DoctorProfileCreate(BaseModel):
     languages: Optional[List[str]] = None
     availability: Optional[Dict[str, Any]] = None
     profile_image: Optional[str] = None
+    service_type: Optional[str] = None
+    home_service: Optional[bool] = False
+    structure_type: Optional[str] = None
 
 class AppointmentCreate(BaseModel):
     doctor_id: str
