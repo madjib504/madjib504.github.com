@@ -140,10 +140,10 @@ const Home = () => {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-serif font-bold text-green-900 mb-4" data-testid="medical-types-title">
-              Trois Approches, Une Mission
+              Quatre Services, Une Mission
             </h2>
             <p className="text-lg text-stone-600 max-w-2xl mx-auto">
-              Médecine moderne, traditionnelle africaine ou bien-être selon vos préférences
+              Médecine moderne, traditionnelle africaine, bien-être et matériel médical
             </p>
           </div>
 
