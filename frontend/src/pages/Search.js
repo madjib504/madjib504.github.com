@@ -86,61 +86,109 @@ const Search = () => {
         {/* Filters */}
         <Card className="mb-8 shadow-md border-stone-100">
           <CardContent className="p-6">
-            <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-4">
-              <Select value={filters.medical_type} onValueChange={(value) => handleFilterChange('medical_type', value)}>
-                <SelectTrigger className="bg-white border-stone-200 rounded-lg h-12" data-testid="filter-medical-type">
-                  <SelectValue placeholder="Type de médecine" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tous les types</SelectItem>
-                  <SelectItem value="moderne">Médecine Moderne</SelectItem>
-                  <SelectItem value="traditionnel">Médecine Traditionnelle</SelectItem>
-                </SelectContent>
-              </Select>
+            {/* Recherche intelligente */}
+            <div className="mb-6">
+              <Label className="text-base font-medium mb-2 block">Recherche simplifiée</Label>
+              <p className="text-sm text-stone-600 mb-3">
+                Décrivez ce que vous cherchez (ex: "mal de dos", "problème de peau", "grossesse", "massage relaxant")
+              </p>
+              <div className="flex gap-3">
+                <Input
+                  type="text"
+                  placeholder="Décrivez votre besoin ou symptôme..."
+                  value={filters.keyword}
+                  onChange={(e) => handleFilterChange('keyword', e.target.value)}
+                  className="flex-1 bg-white border-stone-200 rounded-lg h-12"
+                  data-testid="filter-keyword"
+                />
+                <Button
+                  onClick={handleSearch}
+                  className="bg-green-900 text-white hover:bg-green-800 rounded-lg h-12 px-8"
+                  data-testid="quick-search-btn"
+                >
+                  <SearchIcon className="w-5 h-5 mr-2" />
+                  Rechercher
+                </Button>
+              </div>
+            </div>
 
-              <Select value={filters.specialty} onValueChange={(value) => handleFilterChange('specialty', value)}>
-                <SelectTrigger className="bg-white border-stone-200 rounded-lg h-12" data-testid="filter-specialty">
-                  <SelectValue placeholder="Spécialité" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Toutes les spécialités</SelectItem>
-                  {filteredSpecialties.map((specialty) => (
-                    <SelectItem key={specialty.id} value={specialty.name}>
-                      {specialty.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="border-t border-stone-200 pt-6">
+              <Label className="text-base font-medium mb-3 block">Filtres avancés</Label>
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                <Select value={filters.medical_type} onValueChange={(value) => handleFilterChange('medical_type', value)}>
+                  <SelectTrigger className="bg-white border-stone-200 rounded-lg h-12" data-testid="filter-medical-type">
+                    <SelectValue placeholder="Type de service" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tous les types</SelectItem>
+                    <SelectItem value="moderne">Médecine Moderne</SelectItem>
+                    <SelectItem value="traditionnel_africain">Médecine Traditionnelle Africaine</SelectItem>
+                    <SelectItem value="bien_etre">Bien-être & Beauté</SelectItem>
+                    <SelectItem value="service_domicile">Service à Domicile</SelectItem>
+                  </SelectContent>
+                </Select>
 
-              <Input
-                type="text"
-                placeholder="Localisation"
-                value={filters.location}
-                onChange={(e) => handleFilterChange('location', e.target.value)}
-                className="bg-white border-stone-200 rounded-lg h-12"
-                data-testid="filter-location"
-              />
+                <Select value={filters.specialty} onValueChange={(value) => handleFilterChange('specialty', value)}>
+                  <SelectTrigger className="bg-white border-stone-200 rounded-lg h-12" data-testid="filter-specialty">
+                    <SelectValue placeholder="Spécialité" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-64">
+                    <SelectItem value="all">Toutes les spécialités</SelectItem>
+                    {filteredSpecialties.map((specialty) => (
+                      <SelectItem key={specialty.id} value={specialty.name}>
+                        {specialty.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
 
-              <Select value={filters.min_rating} onValueChange={(value) => handleFilterChange('min_rating', value)}>
-                <SelectTrigger className="bg-white border-stone-200 rounded-lg h-12" data-testid="filter-rating">
-                  <SelectValue placeholder="Note minimum" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Toutes les notes</SelectItem>
-                  <SelectItem value="4">4+ ⭐</SelectItem>
-                  <SelectItem value="4.5">4.5+ ⭐</SelectItem>
-                  <SelectItem value="4.8">4.8+ ⭐</SelectItem>
-                </SelectContent>
-              </Select>
+                <Input
+                  type="text"
+                  placeholder="Localisation"
+                  value={filters.location}
+                  onChange={(e) => handleFilterChange('location', e.target.value)}
+                  className="bg-white border-stone-200 rounded-lg h-12"
+                  data-testid="filter-location"
+                />
 
-              <Button
-                onClick={handleSearch}
-                className="bg-green-900 text-white hover:bg-green-800 rounded-lg h-12"
-                data-testid="search-btn"
-              >
-                <SearchIcon className="w-5 h-5 mr-2" />
-                Rechercher
-              </Button>
+                <Select value={filters.min_rating} onValueChange={(value) => handleFilterChange('min_rating', value)}>
+                  <SelectTrigger className="bg-white border-stone-200 rounded-lg h-12" data-testid="filter-rating">
+                    <SelectValue placeholder="Note minimum" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Toutes les notes</SelectItem>
+                    <SelectItem value="4">4+ ⭐</SelectItem>
+                    <SelectItem value="4.5">4.5+ ⭐</SelectItem>
+                    <SelectItem value="4.8">4.8+ ⭐</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-4">
+                <Select value={filters.structure_type} onValueChange={(value) => handleFilterChange('structure_type', value)}>
+                  <SelectTrigger className="bg-white border-stone-200 rounded-lg h-12" data-testid="filter-structure">
+                    <SelectValue placeholder="Type de structure" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tous</SelectItem>
+                    <SelectItem value="cabinet">Cabinet privé</SelectItem>
+                    <SelectItem value="clinique">Clinique</SelectItem>
+                    <SelectItem value="hopital">Hôpital</SelectItem>
+                    <SelectItem value="centre">Centre de santé</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Select value={filters.home_service} onValueChange={(value) => handleFilterChange('home_service', value)}>
+                  <SelectTrigger className="bg-white border-stone-200 rounded-lg h-12" data-testid="filter-home-service">
+                    <SelectValue placeholder="Service à domicile" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tous</SelectItem>
+                    <SelectItem value="true">Disponible à domicile</SelectItem>
+                    <SelectItem value="false">En cabinet uniquement</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </CardContent>
         </Card>
