@@ -195,6 +195,7 @@ const Register = ({ setUser }) => {
                       <SelectItem value="traditionnel_africain" className="cursor-pointer hover:bg-stone-100">Médecine Traditionnelle Africaine</SelectItem>
                       <SelectItem value="bien_etre" className="cursor-pointer hover:bg-stone-100">Bien-être & Beauté</SelectItem>
                       <SelectItem value="service_domicile" className="cursor-pointer hover:bg-stone-100">Service à Domicile</SelectItem>
+                      <SelectItem value="materiel_medical" className="cursor-pointer hover:bg-stone-100">Matériel Médical</SelectItem>
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-stone-500">Choisissez votre type de pratique médicale</p>
