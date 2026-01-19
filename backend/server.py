@@ -301,7 +301,18 @@ async def get_specialties():
         {"id": "51", "name": "Aide Soignant à Domicile", "medical_type": "service_domicile", "description": "Aide aux personnes dépendantes"},
     ]
     
-    return moderne_specialties + traditionnel_africain_specialties + bien_etre_specialties + services_domicile
+    materiel_medical = [
+        {"id": "60", "name": "Fournitures Médicales", "medical_type": "materiel_medical", "description": "Gants, masques, seringues, compresses"},
+        {"id": "61", "name": "Équipements de Diagnostic", "medical_type": "materiel_medical", "description": "Stéthoscopes, tensiomètres, thermomètres"},
+        {"id": "62", "name": "Matériel de Mobilité", "medical_type": "materiel_medical", "description": "Fauteuils roulants, béquilles, déambulateurs"},
+        {"id": "63", "name": "Équipements Hospitaliers", "medical_type": "materiel_medical", "description": "Lits médicalisés, tables d'examen, chariots"},
+        {"id": "64", "name": "Dispositifs de Rééducation", "medical_type": "materiel_medical", "description": "Appareils de kinésithérapie et rééducation"},
+        {"id": "65", "name": "Matériel d'Urgence", "medical_type": "materiel_medical", "description": "Défibrillateurs, trousses de premiers secours"},
+        {"id": "66", "name": "Consommables de Laboratoire", "medical_type": "materiel_medical", "description": "Tests, tubes, réactifs médicaux"},
+        {"id": "67", "name": "Équipements de Protection", "medical_type": "materiel_medical", "description": "Blouses, lunettes, masques professionnels"},
+    ]
+    
+    return moderne_specialties + traditionnel_africain_specialties + bien_etre_specialties + services_domicile + materiel_medical
 
 @api_router.get("/doctors/search")
 async def search_doctors(
