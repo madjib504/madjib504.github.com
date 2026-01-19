@@ -64,6 +64,13 @@ const Home = () => {
       description: 'Vente d\'équipements, fournitures et matériel médical professionnel',
       image: 'https://images.unsplash.com/photo-1584820927498-cfe5211fd8bf?crop=entropy&cs=srgb&fm=jpg&q=85',
       color: 'orange'
+    },
+    {
+      type: 'boutique_bien_etre',
+      title: 'Boutique Bien-être',
+      description: 'Cosmétiques bio, huiles essentielles, pierres, yoga, méditation et plus',
+      image: 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?crop=entropy&cs=srgb&fm=jpg&q=85',
+      color: 'pink'
     }
   ];
 
