@@ -1,54 +1,110 @@
-import { useEffect } from "react";
-import "@/App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import axios from "axios";
+import { useState, useEffect } from 'react';
+import '@/App.css';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import axios from 'axios';
+import { Toaster } from '@/components/ui/sonner';
+import Navbar from '@/components/Navbar';
+import Home from '@/pages/Home';
+import Login from '@/pages/Login';
+import Register from '@/pages/Register';
+import Search from '@/pages/Search';
+import DoctorProfilePage from '@/pages/DoctorProfilePage';
+import PatientDashboard from '@/pages/PatientDashboard';
+import DoctorDashboard from '@/pages/DoctorDashboard';
+import Chat from '@/pages/Chat';
+import VideoCall from '@/pages/VideoCall';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+export const API = `${BACKEND_URL}/api`;
 
-const Home = () => {
-  const helloWorldApi = async () => {
-    try {
-      const response = await axios.get(`${API}/`);
-      console.log(response.data.message);
-    } catch (e) {
-      console.error(e, `errored out requesting / api`);
-    }
-  };
-
-  useEffect(() => {
-    helloWorldApi();
-  }, []);
-
-  return (
-    <div>
-      <header className="App-header">
-        <a
-          className="App-link"
-          href="https://emergent.sh"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <img src="https://avatars.githubusercontent.com/in/1201222?s=120&u=2686cf91179bbafbc7a71bfbc43004cf9ae1acea&v=4" />
-        </a>
-        <p className="mt-5">Building something incredible ~!</p>
-      </header>
-    </div>
-  );
-};
+export const AuthContext = React.createContext();
 
 function App() {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      axios.get(`${API}/auth/me`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      .then(response => {
+        setUser(response.data);
+        setLoading(false);
+      })
+      .catch(() => {
+        localStorage.removeItem('token');
+        setLoading(false);
+      });
+    } else {
+      setLoading(false);
+    }
+  }, []);
+
+  const ProtectedRoute = ({ children, allowedTypes }) => {
+    if (loading) return <div className="min-h-screen flex items-center justify-center">Chargement...</div>;
+    if (!user) return <Navigate to="/login" />;
+    if (allowedTypes && !allowedTypes.includes(user.user_type)) {
+      return <Navigate to="/" />;
+    }
+    return children;
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-stone-50">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-green-900"></div>
+          <p className="mt-4 text-stone-600">Chargement...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="App">
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Home />}>
-            <Route index element={<Home />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
-    </div>
+    <AuthContext.Provider value={{ user, setUser }}>
+      <div className="App">
+        <BrowserRouter>
+          <Navbar user={user} setUser={setUser} />
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={user ? <Navigate to="/" /> : <Login setUser={setUser} />} />
+            <Route path="/register" element={user ? <Navigate to="/" /> : <Register setUser={setUser} />} />
+            <Route path="/search" element={<Search />} />
+            <Route path="/doctor/:doctorId" element={<DoctorProfilePage />} />
+            <Route path="/patient/dashboard" element={
+              <ProtectedRoute allowedTypes={['patient']}>
+                <PatientDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/doctor/dashboard" element={
+              <ProtectedRoute allowedTypes={['doctor']}>
+                <DoctorDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/chat" element={
+              <ProtectedRoute>
+                <Chat />
+              </ProtectedRoute>
+            } />
+            <Route path="/chat/:userId" element={
+              <ProtectedRoute>
+                <Chat />
+              </ProtectedRoute>
+            } />
+            <Route path="/video-call/:roomId" element={
+              <ProtectedRoute>
+                <VideoCall />
+              </ProtectedRoute>
+            } />
+          </Routes>
+          <Toaster />
+        </BrowserRouter>
+      </div>
+    </AuthContext.Provider>
   );
 }
 
+import React from 'react';
 export default App;
