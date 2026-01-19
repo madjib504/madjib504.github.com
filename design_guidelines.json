@@ -1,0 +1,178 @@
+{
+  "identity": {
+    "name": "E1",
+    "role": "Anti-AI Creative Designer",
+    "principles": [
+      "Fusion over Imitation",
+      "Emotion First",
+      "Content is King",
+      "Zoom In",
+      "Negative Space",
+      "Contrast"
+    ]
+  },
+  "project_context": {
+    "app_name": "HealthFusion",
+    "app_type": "SaaS / Healthcare Platform",
+    "target_audience": "Patients seeking holistic care (Modern & Traditional) and Practitioners",
+    "emotional_tone": "Trustworthy, Organic, Professional, Reassuring",
+    "theme_strategy": "Organic & Earthy (Archetype 1) with Modern Tech accents"
+  },
+  "design_system": {
+    "typography": {
+      "headings": {
+        "font_family": "Merriweather, serif",
+        "weights": ["Light (300)", "Bold (700)"],
+        "usage": "Use for all H1-H3. Adds authority and warmth.",
+        "tracking": "tracking-tight"
+      },
+      "body": {
+        "font_family": "Manrope, sans-serif",
+        "weights": ["Regular (400)", "Medium (500)"],
+        "usage": "Use for all UI text, paragraphs, and data.",
+        "tracking": "tracking-normal"
+      },
+      "scale": {
+        "h1": "text-5xl md:text-6xl lg:text-7xl",
+        "h2": "text-3xl md:text-4xl",
+        "h3": "text-2xl",
+        "body": "text-base md:text-lg",
+        "small": "text-sm"
+      }
+    },
+    "colors": {
+      "palette": {
+        "primary": {
+          "name": "Deep Forest",
+          "tailwind": "bg-green-900",
+          "hex": "#14532d",
+          "usage": "Primary Buttons, Active States, Brand Headers"
+        },
+        "secondary": {
+          "name": "Clinical Sky",
+          "tailwind": "text-sky-600",
+          "hex": "#0284c7",
+          "usage": "Links, Accents, Modern Medicine Indicators"
+        },
+        "background": {
+          "name": "Bone White",
+          "tailwind": "bg-stone-50",
+          "hex": "#fafaf9",
+          "usage": "Main Page Backgrounds"
+        },
+        "surface": {
+          "name": "Pure White",
+          "tailwind": "bg-white",
+          "hex": "#ffffff",
+          "usage": "Cards, Modals, Input Fields"
+        },
+        "text": {
+          "primary": "text-stone-900",
+          "secondary": "text-stone-500",
+          "muted": "text-stone-400"
+        },
+        "border": {
+          "default": "border-stone-200",
+          "active": "border-green-800"
+        }
+      },
+      "gradients": {
+        "hero": "bg-gradient-to-br from-stone-50 via-green-50 to-sky-50",
+        "card_hover": "hover:bg-stone-100"
+      },
+      "forbidden": ["#7351B7", "#1B93A4"]
+    },
+    "spacing": {
+      "container_padding": "p-6 md:p-12 lg:p-24",
+      "section_gap": "gap-12 md:gap-24",
+      "element_gap": "gap-4 md:gap-8",
+      "radius": {
+        "default": "rounded-xl",
+        "button": "rounded-full",
+        "card": "rounded-2xl"
+      }
+    },
+    "shadows": {
+      "card": "shadow-[0_2px_8px_rgba(0,0,0,0.04)]",
+      "hover": "shadow-[0_12px_24px_rgba(0,0,0,0.06)]",
+      "dropdown": "shadow-xl border border-stone-100"
+    }
+  },
+  "components": {
+    "buttons": {
+      "primary": "bg-green-900 text-white hover:bg-green-800 rounded-full px-8 py-6 text-lg font-medium transition-all shadow-lg hover:shadow-green-900/20",
+      "secondary": "bg-white text-stone-900 border border-stone-200 hover:border-stone-300 hover:bg-stone-50 rounded-full px-6 py-4 transition-all",
+      "ghost": "text-stone-600 hover:text-green-900 hover:bg-green-50 rounded-lg px-4 py-2"
+    },
+    "cards": {
+      "doctor_profile": "bg-white rounded-2xl border border-stone-100 p-6 hover:shadow-lg transition-all duration-300 group",
+      "feature": "bg-stone-100/50 rounded-3xl p-8 hover:bg-white hover:shadow-md transition-all border border-transparent hover:border-stone-100"
+    },
+    "inputs": {
+      "default": "bg-white border-stone-200 focus:border-green-800 focus:ring-1 focus:ring-green-800 rounded-lg h-12 px-4",
+      "search": "bg-white shadow-sm border-stone-200 rounded-full h-14 px-6 text-lg"
+    },
+    "navigation": {
+      "wrapper": "fixed top-0 w-full z-50 bg-white/80 backdrop-blur-md border-b border-stone-100",
+      "link": "text-stone-600 hover:text-green-900 font-medium transition-colors"
+    }
+  },
+  "layout_strategies": {
+    "marketing": {
+      "grid": "Bento Grid (Mode A)",
+      "hero": "Asymmetric split: Text left (60%), Image collage right (40%) with floating elements",
+      "features": "Zig-zag layout with large generous whitespace"
+    },
+    "dashboard": {
+      "grid": "High Density Grid (Mode B)",
+      "sidebar": "Fixed left, dark green or light stone",
+      "widgets": "White cards with soft shadows, dense data but readable type"
+    }
+  },
+  "assets": {
+    "images": {
+      "modern_doctors": [
+        "https://images.unsplash.com/photo-1645066928295-2506defde470?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "https://images.unsplash.com/photo-1642975967602-653d378f3b5b?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "https://images.unsplash.com/photo-1759350075177-eeb89d507990?crop=entropy&cs=srgb&fm=jpg&q=85"
+      ],
+      "traditional_healers": [
+        "https://images.unsplash.com/photo-1662302392561-b1deecd3579d?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "https://images.unsplash.com/photo-1488820098099-8d4a4723a490?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "https://images.unsplash.com/photo-1653674136728-a24982136e60?crop=entropy&cs=srgb&fm=jpg&q=85"
+      ],
+      "context": [
+        "https://images.unsplash.com/photo-1497800839469-bdbe4fd9d391?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "https://images.unsplash.com/photo-1659353888096-cc5e333db5e0?crop=entropy&cs=srgb&fm=jpg&q=85"
+      ]
+    },
+    "icons": "Use Lucide React (default). For specialized medical icons, use Phosphor Icons if needed."
+  },
+  "motion": {
+    "page_transition": "initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.4 }}",
+    "hover_lift": "hover:-translate-y-1 transition-transform duration-300",
+    "stagger": "staggerChildren: 0.1"
+  },
+  "accessibility": {
+    "contrast_check": "Ensure text on Green-900 is White. Text on Stone-50 is Stone-900.",
+    "focus_states": "focus:ring-2 focus:ring-offset-2 focus:ring-green-800",
+    "reduced_motion": "Respect prefers-reduced-motion media query"
+  },
+  "instructions_to_main_agent": [
+    "Implement the 'Organic & Earthy' theme strictly. Do not revert to standard SaaS blue.",
+    "Use the provided image URLs for doctor profiles to create realistic demos.",
+    "Ensure the distinction between 'Modern' and 'Traditional' is visual but respectful (e.g., Iconography: Stethoscope vs. Leaf/Mortar).",
+    "For the Dashboard, prioritize clarity. Use the 'High Density Grid' rules.",
+    "All interactive elements MUST have data-testid attributes.",
+    "Use 'sonner' for notifications.",
+    "Do not use 'Inter' font for headings. Import 'Merriweather' and 'Manrope' from Google Fonts."
+  ],
+  "universal_guidelines": [
+    "Avoid generic centered layouts.",
+    "Create depth through layered design elements.",
+    "Use glass-morphism effects with backdrop filters (12-24px blur) for overlays.",
+    "NEVER use AI assistant Emoji characters.",
+    "Every interaction needs micro-animations.",
+    "Use 2-3x more spacing than feels comfortable."
+  ]
+}
