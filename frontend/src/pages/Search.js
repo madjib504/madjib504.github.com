@@ -17,7 +17,10 @@ const Search = () => {
     specialty: searchParams.get('specialty') || '',
     medical_type: searchParams.get('medical_type') || '',
     location: searchParams.get('location') || '',
-    min_rating: searchParams.get('min_rating') || ''
+    min_rating: searchParams.get('min_rating') || '',
+    home_service: searchParams.get('home_service') || '',
+    structure_type: searchParams.get('structure_type') || '',
+    keyword: searchParams.get('keyword') || ''
   });
   const navigate = useNavigate();
 
