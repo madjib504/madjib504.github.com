@@ -13,6 +13,7 @@ import PatientDashboard from '@/pages/PatientDashboard';
 import DoctorDashboard from '@/pages/DoctorDashboard';
 import Chat from '@/pages/Chat';
 import VideoCall from '@/pages/VideoCall';
+import WellnessPacks from '@/pages/WellnessPacks';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 export const API = `${BACKEND_URL}/api`;
