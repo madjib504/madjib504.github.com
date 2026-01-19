@@ -244,25 +244,58 @@ async def get_me(current_user: User = Depends(get_current_user)):
 @api_router.get("/specialties")
 async def get_specialties():
     moderne_specialties = [
-        {"id": "1", "name": "Médecine Générale", "medical_type": "moderne"},
-        {"id": "2", "name": "Cardiologie", "medical_type": "moderne"},
-        {"id": "3", "name": "Dermatologie", "medical_type": "moderne"},
-        {"id": "4", "name": "Gynécologie", "medical_type": "moderne"},
-        {"id": "5", "name": "Ophtalmologie", "medical_type": "moderne"},
-        {"id": "6", "name": "Chirurgie", "medical_type": "moderne"},
-        {"id": "7", "name": "Pédiatrie", "medical_type": "moderne"},
-        {"id": "8", "name": "Orthopédie", "medical_type": "moderne"},
-        {"id": "9", "name": "Neurologie", "medical_type": "moderne"},
-        {"id": "10", "name": "Psychiatrie", "medical_type": "moderne"},
+        {"id": "1", "name": "Médecine Générale", "medical_type": "moderne", "description": "Soins de santé généraux et prévention"},
+        {"id": "2", "name": "Cardiologie", "medical_type": "moderne", "description": "Spécialiste du cœur et des vaisseaux sanguins"},
+        {"id": "3", "name": "Dermatologie", "medical_type": "moderne", "description": "Spécialiste de la peau, des cheveux et des ongles"},
+        {"id": "4", "name": "Gynécologie", "medical_type": "moderne", "description": "Santé de la femme et système reproducteur"},
+        {"id": "5", "name": "Ophtalmologie", "medical_type": "moderne", "description": "Spécialiste des yeux et de la vision"},
+        {"id": "6", "name": "Chirurgie", "medical_type": "moderne", "description": "Interventions chirurgicales"},
+        {"id": "7", "name": "Pédiatrie", "medical_type": "moderne", "description": "Santé des enfants et des nourrissons"},
+        {"id": "8", "name": "Orthopédie", "medical_type": "moderne", "description": "Spécialiste des os, articulations et muscles"},
+        {"id": "9", "name": "Neurologie", "medical_type": "moderne", "description": "Spécialiste du système nerveux et du cerveau"},
+        {"id": "10", "name": "Psychiatrie", "medical_type": "moderne", "description": "Santé mentale et troubles psychologiques"},
+        {"id": "11", "name": "ORL", "medical_type": "moderne", "description": "Oreilles, nez et gorge"},
+        {"id": "12", "name": "Gastro-entérologie", "medical_type": "moderne", "description": "Système digestif et intestinal"},
+        {"id": "13", "name": "Pneumologie", "medical_type": "moderne", "description": "Spécialiste des poumons et de la respiration"},
+        {"id": "14", "name": "Endocrinologie", "medical_type": "moderne", "description": "Hormones et glandes (diabète, thyroïde)"},
+        {"id": "15", "name": "Pharmacien", "medical_type": "moderne", "description": "Médicaments et conseils pharmaceutiques"},
     ]
-    traditionnel_specialties = [
-        {"id": "11", "name": "Phytothérapie", "medical_type": "traditionnel"},
-        {"id": "12", "name": "Acupuncture", "medical_type": "traditionnel"},
-        {"id": "13", "name": "Naturopathie", "medical_type": "traditionnel"},
-        {"id": "14", "name": "Médecine Ayurvédique", "medical_type": "traditionnel"},
-        {"id": "15", "name": "Homéopathie", "medical_type": "traditionnel"},
+    
+    traditionnel_africain_specialties = [
+        {"id": "20", "name": "Tradipraticien Généraliste", "medical_type": "traditionnel_africain", "description": "Soins traditionnels africains généraux"},
+        {"id": "21", "name": "Phytothérapeute Africain", "medical_type": "traditionnel_africain", "description": "Traitement par les plantes médicinales africaines"},
+        {"id": "22", "name": "Guérisseur Traditionnel", "medical_type": "traditionnel_africain", "description": "Médecine ancestrale et spirituelle africaine"},
+        {"id": "23", "name": "Herboriste Africain", "medical_type": "traditionnel_africain", "description": "Expert en plantes et remèdes naturels africains"},
+        {"id": "24", "name": "Masseur Traditionnel", "medical_type": "traditionnel_africain", "description": "Massages thérapeutiques traditionnels"},
+        {"id": "25", "name": "Sage-femme Traditionnelle", "medical_type": "traditionnel_africain", "description": "Accompagnement grossesse et accouchement traditionnel"},
+        {"id": "26", "name": "Rebouteux", "medical_type": "traditionnel_africain", "description": "Spécialiste des fractures et entorses"},
     ]
-    return moderne_specialties + traditionnel_specialties
+    
+    bien_etre_specialties = [
+        {"id": "30", "name": "Kinésithérapeute", "medical_type": "bien_etre", "description": "Rééducation et massage thérapeutique"},
+        {"id": "31", "name": "Ostéopathe", "medical_type": "bien_etre", "description": "Manipulation du corps pour soulager douleurs"},
+        {"id": "32", "name": "Nutritionniste", "medical_type": "bien_etre", "description": "Conseils en alimentation et nutrition"},
+        {"id": "33", "name": "Diététicien", "medical_type": "bien_etre", "description": "Plans alimentaires personnalisés"},
+        {"id": "34", "name": "Naturopathe", "medical_type": "bien_etre", "description": "Médecine naturelle et prévention"},
+        {"id": "35", "name": "Sophrologue", "medical_type": "bien_etre", "description": "Relaxation et gestion du stress"},
+        {"id": "36", "name": "Relaxologue", "medical_type": "bien_etre", "description": "Techniques de relaxation profonde"},
+        {"id": "37", "name": "Coach de Vie", "medical_type": "bien_etre", "description": "Accompagnement personnel et développement"},
+        {"id": "38", "name": "Coach Sportif", "medical_type": "bien_etre", "description": "Entraînement physique et remise en forme"},
+        {"id": "39", "name": "Masseur Bien-être", "medical_type": "bien_etre", "description": "Massages relaxants et détente"},
+        {"id": "40", "name": "Spa Praticien", "medical_type": "bien_etre", "description": "Soins spa et hydrothérapie"},
+        {"id": "41", "name": "Esthéticien", "medical_type": "bien_etre", "description": "Soins du visage et beauté"},
+        {"id": "42", "name": "Coiffeur", "medical_type": "bien_etre", "description": "Soins et coiffure"},
+        {"id": "43", "name": "Prothésiste Ongulaire", "medical_type": "bien_etre", "description": "Soins et pose d'ongles"},
+        {"id": "44", "name": "Maquilleur Professionnel", "medical_type": "bien_etre", "description": "Maquillage et beauté"},
+        {"id": "45", "name": "Acupuncteur", "medical_type": "bien_etre", "description": "Médecine chinoise par aiguilles"},
+    ]
+    
+    services_domicile = [
+        {"id": "50", "name": "Infirmier à Domicile", "medical_type": "service_domicile", "description": "Soins infirmiers à votre domicile"},
+        {"id": "51", "name": "Aide Soignant à Domicile", "medical_type": "service_domicile", "description": "Aide aux personnes dépendantes"},
+    ]
+    
+    return moderne_specialties + traditionnel_africain_specialties + bien_etre_specialties + services_domicile
 
 @api_router.get("/doctors/search")
 async def search_doctors(
