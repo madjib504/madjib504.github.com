@@ -312,7 +312,39 @@ async def get_specialties():
         {"id": "67", "name": "Équipements de Protection", "medical_type": "materiel_medical", "description": "Blouses, lunettes, masques professionnels"},
     ]
     
-    return moderne_specialties + traditionnel_africain_specialties + bien_etre_specialties + services_domicile + materiel_medical
+    boutique_bien_etre = [
+        # Soins & beauté naturels
+        {"id": "70", "name": "Cosmétiques Naturels & Bio", "medical_type": "boutique_bien_etre", "description": "Crèmes, huiles, lotions naturelles"},
+        {"id": "71", "name": "Soins Peau Corps Cheveux", "medical_type": "boutique_bien_etre", "description": "Produits de soins naturels complets"},
+        {"id": "72", "name": "Savons Artisanaux", "medical_type": "boutique_bien_etre", "description": "Savons faits main, naturels"},
+        {"id": "73", "name": "Parfums de Bien-être", "medical_type": "boutique_bien_etre", "description": "Parfums naturels et aromathérapie"},
+        
+        # Relaxation & aromathérapie
+        {"id": "74", "name": "Huiles Essentielles", "medical_type": "boutique_bien_etre", "description": "Huiles essentielles pures et naturelles"},
+        {"id": "75", "name": "Diffuseurs d'Arômes", "medical_type": "boutique_bien_etre", "description": "Diffuseurs électriques et traditionnels"},
+        {"id": "76", "name": "Encens & Fumigation", "medical_type": "boutique_bien_etre", "description": "Encens, bâtons de fumigation, résines"},
+        {"id": "77", "name": "Bougies Parfumées", "medical_type": "boutique_bien_etre", "description": "Bougies naturelles parfumées"},
+        {"id": "78", "name": "Sels de Bain", "medical_type": "boutique_bien_etre", "description": "Sels et produits pour le bain relaxant"},
+        
+        # Spiritualité & énergie
+        {"id": "79", "name": "Pierres & Cristaux", "medical_type": "boutique_bien_etre", "description": "Pierres énergétiques et cristaux naturels"},
+        {"id": "80", "name": "Bijoux Énergétiques", "medical_type": "boutique_bien_etre", "description": "Bracelets mala, pendentifs, bijoux"},
+        {"id": "81", "name": "Oracles & Tarots", "medical_type": "boutique_bien_etre", "description": "Jeux d'oracles, tarots, guidance spirituelle"},
+        {"id": "82", "name": "Livres Développement Personnel", "medical_type": "boutique_bien_etre", "description": "Livres de spiritualité et croissance"},
+        
+        # Nutrition & santé naturelle
+        {"id": "83", "name": "Tisanes & Infusions", "medical_type": "boutique_bien_etre", "description": "Thés relaxants, tisanes digestion, détente"},
+        {"id": "84", "name": "Compléments Naturels", "medical_type": "boutique_bien_etre", "description": "Suppléments à base de plantes"},
+        {"id": "85", "name": "Plantes Médicinales Traditionnelles", "medical_type": "boutique_bien_etre", "description": "Produits issus de plantes médicinales"},
+        
+        # Accessoires pratique
+        {"id": "86", "name": "Coussins de Méditation", "medical_type": "boutique_bien_etre", "description": "Coussins zafu, zafuton, supports"},
+        {"id": "87", "name": "Tapis de Yoga", "medical_type": "boutique_bien_etre", "description": "Tapis, accessoires de yoga et pilates"},
+        {"id": "88", "name": "Outils de Massage", "medical_type": "boutique_bien_etre", "description": "Rouleaux, balles, outils de récupération"},
+        {"id": "89", "name": "Journaux de Pleine Conscience", "medical_type": "boutique_bien_etre", "description": "Carnets, journaux de gratitude, méditation"},
+    ]
+    
+    return moderne_specialties + traditionnel_africain_specialties + bien_etre_specialties + services_domicile + materiel_medical + boutique_bien_etre
 
 @api_router.get("/doctors/search")
 async def search_doctors(
