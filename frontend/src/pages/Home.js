@@ -222,6 +222,58 @@ const Home = () => {
         </div>
       </section>
 
+      {/* Wellness Packs Promo Section */}
+      <section className="py-20 px-6 bg-gradient-to-br from-green-50 via-purple-50 to-pink-50">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl md:text-5xl font-serif font-bold text-green-900 mb-4">
+              Packs Bien-être Thématiques
+            </h2>
+            <p className="text-lg text-stone-600 max-w-2xl mx-auto">
+              Des ensembles complets à prix réduit pour votre bien-être quotidien
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8 mb-12">
+            <div className="bg-white rounded-2xl p-8 shadow-md hover:shadow-xl transition-shadow">
+              <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mb-4">
+                <span className="text-2xl">🧘‍♀️</span>
+              </div>
+              <h3 className="text-xl font-serif font-bold text-stone-900 mb-2">Pack Méditation</h3>
+              <p className="text-stone-600 mb-2">Coussin + Encens + Journal</p>
+              <p className="text-green-700 font-bold">À partir de 59,99€</p>
+            </div>
+
+            <div className="bg-white rounded-2xl p-8 shadow-md hover:shadow-xl transition-shadow">
+              <div className="w-12 h-12 bg-pink-100 rounded-full flex items-center justify-center mb-4">
+                <span className="text-2xl">✨</span>
+              </div>
+              <h3 className="text-xl font-serif font-bold text-stone-900 mb-2">Pack Beauté Naturelle</h3>
+              <p className="text-stone-600 mb-2">Cosmétiques bio + Savons + Huiles</p>
+              <p className="text-green-700 font-bold">À partir de 69,99€</p>
+            </div>
+
+            <div className="bg-white rounded-2xl p-8 shadow-md hover:shadow-xl transition-shadow">
+              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                <span className="text-2xl">🌿</span>
+              </div>
+              <h3 className="text-xl font-serif font-bold text-stone-900 mb-2">Pack Relaxation</h3>
+              <p className="text-stone-600 mb-2">Huiles + Bougies + Sels de bain</p>
+              <p className="text-green-700 font-bold">À partir de 64,99€</p>
+            </div>
+          </div>
+
+          <div className="text-center">
+            <Link to="/wellness-packs">
+              <Button className="bg-green-900 text-white hover:bg-green-800 rounded-full px-8 py-6 text-lg font-medium shadow-xl">
+                Découvrir tous les packs
+                <ArrowRight className="ml-2 w-5 h-5" />
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="py-20 px-6">
         <div className="max-w-4xl mx-auto text-center">
