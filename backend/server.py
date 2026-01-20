@@ -771,6 +771,360 @@ async def send_message(sid, data):
     room = data.get('room')
     await sio.emit('receive_message', data, room=room, skip_sid=sid)
 
+
+# ============ PHASE 1 - New Features Routes ============
+
+# Medical Records
+@api_router.post("/medical-records")
+async def create_medical_record(
+    record_data: Dict[str, Any],
+    current_user: User = Depends(get_current_user)
+):
+    if current_user.user_type != "patient":
+        raise HTTPException(status_code=403, detail="Only patients can create medical records")
+    
+    record = MedicalRecord(patient_id=current_user.id, **record_data)
+    record_dict = record.model_dump()
+    record_dict['created_at'] = record_dict['created_at'].isoformat()
+    record_dict['updated_at'] = record_dict['updated_at'].isoformat()
+    await db.medical_records.insert_one(record_dict)
+    return record
+
+@api_router.get("/medical-records")
+async def get_medical_record(current_user: User = Depends(get_current_user)):
+    record = await db.medical_records.find_one({"patient_id": current_user.id}, {"_id": 0})
+    if not record:
+        # Create empty record if doesn't exist
+        record = MedicalRecord(patient_id=current_user.id)
+        record_dict = record.model_dump()
+        record_dict['created_at'] = record_dict['created_at'].isoformat()
+        record_dict['updated_at'] = record_dict['updated_at'].isoformat()
+        await db.medical_records.insert_one(record_dict)
+        return record
+    
+    if isinstance(record.get('created_at'), str):
+        record['created_at'] = datetime.fromisoformat(record['created_at'])
+    if isinstance(record.get('updated_at'), str):
+        record['updated_at'] = datetime.fromisoformat(record['updated_at'])
+    return record
+
+@api_router.put("/medical-records")
+async def update_medical_record(
+    update_data: Dict[str, Any],
+    current_user: User = Depends(get_current_user)
+):
+    update_data['updated_at'] = datetime.now(timezone.utc).isoformat()
+    await db.medical_records.update_one(
+        {"patient_id": current_user.id},
+        {"$set": update_data}
+    )
+    return {"message": "Medical record updated"}
+
+# Loyalty Program
+@api_router.get("/loyalty/points")
+async def get_loyalty_points(current_user: User = Depends(get_current_user)):
+    loyalty = await db.loyalty_points.find_one({"user_id": current_user.id}, {"_id": 0})
+    if not loyalty:
+        # Create new loyalty account
+        loyalty = LoyaltyPoints(user_id=current_user.id, transactions=[])
+        loyalty_dict = loyalty.model_dump()
+        loyalty_dict['created_at'] = loyalty_dict['created_at'].isoformat()
+        await db.loyalty_points.insert_one(loyalty_dict)
+        return loyalty
+    
+    if isinstance(loyalty.get('created_at'), str):
+        loyalty['created_at'] = datetime.fromisoformat(loyalty['created_at'])
+    return loyalty
+
+@api_router.post("/loyalty/add-points")
+async def add_loyalty_points(
+    data: Dict[str, Any],
+    current_user: User = Depends(get_current_user)
+):
+    points = data.get('points', 0)
+    reason = data.get('reason', 'Purchase')
+    
+    loyalty = await db.loyalty_points.find_one({"user_id": current_user.id})
+    if not loyalty:
+        loyalty = LoyaltyPoints(user_id=current_user.id, total_points=points, transactions=[])
+        loyalty_dict = loyalty.model_dump()
+    else:
+        loyalty['total_points'] = loyalty.get('total_points', 0) + points
+        if not loyalty.get('transactions'):
+            loyalty['transactions'] = []
+        loyalty['transactions'].append({
+            "points": points,
+            "reason": reason,
+            "date": datetime.now(timezone.utc).isoformat()
+        })
+        
+        # Update level based on points
+        total = loyalty['total_points']
+        if total >= 5000:
+            loyalty['level'] = "Platine"
+        elif total >= 2000:
+            loyalty['level'] = "Or"
+        elif total >= 1000:
+            loyalty['level'] = "Argent"
+        else:
+            loyalty['level'] = "Bronze"
+        
+        loyalty_dict = loyalty
+    
+    if isinstance(loyalty_dict.get('created_at'), datetime):
+        loyalty_dict['created_at'] = loyalty_dict['created_at'].isoformat()
+    
+    await db.loyalty_points.update_one(
+        {"user_id": current_user.id},
+        {"$set": loyalty_dict},
+        upsert=True
+    )
+    
+    return {"total_points": loyalty_dict['total_points'], "level": loyalty_dict['level']}
+
+@api_router.get("/loyalty/rewards")
+async def get_loyalty_rewards():
+    rewards = [
+        {"id": "r1", "name": "5€ de réduction", "points": 500, "type": "discount"},
+        {"id": "r2", "name": "Consultation gratuite", "points": 1000, "type": "free_consultation"},
+        {"id": "r3", "name": "Pack bien-être gratuit", "points": 2000, "type": "free_pack"},
+        {"id": "r4", "name": "20€ de réduction", "points": 3000, "type": "discount"},
+        {"id": "r5", "name": "Accès VIP 1 mois", "points": 5000, "type": "vip"},
+    ]
+    return rewards
+
+# Doctor Schedule
+@api_router.get("/doctors/{doctor_id}/schedule")
+async def get_doctor_schedule(doctor_id: str, date: Optional[str] = None):
+    if not date:
+        date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    
+    schedule = await db.doctor_schedules.find_one(
+        {"doctor_id": doctor_id, "date": date},
+        {"_id": 0}
+    )
+    
+    if not schedule:
+        # Generate default schedule (9h-17h)
+        slots = []
+        for hour in range(9, 17):
+            for minute in [0, 30]:
+                time_str = f"{hour:02d}:{minute:02d}"
+                slots.append({"time": time_str, "available": True})
+        
+        schedule = {
+            "doctor_id": doctor_id,
+            "date": date,
+            "slots": slots
+        }
+    
+    return schedule
+
+@api_router.post("/doctors/schedule")
+async def update_doctor_schedule(
+    schedule_data: Dict[str, Any],
+    current_user: User = Depends(get_current_user)
+):
+    if current_user.user_type != "doctor":
+        raise HTTPException(status_code=403, detail="Only doctors can update schedules")
+    
+    # Get doctor profile to get doctor_id
+    doctor_profile = await db.doctor_profiles.find_one({"user_id": current_user.id}, {"_id": 0})
+    if not doctor_profile:
+        raise HTTPException(status_code=404, detail="Doctor profile not found")
+    
+    schedule_data['doctor_id'] = doctor_profile['id']
+    
+    await db.doctor_schedules.update_one(
+        {"doctor_id": doctor_profile['id'], "date": schedule_data['date']},
+        {"$set": schedule_data},
+        upsert=True
+    )
+    
+    return {"message": "Schedule updated"}
+
+# Statistics
+@api_router.get("/stats/doctor")
+async def get_doctor_stats(current_user: User = Depends(get_current_user)):
+    if current_user.user_type != "doctor":
+        raise HTTPException(status_code=403, detail="Only doctors can view doctor stats")
+    
+    # Get doctor profile
+    doctor_profile = await db.doctor_profiles.find_one({"user_id": current_user.id}, {"_id": 0})
+    if not doctor_profile:
+        raise HTTPException(status_code=404, detail="Doctor profile not found")
+    
+    doctor_id = doctor_profile['id']
+    
+    # Get appointments
+    appointments = await db.appointments.find({"doctor_id": doctor_id}, {"_id": 0}).to_list(1000)
+    
+    total_appointments = len(appointments)
+    completed = sum(1 for apt in appointments if apt.get('status') == 'completed')
+    pending = sum(1 for apt in appointments if apt.get('status') == 'pending')
+    cancelled = sum(1 for apt in appointments if apt.get('status') == 'cancelled')
+    
+    # Calculate revenue (assuming consultation_fee per completed appointment)
+    consultation_fee = doctor_profile.get('consultation_fee', 0) or 0
+    total_revenue = completed * consultation_fee
+    
+    # Monthly data
+    monthly_data = {}
+    for apt in appointments:
+        if isinstance(apt.get('created_at'), str):
+            month = apt['created_at'][:7]  # YYYY-MM
+            if month not in monthly_data:
+                monthly_data[month] = 0
+            if apt.get('status') == 'completed':
+                monthly_data[month] += 1
+    
+    return {
+        "total_appointments": total_appointments,
+        "completed": completed,
+        "pending": pending,
+        "cancelled": cancelled,
+        "total_revenue": total_revenue,
+        "average_rating": doctor_profile.get('rating', 0),
+        "total_reviews": doctor_profile.get('total_reviews', 0),
+        "monthly_appointments": monthly_data
+    }
+
+@api_router.get("/stats/patient")
+async def get_patient_stats(current_user: User = Depends(get_current_user)):
+    if current_user.user_type != "patient":
+        raise HTTPException(status_code=403, detail="Only patients can view patient stats")
+    
+    appointments = await db.appointments.find({"patient_id": current_user.id}, {"_id": 0}).to_list(1000)
+    
+    total_appointments = len(appointments)
+    completed = sum(1 for apt in appointments if apt.get('status') == 'completed')
+    upcoming = sum(1 for apt in appointments if apt.get('status') in ['pending', 'confirmed'])
+    
+    # Get loyalty points
+    loyalty = await db.loyalty_points.find_one({"user_id": current_user.id}, {"_id": 0})
+    total_points = loyalty.get('total_points', 0) if loyalty else 0
+    
+    return {
+        "total_appointments": total_appointments,
+        "completed": completed,
+        "upcoming": upcoming,
+        "loyalty_points": total_points,
+        "loyalty_level": loyalty.get('level', 'Bronze') if loyalty else 'Bronze'
+    }
+
+# Blog
+@api_router.get("/blog")
+async def get_blog_posts(category: Optional[str] = None, limit: int = 10):
+    query = {"published": True}
+    if category:
+        query["category"] = category
+    
+    posts = await db.blog_posts.find(query, {"_id": 0}).sort("created_at", -1).limit(limit).to_list(limit)
+    for post in posts:
+        if isinstance(post.get('created_at'), str):
+            post['created_at'] = datetime.fromisoformat(post['created_at'])
+    return posts
+
+@api_router.get("/blog/{post_id}")
+async def get_blog_post(post_id: str):
+    post = await db.blog_posts.find_one({"id": post_id}, {"_id": 0})
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found")
+    
+    # Increment views
+    await db.blog_posts.update_one({"id": post_id}, {"$inc": {"views": 1}})
+    post['views'] = post.get('views', 0) + 1
+    
+    if isinstance(post.get('created_at'), str):
+        post['created_at'] = datetime.fromisoformat(post['created_at'])
+    return post
+
+@api_router.post("/blog")
+async def create_blog_post(
+    post_data: Dict[str, Any],
+    current_user: User = Depends(get_current_user)
+):
+    if current_user.user_type != "doctor":
+        raise HTTPException(status_code=403, detail="Only doctors can create blog posts")
+    
+    post = BlogPost(
+        author_id=current_user.id,
+        author_name=current_user.name,
+        **post_data
+    )
+    post_dict = post.model_dump()
+    post_dict['created_at'] = post_dict['created_at'].isoformat()
+    await db.blog_posts.insert_one(post_dict)
+    return post
+
+# Emergency Contacts
+@api_router.get("/emergency/contacts")
+async def get_emergency_contacts():
+    contacts = [
+        {"name": "SAMU", "number": "15", "country": "France", "type": "medical"},
+        {"name": "Pompiers", "number": "18", "country": "France", "type": "fire"},
+        {"name": "Police", "number": "17", "country": "France", "type": "police"},
+        {"name": "Urgences Europe", "number": "112", "country": "Europe", "type": "all"},
+        {"name": "SOS Médecins", "number": "3624", "country": "France", "type": "medical"},
+        {"name": "Centre Anti-Poison", "number": "01 40 05 48 48", "country": "France", "type": "poison"},
+    ]
+    return contacts
+
+# Medical Assistant (symptom checker)
+@api_router.post("/assistant/suggest")
+async def suggest_specialty(data: Dict[str, Any]):
+    symptoms = data.get('symptoms', '').lower()
+    
+    suggestions = []
+    
+    symptom_mapping = {
+        "coeur|palpitation|douleur poitrine|essoufflement": {"specialty": "Cardiologie", "medical_type": "moderne"},
+        "peau|bouton|acné|eczéma|psoriasis|démangeaison": {"specialty": "Dermatologie", "medical_type": "moderne"},
+        "yeux|vision|vue|lunettes|cataracte": {"specialty": "Ophtalmologie", "medical_type": "moderne"},
+        "femme|grossesse|règles|contraception|ménopause": {"specialty": "Gynécologie", "medical_type": "moderne"},
+        "enfant|bébé|vaccination|croissance": {"specialty": "Pédiatrie", "medical_type": "moderne"},
+        "dos|articulation|fracture|entorse|genou": {"specialty": "Orthopédie", "medical_type": "moderne"},
+        "tête|migraine|cerveau|épilepsie|parkinson": {"specialty": "Neurologie", "medical_type": "moderne"},
+        "stress|anxiété|dépression|insomnie|panique": {"specialty": "Psychiatrie", "medical_type": "moderne"},
+        "estomac|ventre|diarrhée|constipation|digestion": {"specialty": "Gastro-entérologie", "medical_type": "moderne"},
+        "poumon|toux|asthme|bronchite|respiration": {"specialty": "Pneumologie", "medical_type": "moderne"},
+        "diabète|thyroïde|hormone|poids": {"specialty": "Endocrinologie", "medical_type": "moderne"},
+        "plantes|naturel|traditionnel": {"specialty": "Phytothérapeute Africain", "medical_type": "traditionnel_africain"},
+        "massage|détente|relaxation": {"specialty": "Masseur Bien-être", "medical_type": "bien_etre"},
+        "nutrition|régime|alimentation": {"specialty": "Nutritionniste", "medical_type": "bien_etre"},
+        "yoga|meditation|stress": {"specialty": "Sophrologue", "medical_type": "bien_etre"},
+    }
+    
+    for pattern, spec in symptom_mapping.items():
+        if any(keyword in symptoms for keyword in pattern.split('|')):
+            suggestions.append(spec)
+    
+    if not suggestions:
+        suggestions.append({"specialty": "Médecine Générale", "medical_type": "moderne"})
+    
+    return {"suggestions": suggestions, "message": "Voici les spécialités recommandées"}
+
+# Review Reply
+@api_router.post("/reviews/{review_id}/reply")
+async def reply_to_review(
+    review_id: str,
+    data: Dict[str, str],
+    current_user: User = Depends(get_current_user)
+):
+    if current_user.user_type != "doctor":
+        raise HTTPException(status_code=403, detail="Only doctors can reply to reviews")
+    
+    reply = data.get('reply', '')
+    await db.reviews.update_one(
+        {"id": review_id},
+        {"$set": {
+            "doctor_reply": reply,
+            "reply_date": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    return {"message": "Reply added successfully"}
+
 app.include_router(api_router)
 
 app.add_middleware(
