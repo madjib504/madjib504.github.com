@@ -80,35 +80,35 @@ const Loyalty = () => {
         </div>
 
         {/* Current Status */}
-        <Card className=\"mb-8 shadow-xl border-2 ${getLevelColor(loyalty?.level || 'Bronze')} border-opacity-20\">
-          <CardContent className=\"p-8\">
-            <div className=\"flex items-center justify-between flex-wrap gap-4\">
-              <div className=\"flex items-center gap-4\">
-                <div className=\"text-6xl\">{getLevelIcon(loyalty?.level || 'Bronze')}</div>
+        <Card className={"mb-8 shadow-xl border-2 " + getLevelColor(loyalty?.level || 'Bronze') + " border-opacity-20"}>
+          <CardContent className="p-8">
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <div className="flex items-center gap-4">
+                <div className="text-6xl">{getLevelIcon(loyalty?.level || 'Bronze')}</div>
                 <div>
-                  <p className=\"text-sm text-stone-600\">Niveau actuel</p>
-                  <h2 className=\"text-3xl font-bold text-green-900\">{loyalty?.level || 'Bronze'}</h2>
+                  <p className="text-sm text-stone-600">Niveau actuel</p>
+                  <h2 className="text-3xl font-bold text-green-900">{loyalty?.level || 'Bronze'}</h2>
                 </div>
               </div>
-              <div className=\"text-right\">
-                <p className=\"text-sm text-stone-600\">Total de points</p>
-                <h2 className=\"text-4xl font-bold text-green-900\">{loyalty?.total_points || 0}</h2>
-                <p className=\"text-xs text-stone-500 mt-1\">1€ dépensé = 10 points</p>
+              <div className="text-right">
+                <p className="text-sm text-stone-600">Total de points</p>
+                <h2 className="text-4xl font-bold text-green-900">{loyalty?.total_points || 0}</h2>
+                <p className="text-xs text-stone-500 mt-1">1€ dépensé = 10 points</p>
               </div>
             </div>
 
             {/* Progress Bar */}
-            <div className=\"mt-6\">
-              <div className=\"flex justify-between text-sm mb-2\">
+            <div className="mt-6">
+              <div className="flex justify-between text-sm mb-2">
                 <span>Bronze (0)</span>
                 <span>Argent (1000)</span>
                 <span>Or (2000)</span>
                 <span>Platine (5000)</span>
               </div>
-              <div className=\"h-3 bg-stone-200 rounded-full overflow-hidden\">
+              <div className="h-3 bg-stone-200 rounded-full overflow-hidden">
                 <div 
-                  className=\"h-full ${getLevelColor(loyalty?.level || 'Bronze')} transition-all duration-500\"
-                  style={{ width: `${Math.min((loyalty?.total_points || 0) / 5000 * 100, 100)}%` }}
+                  className={getLevelColor(loyalty?.level || 'Bronze') + " h-full transition-all duration-500"}
+                  style={{ width: Math.min((loyalty?.total_points || 0) / 5000 * 100, 100) + '%' }}
                 ></div>
               </div>
             </div>
