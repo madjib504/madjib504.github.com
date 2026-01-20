@@ -116,6 +116,8 @@ function App() {
               </ProtectedRoute>
             } />
           </Routes>
+          <SOSButton />
+          <MedicalAssistant />
           <Toaster />
         </BrowserRouter>
       </div>
