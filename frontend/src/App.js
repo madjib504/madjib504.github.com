@@ -17,6 +17,7 @@ import WellnessPacks from '@/pages/WellnessPacks';
 import MedicalRecord from '@/pages/MedicalRecord';
 import Loyalty from '@/pages/Loyalty';
 import Blog from '@/pages/Blog';
+import MobileMoneyPayment from '@/pages/MobileMoneyPayment';
 import { SOSButton, MedicalAssistant } from '@/components/HealthTools';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -79,6 +80,7 @@ function App() {
             <Route path="/search" element={<Search />} />
             <Route path="/wellness-packs" element={<WellnessPacks />} />
             <Route path="/blog" element={<Blog />} />
+            <Route path="/payment" element={<MobileMoneyPayment />} />
             <Route path="/medical-record" element={
               <ProtectedRoute allowedTypes={['patient']}>
                 <MedicalRecord />
