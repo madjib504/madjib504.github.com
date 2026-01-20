@@ -70,13 +70,13 @@ const Loyalty = () => {
   }
 
   return (
-    <div data-testid=\"loyalty-page\" className=\"min-h-screen bg-gradient-to-br from-stone-50 via-purple-50 to-yellow-50 pt-24 px-6 pb-12\">
-      <div className=\"max-w-6xl mx-auto\">
-        <div className=\"text-center mb-12\">
-          <h1 className=\"text-4xl md:text-5xl font-serif font-bold text-green-900 mb-2\">
+    <div data-testid="loyalty-page" className="min-h-screen bg-gradient-to-br from-stone-50 via-purple-50 to-yellow-50 pt-24 px-6 pb-12">
+      <div className="max-w-6xl mx-auto">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl md:text-5xl font-serif font-bold text-green-900 mb-2">
             Programme HealthPoints
           </h1>
-          <p className=\"text-lg text-stone-600\">Gagnez des points à chaque achat et profitez de récompenses exclusives</p>
+          <p className="text-lg text-stone-600">Gagnez des points à chaque achat et profitez de récompenses exclusives</p>
         </div>
 
         {/* Current Status */}
