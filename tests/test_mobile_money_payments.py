@@ -220,15 +220,13 @@ class TestPaymentSimulation:
             json=payment_data
         )
         assert init_response.status_code == 200
-        reference_id = init_response.json()["reference_id"]
+        init_data = init_response.json()
+        reference_id = init_data["reference_id"]
         
-        # Verify initial status is PENDING
-        status_response = requests.get(
-            f"{BASE_URL}/api/payments/status/{reference_id}?provider=mtn_momo"
-        )
-        assert status_response.json()["status"] == "PENDING", "Initial status should be PENDING"
+        # Verify initial response shows PENDING
+        assert init_data["status"] == "PENDING", "Initial status from initiate should be PENDING"
         
-        # Simulate confirmation
+        # Simulate confirmation (before checking status, as sandbox auto-confirms on status check)
         confirm_response = requests.post(
             f"{BASE_URL}/api/payments/simulate-confirmation/{reference_id}"
         )
@@ -240,7 +238,7 @@ class TestPaymentSimulation:
         assert data["status"] == "SUCCESSFUL", "Status should be SUCCESSFUL after confirmation"
         assert "confirmed_at" in data, "Response should contain confirmed_at timestamp"
         
-        # Verify status changed
+        # Verify status is SUCCESSFUL
         final_status = requests.get(
             f"{BASE_URL}/api/payments/status/{reference_id}?provider=mtn_momo"
         )
