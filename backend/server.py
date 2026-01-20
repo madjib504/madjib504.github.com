@@ -153,6 +153,8 @@ class Review(BaseModel):
     patient_name: str
     rating: float
     comment: Optional[str] = None
+    doctor_reply: Optional[str] = None
+    reply_date: Optional[datetime] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class Specialty(BaseModel):
@@ -160,6 +162,54 @@ class Specialty(BaseModel):
     id: str
     name: str
     medical_type: str  # 'moderne' or 'traditionnel'
+
+# New Models for Phase 1
+
+class MedicalRecord(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    patient_id: str
+    allergies: Optional[List[str]] = None
+    chronic_conditions: Optional[List[str]] = None
+    medications: Optional[List[Dict[str, str]]] = None
+    vaccinations: Optional[List[Dict[str, str]]] = None
+    blood_type: Optional[str] = None
+    emergency_contact: Optional[Dict[str, str]] = None
+    documents: Optional[List[Dict[str, str]]] = None  # {name, url, type, date}
+    notes: Optional[str] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class LoyaltyPoints(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    user_id: str
+    total_points: int = 0
+    level: str = "Bronze"  # Bronze, Argent, Or, Platine
+    transactions: Optional[List[Dict[str, Any]]] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class DoctorSchedule(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    doctor_id: str
+    date: str  # YYYY-MM-DD
+    slots: List[Dict[str, Any]]  # [{time: "09:00", available: true}]
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class BlogPost(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    title: str
+    content: str
+    author_id: str
+    author_name: str
+    category: str  # nutrition, exercice, prévention, etc.
+    image: Optional[str] = None
+    tags: Optional[List[str]] = None
+    views: int = 0
+    published: bool = True
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 # ============ Utility Functions ============
 
