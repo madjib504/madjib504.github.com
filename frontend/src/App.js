@@ -78,6 +78,17 @@ function App() {
             <Route path="/register" element={user ? <Navigate to="/" /> : <Register setUser={setUser} />} />
             <Route path="/search" element={<Search />} />
             <Route path="/wellness-packs" element={<WellnessPacks />} />
+            <Route path="/blog" element={<Blog />} />
+            <Route path="/medical-record" element={
+              <ProtectedRoute allowedTypes={['patient']}>
+                <MedicalRecord />
+              </ProtectedRoute>
+            } />
+            <Route path="/loyalty" element={
+              <ProtectedRoute>
+                <Loyalty />
+              </ProtectedRoute>
+            } />
             <Route path="/doctor/:doctorId" element={<DoctorProfilePage />} />
             <Route path="/patient/dashboard" element={
               <ProtectedRoute allowedTypes={['patient']}>
