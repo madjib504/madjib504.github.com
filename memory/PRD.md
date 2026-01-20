@@ -46,6 +46,7 @@ La fonctionnalité principale est de connecter les patients avec les spécialist
 ### Phase 2 - Intégrations Tierces 🔄
 *In Progress - January 2025*
 - ✅ **Mobile Money** (Orange Money, MTN MoMo, Moov) - Mode Sandbox
+- ✅ **Historique Paiements** dans le dashboard patient (avec statistiques)
 - ⏳ Téléconsultation Vidéo (Twilio)
 - ⏳ Notifications SMS/Email
 - ⏳ Paiement Carte Bancaire (Stripe)
