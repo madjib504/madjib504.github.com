@@ -1125,6 +1125,347 @@ async def reply_to_review(
     
     return {"message": "Reply added successfully"}
 
+
+# ============ PHASE 2 - Mobile Money Payments ============
+
+class PaymentInitiationRequest(BaseModel):
+    provider: str  # orange_money, mtn_momo, moov
+    amount: float
+    phone_number: str
+    email: str
+    description: str
+    customer_name: str
+    service_type: str  # consultation, product, equipment
+
+
+class PaymentDocument(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    reference_id: str
+    external_id: str
+    provider: str
+    amount: float
+    currency: str = "XOF"
+    phone_number: str
+    email: str
+    description: str
+    customer_name: str
+    service_type: str
+    status: str = "PENDING"
+    webhook_received: bool = False
+    provider_response: Optional[Dict[str, Any]] = None
+    error_message: Optional[str] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    confirmed_at: Optional[datetime] = None
+
+
+@api_router.post("/payments/initiate")
+async def initiate_payment(request: PaymentInitiationRequest):
+    """
+    Initier un paiement Mobile Money (Orange Money, MTN MoMo, Moov).
+    En mode sandbox, simule le flux de paiement.
+    """
+    from services.mobile_money import mobile_money_service, MobileMoneyPaymentRequest, PaymentProvider
+    
+    try:
+        # Valider le provider
+        valid_providers = ['orange_money', 'mtn_momo', 'moov']
+        if request.provider not in valid_providers:
+            raise HTTPException(status_code=400, detail=f"Fournisseur invalide. Utilisez: {', '.join(valid_providers)}")
+        
+        # Créer la requête de paiement
+        payment_request = MobileMoneyPaymentRequest(
+            provider=PaymentProvider(request.provider),
+            amount=request.amount,
+            currency="XOF",
+            phone_number=request.phone_number,
+            description=request.description,
+            customer_name=request.customer_name,
+            service_type=request.service_type
+        )
+        
+        # Initier le paiement
+        result = await mobile_money_service.initiate_payment(payment_request)
+        
+        if not result.get("success"):
+            raise HTTPException(status_code=500, detail=result.get("error", "Erreur lors de l'initiation du paiement"))
+        
+        # Sauvegarder en base de données
+        payment_doc = {
+            "id": str(uuid.uuid4()),
+            "reference_id": result.get("reference_id"),
+            "external_id": result.get("external_id"),
+            "provider": request.provider,
+            "amount": request.amount,
+            "currency": result.get("currency", "XOF"),
+            "phone_number": request.phone_number,
+            "email": request.email,
+            "description": request.description,
+            "customer_name": request.customer_name,
+            "service_type": request.service_type,
+            "status": "PENDING",
+            "webhook_received": False,
+            "provider_response": result,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        await db.payments.insert_one(payment_doc)
+        
+        return {
+            "success": True,
+            "reference_id": result.get("reference_id"),
+            "status": "PENDING",
+            "message": result.get("message", "Paiement initié avec succès"),
+            "sandbox_mode": result.get("sandbox_mode", False),
+            "provider": request.provider,
+            "amount": request.amount,
+            "currency": result.get("currency", "XOF")
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Erreur paiement: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/payments/status/{reference_id}")
+async def get_payment_status(reference_id: str, provider: Optional[str] = None):
+    """
+    Récupérer le statut d'un paiement par sa référence.
+    """
+    from services.mobile_money import mobile_money_service, PaymentProvider
+    
+    try:
+        # Chercher en base de données
+        payment = await db.payments.find_one(
+            {"reference_id": reference_id},
+            {"_id": 0}
+        )
+        
+        if not payment:
+            raise HTTPException(status_code=404, detail="Paiement non trouvé")
+        
+        # Si le paiement est en attente, vérifier auprès du provider
+        if payment.get("status") == "PENDING" and not payment.get("webhook_received"):
+            provider_enum = PaymentProvider(payment.get("provider", provider))
+            verification = await mobile_money_service.verify_payment(reference_id, provider_enum)
+            
+            if verification.get("success") and verification.get("status") != "PENDING":
+                # Mettre à jour le statut
+                new_status = verification.get("status")
+                await db.payments.update_one(
+                    {"reference_id": reference_id},
+                    {
+                        "$set": {
+                            "status": new_status,
+                            "updated_at": datetime.now(timezone.utc).isoformat(),
+                            "confirmed_at": datetime.now(timezone.utc).isoformat() if new_status == "SUCCESSFUL" else None
+                        }
+                    }
+                )
+                payment["status"] = new_status
+        
+        return {
+            "success": True,
+            "reference_id": reference_id,
+            "status": payment.get("status", "UNKNOWN"),
+            "amount": payment.get("amount"),
+            "currency": payment.get("currency", "XOF"),
+            "provider": payment.get("provider"),
+            "customer_name": payment.get("customer_name"),
+            "service_type": payment.get("service_type"),
+            "created_at": payment.get("created_at"),
+            "confirmed_at": payment.get("confirmed_at")
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Erreur vérification paiement: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/payments/webhook/{provider}")
+async def payment_webhook(provider: str, request_data: Dict[str, Any]):
+    """
+    Endpoint webhook pour recevoir les notifications des providers.
+    """
+    from services.mobile_money import mobile_money_service, PaymentProvider
+    
+    try:
+        valid_providers = ['orange', 'mtn', 'moov']
+        provider_map = {
+            'orange': PaymentProvider.ORANGE_MONEY,
+            'mtn': PaymentProvider.MTN_MOMO,
+            'moov': PaymentProvider.MOOV
+        }
+        
+        if provider not in valid_providers:
+            raise HTTPException(status_code=400, detail="Provider invalide")
+        
+        # Traiter le webhook
+        result = mobile_money_service.process_webhook(provider_map[provider], request_data)
+        
+        if result.get("success"):
+            reference_id = result.get("reference_id")
+            status = result.get("status")
+            
+            # Mettre à jour en base de données
+            await db.payments.update_one(
+                {"reference_id": reference_id},
+                {
+                    "$set": {
+                        "status": status,
+                        "webhook_received": True,
+                        "webhook_payload": request_data,
+                        "updated_at": datetime.now(timezone.utc).isoformat(),
+                        "confirmed_at": datetime.now(timezone.utc).isoformat() if status == "SUCCESSFUL" else None
+                    }
+                }
+            )
+            
+            logging.info(f"Webhook traité: {reference_id} - {status}")
+            return {"status": "success"}
+        else:
+            logging.error(f"Erreur webhook: {result.get('error')}")
+            return {"status": "error", "message": result.get("error")}
+            
+    except Exception as e:
+        logging.error(f"Erreur traitement webhook: {str(e)}")
+        return {"status": "error", "message": str(e)}
+
+
+@api_router.post("/payments/simulate-confirmation/{reference_id}")
+async def simulate_payment_confirmation(reference_id: str):
+    """
+    [SANDBOX UNIQUEMENT] Simuler la confirmation d'un paiement.
+    Utilisé pour tester le flux complet sans vrai paiement.
+    """
+    try:
+        payment = await db.payments.find_one({"reference_id": reference_id}, {"_id": 0})
+        
+        if not payment:
+            raise HTTPException(status_code=404, detail="Paiement non trouvé")
+        
+        if payment.get("status") != "PENDING":
+            raise HTTPException(status_code=400, detail=f"Le paiement est déjà {payment.get('status')}")
+        
+        # Simuler la confirmation
+        await db.payments.update_one(
+            {"reference_id": reference_id},
+            {
+                "$set": {
+                    "status": "SUCCESSFUL",
+                    "webhook_received": True,
+                    "updated_at": datetime.now(timezone.utc).isoformat(),
+                    "confirmed_at": datetime.now(timezone.utc).isoformat()
+                }
+            }
+        )
+        
+        # Ajouter des points de fidélité si c'est un paiement pour une consultation
+        if payment.get("service_type") == "consultation":
+            # Trouver l'utilisateur par email
+            user = await db.users.find_one({"email": payment.get("email")}, {"_id": 0})
+            if user:
+                # Ajouter 10 points par euro/franc dépensé
+                points_to_add = int(payment.get("amount", 0) / 100)  # 1 point par 100 XOF
+                await db.loyalty_points.update_one(
+                    {"user_id": user.get("id")},
+                    {
+                        "$inc": {"total_points": points_to_add},
+                        "$push": {
+                            "transactions": {
+                                "points": points_to_add,
+                                "reason": f"Paiement consultation - {payment.get('description', '')}",
+                                "date": datetime.now(timezone.utc).isoformat()
+                            }
+                        }
+                    },
+                    upsert=True
+                )
+        
+        return {
+            "success": True,
+            "message": "[SANDBOX] Paiement confirmé avec succès",
+            "reference_id": reference_id,
+            "status": "SUCCESSFUL",
+            "confirmed_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Erreur simulation: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/payments/history")
+async def get_payment_history(current_user: User = Depends(get_current_user)):
+    """
+    Récupérer l'historique des paiements de l'utilisateur connecté.
+    """
+    try:
+        # Chercher par email de l'utilisateur
+        payments = await db.payments.find(
+            {"email": current_user.email},
+            {"_id": 0}
+        ).sort("created_at", -1).to_list(100)
+        
+        return {
+            "success": True,
+            "payments": payments,
+            "total": len(payments)
+        }
+        
+    except Exception as e:
+        logging.error(f"Erreur historique paiements: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/payments/providers")
+async def get_available_providers():
+    """
+    Récupérer la liste des fournisseurs de paiement Mobile Money disponibles.
+    """
+    return {
+        "providers": [
+            {
+                "id": "orange_money",
+                "name": "Orange Money",
+                "logo": "https://images.unsplash.com/photo-1611532736597-de2d4265fba3?w=100",
+                "description": "Paiement via Orange Money",
+                "countries": ["Sénégal", "Mali", "Côte d'Ivoire", "Cameroun", "Madagascar"],
+                "currency": "XOF",
+                "available": True
+            },
+            {
+                "id": "mtn_momo",
+                "name": "MTN Mobile Money",
+                "logo": "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=100",
+                "description": "Paiement via MTN Mobile Money",
+                "countries": ["Cameroun", "Ghana", "Uganda", "Rwanda", "Côte d'Ivoire"],
+                "currency": "XOF",
+                "available": True
+            },
+            {
+                "id": "moov",
+                "name": "Moov Money",
+                "logo": "https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=100",
+                "description": "Paiement via Moov Money",
+                "countries": ["Bénin", "Togo", "Côte d'Ivoire", "Niger"],
+                "currency": "XOF",
+                "available": True
+            }
+        ],
+        "sandbox_mode": True,
+        "note": "En mode sandbox, les paiements sont simulés. Pour activer les vrais paiements, configurez les clés API des fournisseurs."
+    }
+
+
 app.include_router(api_router)
 
 app.add_middleware(
