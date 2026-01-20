@@ -117,22 +117,22 @@ const Loyalty = () => {
 
         {/* Rewards */}
         <h2 className=\"text-3xl font-serif font-bold text-green-900 mb-6\">Récompenses Disponibles</h2>
-        <div className=\"grid md:grid-cols-2 lg:grid-cols-3 gap-6\">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {rewards.map((reward) => {
             const canRedeem = (loyalty?.total_points || 0) >= reward.points;
             return (
-              <Card key={reward.id} className={`hover:shadow-lg transition-all ${canRedeem ? 'border-green-500' : ''}`}>
-                <CardContent className=\"p-6\">
-                  <div className=\"flex items-center justify-between mb-4\">
-                    <Gift className={`w-10 h-10 ${canRedeem ? 'text-green-600' : 'text-stone-400'}`} />
+              <Card key={reward.id} className={"hover:shadow-lg transition-all " + (canRedeem ? 'border-green-500' : '')}>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <Gift className={"w-10 h-10 " + (canRedeem ? 'text-green-600' : 'text-stone-400')} />
                     <Badge className={canRedeem ? 'bg-green-600' : 'bg-stone-400'}>
                       {reward.points} pts
                     </Badge>
                   </div>
-                  <h3 className=\"text-lg font-bold text-stone-900 mb-2\">{reward.name}</h3>
+                  <h3 className="text-lg font-bold text-stone-900 mb-2">{reward.name}</h3>
                   <Button 
                     disabled={!canRedeem}
-                    className=\"w-full mt-4 rounded-full\"
+                    className="w-full mt-4 rounded-full"
                   >
                     {canRedeem ? 'Échanger' : 'Pas assez de points'}
                   </Button>
