@@ -79,7 +79,6 @@ const Loyalty = () => {
           <p className="text-lg text-stone-600">Gagnez des points à chaque achat et profitez de récompenses exclusives</p>
         </div>
 
-        {/* Current Status */}
         <Card className={"mb-8 shadow-xl border-2 " + getLevelColor(loyalty?.level || 'Bronze') + " border-opacity-20"}>
           <CardContent className="p-8">
             <div className="flex items-center justify-between flex-wrap gap-4">
@@ -97,7 +96,6 @@ const Loyalty = () => {
               </div>
             </div>
 
-            {/* Progress Bar */}
             <div className="mt-6">
               <div className="flex justify-between text-sm mb-2">
                 <span>Bronze (0)</span>
@@ -115,8 +113,7 @@ const Loyalty = () => {
           </CardContent>
         </Card>
 
-        {/* Rewards */}
-        <h2 className=\"text-3xl font-serif font-bold text-green-900 mb-6\">Récompenses Disponibles</h2>
+        <h2 className="text-3xl font-serif font-bold text-green-900 mb-6">Récompenses Disponibles</h2>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {rewards.map((reward) => {
             const canRedeem = (loyalty?.total_points || 0) >= reward.points;
@@ -142,33 +139,32 @@ const Loyalty = () => {
           })}
         </div>
 
-        {/* How it works */}
-        <Card className=\"mt-12\">
+        <Card className="mt-12">
           <CardHeader>
             <CardTitle>Comment ça marche ?</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className=\"grid md:grid-cols-3 gap-6\">
-              <div className=\"text-center\">
-                <div className=\"bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4\">
-                  <Trophy className=\"w-8 h-8 text-green-900\" />
+            <div className="grid md:grid-cols-3 gap-6">
+              <div className="text-center">
+                <div className="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Trophy className="w-8 h-8 text-green-900" />
                 </div>
-                <h4 className=\"font-bold mb-2\">1. Gagnez des points</h4>
-                <p className=\"text-sm text-stone-600\">Chaque euro dépensé = 10 points</p>
+                <h4 className="font-bold mb-2">1. Gagnez des points</h4>
+                <p className="text-sm text-stone-600">Chaque euro dépensé = 10 points</p>
               </div>
-              <div className=\"text-center\">
-                <div className=\"bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4\">
-                  <Star className=\"w-8 h-8 text-purple-900\" />
+              <div className="text-center">
+                <div className="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Star className="w-8 h-8 text-purple-900" />
                 </div>
-                <h4 className=\"font-bold mb-2\">2. Montez de niveau</h4>
-                <p className=\"text-sm text-stone-600\">Plus de points = meilleurs avantages</p>
+                <h4 className="font-bold mb-2">2. Montez de niveau</h4>
+                <p className="text-sm text-stone-600">Plus de points = meilleurs avantages</p>
               </div>
-              <div className=\"text-center\">
-                <div className=\"bg-yellow-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4\">
-                  <Award className=\"w-8 h-8 text-yellow-900\" />
+              <div className="text-center">
+                <div className="bg-yellow-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Award className="w-8 h-8 text-yellow-900" />
                 </div>
-                <h4 className=\"font-bold mb-2\">3. Profitez !</h4>
-                <p className=\"text-sm text-stone-600\">Échangez vos points contre des récompenses</p>
+                <h4 className="font-bold mb-2">3. Profitez !</h4>
+                <p className="text-sm text-stone-600">Échangez vos points contre des récompenses</p>
               </div>
             </div>
           </CardContent>
