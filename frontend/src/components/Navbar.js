@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Stethoscope, User, LogOut, MessageSquare, Calendar } from 'lucide-react';
+import { Stethoscope, User, LogOut, MessageSquare, Calendar, Smartphone } from 'lucide-react';
 
 const Navbar = ({ user, setUser }) => {
   const navigate = useNavigate();
@@ -31,6 +31,10 @@ const Navbar = ({ user, setUser }) => {
             </Link>
             <Link to="/blog" className="text-stone-600 hover:text-green-900 font-medium transition-colors" data-testid="nav-blog-link">
               Blog
+            </Link>
+            <Link to="/payment" className="text-stone-600 hover:text-green-900 font-medium transition-colors flex items-center gap-1" data-testid="nav-payment-link">
+              <Smartphone className="w-4 h-4" />
+              Paiement
             </Link>
             
             {user ? (
