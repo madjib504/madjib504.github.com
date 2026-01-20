@@ -27,11 +27,22 @@ const Navbar = ({ user, setUser }) => {
               Rechercher
             </Link>
             <Link to="/wellness-packs" className="text-stone-600 hover:text-green-900 font-medium transition-colors" data-testid="nav-packs-link">
-              Packs Bien-être
+              Packs
+            </Link>
+            <Link to="/blog" className="text-stone-600 hover:text-green-900 font-medium transition-colors" data-testid="nav-blog-link">
+              Blog
             </Link>
             
             {user ? (
               <>
+                <Link to="/loyalty" className="text-stone-600 hover:text-green-900 transition-colors" data-testid="nav-loyalty-link">
+                  🏆
+                </Link>
+                {user.user_type === 'patient' && (
+                  <Link to="/medical-record" className="text-stone-600 hover:text-green-900 transition-colors" data-testid="nav-medical-link">
+                    📋
+                  </Link>
+                )}
                 <Link to="/chat" className="text-stone-600 hover:text-green-900 transition-colors" data-testid="nav-chat-link">
                   <MessageSquare className="w-5 h-5" />
                 </Link>
