@@ -14,6 +14,10 @@ import DoctorDashboard from '@/pages/DoctorDashboard';
 import Chat from '@/pages/Chat';
 import VideoCall from '@/pages/VideoCall';
 import WellnessPacks from '@/pages/WellnessPacks';
+import MedicalRecord from '@/pages/MedicalRecord';
+import Loyalty from '@/pages/Loyalty';
+import Blog from '@/pages/Blog';
+import { SOSButton, MedicalAssistant } from '@/components/HealthTools';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 export const API = `${BACKEND_URL}/api`;
