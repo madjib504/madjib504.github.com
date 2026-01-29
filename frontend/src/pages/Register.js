@@ -18,7 +18,9 @@ const Register = ({ setUser }) => {
     password: '',
     user_type: 'patient',
     medical_type: '',
-    specialties: []
+    specialties: [],
+    custom_corps: '',
+    custom_specialties: ''
   });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -50,15 +52,43 @@ const Register = ({ setUser }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (formData.user_type === 'doctor' && (!formData.medical_type || formData.specialties.length === 0)) {
-      toast.error('Veuillez sélectionner un type de médecine et au moins une spécialité');
-      return;
+    // Validation pour "Corps de Santé"
+    if (formData.user_type === 'doctor') {
+      if (!formData.medical_type) {
+        toast.error('Veuillez sélectionner un type de médecine');
+        return;
+      }
+      
+      // Si "Autre" est sélectionné, vérifier le champ personnalisé
+      if (formData.medical_type === 'autre') {
+        if (!formData.custom_corps || formData.custom_corps.trim() === '') {
+          toast.error('Veuillez préciser votre corps de santé');
+          return;
+        }
+      } else {
+        // Sinon, vérifier qu'au moins une spécialité est sélectionnée
+        if (formData.specialties.length === 0) {
+          toast.error('Veuillez sélectionner au moins une spécialité');
+          return;
+        }
+      }
     }
 
     setLoading(true);
 
     try {
-      const response = await axios.post(`${API}/auth/register`, formData);
+      // Préparer les données à envoyer
+      const dataToSend = { ...formData };
+      
+      // Si "Autre", utiliser custom_corps comme nom de spécialité
+      if (formData.medical_type === 'autre') {
+        dataToSend.specialties = formData.custom_specialties 
+          ? formData.custom_specialties.split(',').map(s => s.trim()).filter(s => s)
+          : [formData.custom_corps];
+        dataToSend.custom_medical_type = formData.custom_corps;
+      }
+      
+      const response = await axios.post(`${API}/auth/register`, dataToSend);
       localStorage.setItem('token', response.data.token);
       setUser(response.data.user);
       toast.success('Inscription réussie !');
