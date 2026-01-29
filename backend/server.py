@@ -32,6 +32,11 @@ SECRET_KEY = os.environ.get('JWT_SECRET_KEY', 'your-secret-key-change-in-product
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 days
 
+# Admin credentials (changez ces valeurs !)
+ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin')
+ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'HealthFusion2025!')
+ADMIN_SECRET = os.environ.get('ADMIN_SECRET', 'admin-secret-key-change-me')
+
 security = HTTPBearer()
 
 # Create the main app
