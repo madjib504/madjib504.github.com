@@ -185,19 +185,32 @@ const Search = () => {
                     </SelectContent>
                   </Select>
 
-                  <Select value={filters.specialty} onValueChange={(value) => handleFilterChange('specialty', value)}>
-                    <SelectTrigger className="bg-white border-stone-200 rounded-lg h-10 text-sm" data-testid="filter-specialty">
-                      <SelectValue placeholder="Spécialité" />
-                    </SelectTrigger>
-                    <SelectContent className="max-h-64">
-                      <SelectItem value="all">Toutes</SelectItem>
-                      {filteredSpecialties.map((specialty) => (
-                        <SelectItem key={specialty.id} value={specialty.name}>
-                          {specialty.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  {/* Champ de recherche personnalisé pour "Autre" */}
+                  {filters.medical_type === 'autre' ? (
+                    <Input
+                      type="text"
+                      placeholder="Ex: Orthophoniste, Podologue..."
+                      value={filters.custom_search || ''}
+                      onChange={(e) => handleFilterChange('custom_search', e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                      className="bg-white border-stone-200 rounded-lg h-10 text-sm"
+                      data-testid="filter-custom-search"
+                    />
+                  ) : (
+                    <Select value={filters.specialty} onValueChange={(value) => handleFilterChange('specialty', value)}>
+                      <SelectTrigger className="bg-white border-stone-200 rounded-lg h-10 text-sm" data-testid="filter-specialty">
+                        <SelectValue placeholder="Spécialité" />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-64">
+                        <SelectItem value="all">Toutes</SelectItem>
+                        {filteredSpecialties.map((specialty) => (
+                          <SelectItem key={specialty.id} value={specialty.name}>
+                            {specialty.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
 
                   <Input
                     type="text"
