@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import '@/App.css';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { Toaster } from '@/components/ui/sonner';
 import Navbar from '@/components/Navbar';
@@ -25,6 +25,82 @@ export const API = `${BACKEND_URL}/api`;
 
 export const AuthContext = React.createContext();
 
+// Layout component to conditionally show navbar
+const Layout = ({ children, user, setUser }) => {
+  const location = useLocation();
+  const isHomePage = location.pathname === '/';
+  
+  return (
+    <>
+      {!isHomePage && <Navbar user={user} setUser={setUser} />}
+      {children}
+      {!isHomePage && <SOSButton />}
+      {!isHomePage && <MedicalAssistant />}
+    </>
+  );
+};
+
+function AppContent({ user, setUser, loading }) {
+  const ProtectedRoute = ({ children, allowedTypes }) => {
+    if (loading) return <div className="min-h-screen flex items-center justify-center">Chargement...</div>;
+    if (!user) return <Navigate to="/login" />;
+    if (allowedTypes && !allowedTypes.includes(user.user_type)) {
+      return <Navigate to="/" />;
+    }
+    return children;
+  };
+
+  return (
+    <Layout user={user} setUser={setUser}>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/login" element={user ? <Navigate to="/" /> : <Login setUser={setUser} />} />
+        <Route path="/register" element={user ? <Navigate to="/" /> : <Register setUser={setUser} />} />
+        <Route path="/search" element={<Search />} />
+        <Route path="/wellness-packs" element={<WellnessPacks />} />
+        <Route path="/blog" element={<Blog />} />
+        <Route path="/payment" element={<MobileMoneyPayment />} />
+        <Route path="/medical-record" element={
+          <ProtectedRoute allowedTypes={['patient']}>
+            <MedicalRecord />
+          </ProtectedRoute>
+        } />
+        <Route path="/loyalty" element={
+          <ProtectedRoute>
+            <Loyalty />
+          </ProtectedRoute>
+        } />
+        <Route path="/doctor/:doctorId" element={<DoctorProfilePage />} />
+        <Route path="/patient/dashboard" element={
+          <ProtectedRoute allowedTypes={['patient']}>
+            <PatientDashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/doctor/dashboard" element={
+          <ProtectedRoute allowedTypes={['doctor']}>
+            <DoctorDashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/chat" element={
+          <ProtectedRoute>
+            <Chat />
+          </ProtectedRoute>
+        } />
+        <Route path="/chat/:userId" element={
+          <ProtectedRoute>
+            <Chat />
+          </ProtectedRoute>
+        } />
+        <Route path="/video-call/:roomId" element={
+          <ProtectedRoute>
+            <VideoCall />
+          </ProtectedRoute>
+        } />
+      </Routes>
+    </Layout>
+  );
+}
+
 function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -48,15 +124,6 @@ function App() {
     }
   }, []);
 
-  const ProtectedRoute = ({ children, allowedTypes }) => {
-    if (loading) return <div className="min-h-screen flex items-center justify-center">Chargement...</div>;
-    if (!user) return <Navigate to="/login" />;
-    if (allowedTypes && !allowedTypes.includes(user.user_type)) {
-      return <Navigate to="/" />;
-    }
-    return children;
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-stone-50">
@@ -72,54 +139,7 @@ function App() {
     <AuthContext.Provider value={{ user, setUser }}>
       <div className="App">
         <BrowserRouter>
-          <Navbar user={user} setUser={setUser} />
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/login" element={user ? <Navigate to="/" /> : <Login setUser={setUser} />} />
-            <Route path="/register" element={user ? <Navigate to="/" /> : <Register setUser={setUser} />} />
-            <Route path="/search" element={<Search />} />
-            <Route path="/wellness-packs" element={<WellnessPacks />} />
-            <Route path="/blog" element={<Blog />} />
-            <Route path="/payment" element={<MobileMoneyPayment />} />
-            <Route path="/medical-record" element={
-              <ProtectedRoute allowedTypes={['patient']}>
-                <MedicalRecord />
-              </ProtectedRoute>
-            } />
-            <Route path="/loyalty" element={
-              <ProtectedRoute>
-                <Loyalty />
-              </ProtectedRoute>
-            } />
-            <Route path="/doctor/:doctorId" element={<DoctorProfilePage />} />
-            <Route path="/patient/dashboard" element={
-              <ProtectedRoute allowedTypes={['patient']}>
-                <PatientDashboard />
-              </ProtectedRoute>
-            } />
-            <Route path="/doctor/dashboard" element={
-              <ProtectedRoute allowedTypes={['doctor']}>
-                <DoctorDashboard />
-              </ProtectedRoute>
-            } />
-            <Route path="/chat" element={
-              <ProtectedRoute>
-                <Chat />
-              </ProtectedRoute>
-            } />
-            <Route path="/chat/:userId" element={
-              <ProtectedRoute>
-                <Chat />
-              </ProtectedRoute>
-            } />
-            <Route path="/video-call/:roomId" element={
-              <ProtectedRoute>
-                <VideoCall />
-              </ProtectedRoute>
-            } />
-          </Routes>
-          <SOSButton />
-          <MedicalAssistant />
+          <AppContent user={user} setUser={setUser} loading={loading} />
           <Toaster />
         </BrowserRouter>
       </div>
@@ -127,5 +147,4 @@ function App() {
   );
 }
 
-import React from 'react';
 export default App;
