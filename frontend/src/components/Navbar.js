@@ -1,6 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Stethoscope, User, LogOut, MessageSquare, Calendar, Smartphone } from 'lucide-react';
+import { NotificationBell } from '@/components/NotificationCenter';
 
 const Navbar = ({ user, setUser }) => {
   const navigate = useNavigate();
@@ -19,34 +20,29 @@ const Navbar = ({ user, setUser }) => {
             <div className="bg-green-900 text-white p-2 rounded-lg group-hover:bg-green-800 transition-colors">
               <Stethoscope className="w-6 h-6" />
             </div>
-            <span className="text-2xl font-serif font-bold text-green-900">HealthFusion</span>
+            <span className="text-2xl font-serif font-bold text-green-900 hidden sm:inline">HealthFusion</span>
           </Link>
 
-          <div className="flex items-center gap-6">
-            <Link to="/search" className="text-stone-600 hover:text-green-900 font-medium transition-colors" data-testid="nav-search-link">
+          <div className="flex items-center gap-4 md:gap-6">
+            <Link to="/search" className="text-stone-600 hover:text-green-900 font-medium transition-colors text-sm md:text-base" data-testid="nav-search-link">
               Rechercher
             </Link>
-            <Link to="/wellness-packs" className="text-stone-600 hover:text-green-900 font-medium transition-colors" data-testid="nav-packs-link">
+            <Link to="/wellness-packs" className="text-stone-600 hover:text-green-900 font-medium transition-colors hidden md:block" data-testid="nav-packs-link">
               Packs
             </Link>
-            <Link to="/blog" className="text-stone-600 hover:text-green-900 font-medium transition-colors" data-testid="nav-blog-link">
+            <Link to="/blog" className="text-stone-600 hover:text-green-900 font-medium transition-colors hidden md:block" data-testid="nav-blog-link">
               Blog
             </Link>
-            <Link to="/payment" className="text-stone-600 hover:text-green-900 font-medium transition-colors flex items-center gap-1" data-testid="nav-payment-link">
+            <Link to="/payment" className="text-stone-600 hover:text-green-900 font-medium transition-colors flex items-center gap-1 hidden md:flex" data-testid="nav-payment-link">
               <Smartphone className="w-4 h-4" />
               Paiement
             </Link>
             
             {user ? (
               <>
-                <Link to="/loyalty" className="text-stone-600 hover:text-green-900 transition-colors" data-testid="nav-loyalty-link">
-                  🏆
-                </Link>
-                {user.user_type === 'patient' && (
-                  <Link to="/medical-record" className="text-stone-600 hover:text-green-900 transition-colors" data-testid="nav-medical-link">
-                    📋
-                  </Link>
-                )}
+                {/* Notification Bell */}
+                <NotificationBell />
+                
                 <Link to="/chat" className="text-stone-600 hover:text-green-900 transition-colors" data-testid="nav-chat-link">
                   <MessageSquare className="w-5 h-5" />
                 </Link>
@@ -56,23 +52,24 @@ const Navbar = ({ user, setUser }) => {
                 <Button
                   onClick={handleLogout}
                   variant="ghost"
+                  size="sm"
                   className="text-stone-600 hover:text-green-900 hover:bg-green-50 rounded-lg"
                   data-testid="nav-logout-btn"
                 >
-                  <LogOut className="w-5 h-5 mr-2" />
-                  Déconnexion
+                  <LogOut className="w-4 h-4 md:mr-2" />
+                  <span className="hidden md:inline">Déconnexion</span>
                 </Button>
               </>
             ) : (
               <>
                 <Link to="/login" data-testid="nav-login-link">
-                  <Button variant="ghost" className="text-stone-600 hover:text-green-900 hover:bg-green-50 rounded-lg">
-                    <User className="w-4 h-4 mr-2" />
-                    Connexion
+                  <Button variant="ghost" size="sm" className="text-stone-600 hover:text-green-900 hover:bg-green-50 rounded-lg">
+                    <User className="w-4 h-4 md:mr-2" />
+                    <span className="hidden md:inline">Connexion</span>
                   </Button>
                 </Link>
                 <Link to="/register" data-testid="nav-register-link">
-                  <Button className="bg-green-900 text-white hover:bg-green-800 rounded-full px-6">
+                  <Button size="sm" className="bg-green-900 text-white hover:bg-green-800 rounded-full px-4 md:px-6">
                     S'inscrire
                   </Button>
                 </Link>
