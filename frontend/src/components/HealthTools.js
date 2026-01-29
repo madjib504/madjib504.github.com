@@ -4,7 +4,7 @@ import { API } from '@/App';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { AlertCircle, Phone, Stethoscope } from 'lucide-react';
+import { AlertCircle, Phone, Stethoscope, Hospital, Shield, Flame, Heart, AlertTriangle } from 'lucide-react';
 
 export const SOSButton = () => {
   const [open, setOpen] = useState(false);
@@ -25,6 +25,52 @@ export const SOSButton = () => {
     }
   };
 
+  const getIcon = (type) => {
+    switch (type) {
+      case 'Urgences Médicales':
+        return <Hospital className="w-5 h-5 text-red-500" />;
+      case 'Incendie & Secours':
+      case 'Secours':
+        return <Flame className="w-5 h-5 text-orange-500" />;
+      case 'Police':
+      case 'Gendarmerie':
+        return <Shield className="w-5 h-5 text-blue-500" />;
+      case 'Hôpital':
+        return <Hospital className="w-5 h-5 text-green-500" />;
+      case 'Humanitaire':
+        return <Heart className="w-5 h-5 text-red-500" />;
+      case 'Intoxication':
+        return <AlertTriangle className="w-5 h-5 text-yellow-500" />;
+      default:
+        return <Phone className="w-5 h-5 text-gray-500" />;
+    }
+  };
+
+  const getTypeColor = (type) => {
+    switch (type) {
+      case 'Urgences Médicales':
+        return 'bg-red-50 border-red-200';
+      case 'Incendie & Secours':
+      case 'Secours':
+        return 'bg-orange-50 border-orange-200';
+      case 'Police':
+      case 'Gendarmerie':
+        return 'bg-blue-50 border-blue-200';
+      case 'Hôpital':
+        return 'bg-green-50 border-green-200';
+      case 'Humanitaire':
+        return 'bg-pink-50 border-pink-200';
+      case 'Intoxication':
+        return 'bg-yellow-50 border-yellow-200';
+      default:
+        return 'bg-stone-50 border-stone-200';
+    }
+  };
+
+  // Séparer les numéros courts (urgences) des numéros longs (hôpitaux)
+  const urgentContacts = contacts.filter(c => c.number.length <= 3);
+  const otherContacts = contacts.filter(c => c.number.length > 3);
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -35,33 +81,75 @@ export const SOSButton = () => {
           <AlertCircle className="w-8 h-8" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="bg-white">
+      <DialogContent className="bg-white max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl font-serif text-red-600 flex items-center gap-2">
             <AlertCircle className="w-6 h-6" />
-            Urgences Médicales
+            Urgences - Côte d'Ivoire
           </DialogTitle>
         </DialogHeader>
-        <div className="space-y-3">
-          {contacts.map((contact, idx) => (
-            <a
-              key={idx}
-              href={`tel:${contact.number}`}
-              className="flex items-center justify-between p-4 bg-stone-50 rounded-lg hover:bg-stone-100 transition-colors"
-            >
-              <div>
-                <p className="font-bold text-stone-900">{contact.name}</p>
-                <p className="text-sm text-stone-600">{contact.type}</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <Phone className="w-5 h-5 text-green-600" />
-                <span className="text-xl font-bold text-green-900">{contact.number}</span>
-              </div>
-            </a>
-          ))}
+        
+        {/* Numéros d'urgence courts */}
+        <div className="mb-4">
+          <h3 className="text-sm font-semibold text-stone-500 uppercase tracking-wider mb-3">
+            Numéros d'urgence
+          </h3>
+          <div className="grid grid-cols-2 gap-2">
+            {urgentContacts.map((contact, idx) => (
+              <a
+                key={idx}
+                href={`tel:${contact.number}`}
+                className={`flex flex-col items-center p-4 rounded-xl border-2 ${getTypeColor(contact.type)} hover:shadow-md transition-all`}
+                data-testid={`emergency-${contact.number}`}
+              >
+                <div className="mb-2">
+                  {getIcon(contact.type)}
+                </div>
+                <span className="text-2xl font-bold text-stone-900">{contact.number}</span>
+                <span className="text-sm font-medium text-stone-700 text-center">{contact.name}</span>
+                <span className="text-xs text-stone-500 text-center mt-1">{contact.type}</span>
+              </a>
+            ))}
+          </div>
         </div>
-        <p className="text-sm text-stone-500 text-center mt-4">
-          En cas d'urgence vitale, appelez immédiatement le 15 ou le 112
+
+        {/* Autres numéros utiles */}
+        <div>
+          <h3 className="text-sm font-semibold text-stone-500 uppercase tracking-wider mb-3">
+            Hôpitaux & Services
+          </h3>
+          <div className="space-y-2">
+            {otherContacts.map((contact, idx) => (
+              <a
+                key={idx}
+                href={`tel:${contact.number.replace(/\s/g, '')}`}
+                className={`flex items-center justify-between p-3 rounded-lg border ${getTypeColor(contact.type)} hover:shadow-md transition-all`}
+                data-testid={`contact-${idx}`}
+              >
+                <div className="flex items-center gap-3">
+                  {getIcon(contact.type)}
+                  <div>
+                    <p className="font-semibold text-stone-900 text-sm">{contact.name}</p>
+                    <p className="text-xs text-stone-500">{contact.description}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Phone className="w-4 h-4 text-green-600" />
+                  <span className="font-bold text-green-800 text-sm">{contact.number}</span>
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-sm text-red-800 text-center font-medium">
+            🚨 En cas d'urgence vitale, appelez le <strong>185</strong> (SAMU) ou le <strong>180</strong> (Pompiers)
+          </p>
+        </div>
+
+        <p className="text-xs text-stone-400 text-center mt-2">
+          Cliquez sur un numéro pour appeler directement
         </p>
       </DialogContent>
     </Dialog>
