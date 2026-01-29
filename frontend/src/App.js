@@ -19,6 +19,7 @@ import Loyalty from '@/pages/Loyalty';
 import Blog from '@/pages/Blog';
 import MobileMoneyPayment from '@/pages/MobileMoneyPayment';
 import BookingPage from '@/pages/BookingPage';
+import AdminDashboard from '@/pages/AdminDashboard';
 import { SOSButton, MedicalAssistant } from '@/components/HealthTools';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
