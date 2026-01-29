@@ -1466,6 +1466,417 @@ async def get_available_providers():
     }
 
 
+# ============ FONCTIONNALITÉS AVANCÉES ============
+
+# === 1. Système de Réservation Amélioré ===
+
+class TimeSlot(BaseModel):
+    time: str  # Format: "09:00"
+    available: bool = True
+    booked_by: Optional[str] = None
+
+class DoctorAvailability(BaseModel):
+    doctor_id: str
+    date: str  # Format: "2025-01-20"
+    slots: List[TimeSlot]
+
+class BookingRequest(BaseModel):
+    doctor_id: str
+    date: str  # Format: "2025-01-20"
+    time: str  # Format: "09:00"
+    reason: Optional[str] = None
+    payment_method: Optional[str] = None  # orange_money, mtn_momo, moov
+
+
+@api_router.get("/doctors/{doctor_id}/availability")
+async def get_doctor_availability(doctor_id: str, date: Optional[str] = None):
+    """
+    Récupérer les créneaux disponibles d'un médecin pour une date donnée.
+    Si aucune date n'est spécifiée, retourne les 7 prochains jours.
+    """
+    doctor = await db.doctor_profiles.find_one({"id": doctor_id}, {"_id": 0})
+    if not doctor:
+        raise HTTPException(status_code=404, detail="Médecin non trouvé")
+    
+    # Définir les heures de travail par défaut (9h-18h)
+    default_hours = ["09:00", "09:30", "10:00", "10:30", "11:00", "11:30", 
+                     "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00", "17:30"]
+    
+    if date:
+        dates_to_check = [date]
+    else:
+        # Générer les 7 prochains jours
+        today = datetime.now(timezone.utc).date()
+        dates_to_check = [(today + timedelta(days=i)).isoformat() for i in range(7)]
+    
+    availability = []
+    for check_date in dates_to_check:
+        # Récupérer les rendez-vous existants pour cette date
+        existing_appointments = await db.appointments.find({
+            "doctor_id": doctor_id,
+            "appointment_date": check_date,
+            "status": {"$nin": ["cancelled"]}
+        }, {"_id": 0}).to_list(100)
+        
+        booked_times = [apt.get("appointment_time") for apt in existing_appointments]
+        
+        slots = []
+        for hour in default_hours:
+            is_available = hour not in booked_times
+            slots.append({
+                "time": hour,
+                "available": is_available,
+                "booked_by": None if is_available else "reserved"
+            })
+        
+        # Calculer le jour de la semaine en français
+        date_obj = datetime.fromisoformat(check_date)
+        days_fr = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
+        day_name = days_fr[date_obj.weekday()]
+        
+        availability.append({
+            "date": check_date,
+            "day_name": day_name,
+            "slots": slots,
+            "available_count": sum(1 for s in slots if s["available"])
+        })
+    
+    return {
+        "doctor_id": doctor_id,
+        "doctor_name": doctor.get("name"),
+        "consultation_fee": doctor.get("consultation_fee", 0),
+        "availability": availability
+    }
+
+
+@api_router.post("/bookings")
+async def create_booking(
+    booking: BookingRequest,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Créer une réservation avec un créneau spécifique.
+    """
+    if current_user.user_type != "patient":
+        raise HTTPException(status_code=403, detail="Seuls les patients peuvent réserver")
+    
+    # Vérifier que le médecin existe
+    doctor = await db.doctor_profiles.find_one({"id": booking.doctor_id}, {"_id": 0})
+    if not doctor:
+        raise HTTPException(status_code=404, detail="Médecin non trouvé")
+    
+    # Vérifier que le créneau est disponible
+    existing = await db.appointments.find_one({
+        "doctor_id": booking.doctor_id,
+        "appointment_date": booking.date,
+        "appointment_time": booking.time,
+        "status": {"$nin": ["cancelled"]}
+    })
+    
+    if existing:
+        raise HTTPException(status_code=400, detail="Ce créneau n'est plus disponible")
+    
+    # Créer le rendez-vous
+    appointment_id = str(uuid.uuid4())
+    appointment = {
+        "id": appointment_id,
+        "patient_id": current_user.id,
+        "patient_name": current_user.name,
+        "patient_email": current_user.email,
+        "doctor_id": booking.doctor_id,
+        "doctor_name": doctor.get("name"),
+        "appointment_date": booking.date,
+        "appointment_time": booking.time,
+        "reason": booking.reason,
+        "status": "pending",
+        "consultation_fee": doctor.get("consultation_fee", 0),
+        "payment_method": booking.payment_method,
+        "payment_status": "pending",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.appointments.insert_one(appointment)
+    
+    # Créer une notification pour le médecin
+    notification = {
+        "id": str(uuid.uuid4()),
+        "user_id": doctor.get("user_id"),
+        "type": "new_booking",
+        "title": "Nouvelle réservation",
+        "message": f"{current_user.name} a réservé un rendez-vous le {booking.date} à {booking.time}",
+        "data": {"appointment_id": appointment_id},
+        "read": False,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.notifications.insert_one(notification)
+    
+    return {
+        "success": True,
+        "appointment_id": appointment_id,
+        "message": "Réservation créée avec succès",
+        "appointment": {
+            "id": appointment_id,
+            "doctor_name": doctor.get("name"),
+            "date": booking.date,
+            "time": booking.time,
+            "fee": doctor.get("consultation_fee", 0),
+            "status": "pending"
+        }
+    }
+
+
+# === 2. Géolocalisation ===
+
+class LocationUpdate(BaseModel):
+    latitude: float
+    longitude: float
+    address: Optional[str] = None
+
+
+@api_router.put("/doctors/location")
+async def update_doctor_location(
+    location: LocationUpdate,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Mettre à jour la position géographique d'un médecin.
+    """
+    if current_user.user_type != "doctor":
+        raise HTTPException(status_code=403, detail="Réservé aux professionnels")
+    
+    await db.doctor_profiles.update_one(
+        {"user_id": current_user.id},
+        {
+            "$set": {
+                "coordinates": {
+                    "latitude": location.latitude,
+                    "longitude": location.longitude
+                },
+                "address": location.address
+            }
+        }
+    )
+    
+    return {"success": True, "message": "Position mise à jour"}
+
+
+@api_router.get("/doctors/nearby")
+async def get_nearby_doctors(
+    latitude: float,
+    longitude: float,
+    radius_km: float = 10.0,
+    medical_type: Optional[str] = None,
+    specialty: Optional[str] = None
+):
+    """
+    Trouver les médecins proches d'une position donnée.
+    Utilise la formule de Haversine pour calculer la distance.
+    """
+    import math
+    
+    def haversine_distance(lat1, lon1, lat2, lon2):
+        R = 6371  # Rayon de la Terre en km
+        phi1 = math.radians(lat1)
+        phi2 = math.radians(lat2)
+        delta_phi = math.radians(lat2 - lat1)
+        delta_lambda = math.radians(lon2 - lon1)
+        
+        a = math.sin(delta_phi/2)**2 + math.cos(phi1) * math.cos(phi2) * math.sin(delta_lambda/2)**2
+        c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
+        
+        return R * c
+    
+    # Récupérer tous les médecins avec coordonnées
+    query = {"coordinates": {"$exists": True}}
+    if medical_type:
+        query["medical_type"] = medical_type
+    if specialty:
+        query["specialties"] = {"$in": [specialty]}
+    
+    all_doctors = await db.doctor_profiles.find(query, {"_id": 0}).to_list(500)
+    
+    # Filtrer par distance
+    nearby_doctors = []
+    for doctor in all_doctors:
+        coords = doctor.get("coordinates", {})
+        doc_lat = coords.get("latitude")
+        doc_lon = coords.get("longitude")
+        
+        if doc_lat and doc_lon:
+            distance = haversine_distance(latitude, longitude, doc_lat, doc_lon)
+            if distance <= radius_km:
+                doctor["distance_km"] = round(distance, 2)
+                nearby_doctors.append(doctor)
+    
+    # Trier par distance
+    nearby_doctors.sort(key=lambda x: x.get("distance_km", 999))
+    
+    return {
+        "count": len(nearby_doctors),
+        "radius_km": radius_km,
+        "doctors": nearby_doctors
+    }
+
+
+# === 3. Notifications ===
+
+class NotificationCreate(BaseModel):
+    user_id: str
+    type: str  # new_booking, reminder, message, promotion
+    title: str
+    message: str
+    data: Optional[Dict[str, Any]] = None
+
+
+@api_router.get("/notifications")
+async def get_notifications(
+    current_user: User = Depends(get_current_user),
+    unread_only: bool = False
+):
+    """
+    Récupérer les notifications de l'utilisateur.
+    """
+    query = {"user_id": current_user.id}
+    if unread_only:
+        query["read"] = False
+    
+    notifications = await db.notifications.find(
+        query, {"_id": 0}
+    ).sort("created_at", -1).to_list(50)
+    
+    unread_count = await db.notifications.count_documents({
+        "user_id": current_user.id,
+        "read": False
+    })
+    
+    return {
+        "notifications": notifications,
+        "unread_count": unread_count
+    }
+
+
+@api_router.patch("/notifications/{notification_id}/read")
+async def mark_notification_read(
+    notification_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Marquer une notification comme lue.
+    """
+    await db.notifications.update_one(
+        {"id": notification_id, "user_id": current_user.id},
+        {"$set": {"read": True, "read_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    return {"success": True}
+
+
+@api_router.patch("/notifications/read-all")
+async def mark_all_notifications_read(current_user: User = Depends(get_current_user)):
+    """
+    Marquer toutes les notifications comme lues.
+    """
+    await db.notifications.update_many(
+        {"user_id": current_user.id, "read": False},
+        {"$set": {"read": True, "read_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    return {"success": True}
+
+
+@api_router.post("/notifications/send-reminder")
+async def send_appointment_reminders():
+    """
+    Envoyer des rappels pour les rendez-vous du lendemain.
+    À appeler via un cron job.
+    """
+    tomorrow = (datetime.now(timezone.utc) + timedelta(days=1)).date().isoformat()
+    
+    appointments = await db.appointments.find({
+        "appointment_date": tomorrow,
+        "status": {"$nin": ["cancelled", "completed"]}
+    }, {"_id": 0}).to_list(500)
+    
+    reminders_sent = 0
+    for apt in appointments:
+        # Notification pour le patient
+        patient_notification = {
+            "id": str(uuid.uuid4()),
+            "user_id": apt.get("patient_id"),
+            "type": "reminder",
+            "title": "Rappel de rendez-vous",
+            "message": f"Vous avez rendez-vous demain à {apt.get('appointment_time')} avec {apt.get('doctor_name', 'votre médecin')}",
+            "data": {"appointment_id": apt.get("id")},
+            "read": False,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.notifications.insert_one(patient_notification)
+        
+        # Notification pour le médecin
+        doctor = await db.doctor_profiles.find_one({"id": apt.get("doctor_id")}, {"_id": 0})
+        if doctor:
+            doctor_notification = {
+                "id": str(uuid.uuid4()),
+                "user_id": doctor.get("user_id"),
+                "type": "reminder",
+                "title": "Rappel de rendez-vous",
+                "message": f"Vous avez rendez-vous demain à {apt.get('appointment_time')} avec {apt.get('patient_name', 'un patient')}",
+                "data": {"appointment_id": apt.get("id")},
+                "read": False,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            }
+            await db.notifications.insert_one(doctor_notification)
+        
+        reminders_sent += 1
+    
+    return {"success": True, "reminders_sent": reminders_sent}
+
+
+# === Seed sample doctors with coordinates ===
+@api_router.post("/seed/doctors-with-location")
+async def seed_doctors_with_location():
+    """
+    Ajouter des coordonnées GPS aux médecins existants pour les tests de géolocalisation.
+    Coordonnées basées sur des villes africaines.
+    """
+    # Coordonnées de quelques villes africaines
+    cities = [
+        {"name": "Douala", "lat": 4.0511, "lon": 9.7679},
+        {"name": "Yaoundé", "lat": 3.8480, "lon": 11.5021},
+        {"name": "Abidjan", "lat": 5.3600, "lon": -4.0083},
+        {"name": "Dakar", "lat": 14.7167, "lon": -17.4677},
+        {"name": "Lagos", "lat": 6.5244, "lon": 3.3792},
+        {"name": "Accra", "lat": 5.6037, "lon": -0.1870},
+        {"name": "Bamako", "lat": 12.6392, "lon": -8.0029},
+        {"name": "Conakry", "lat": 9.6412, "lon": -13.5784},
+    ]
+    
+    doctors = await db.doctor_profiles.find({}, {"_id": 0}).to_list(100)
+    updated = 0
+    
+    for i, doctor in enumerate(doctors):
+        city = cities[i % len(cities)]
+        # Ajouter une légère variation pour disperser les médecins
+        import random
+        lat_variation = random.uniform(-0.05, 0.05)
+        lon_variation = random.uniform(-0.05, 0.05)
+        
+        await db.doctor_profiles.update_one(
+            {"id": doctor["id"]},
+            {
+                "$set": {
+                    "coordinates": {
+                        "latitude": city["lat"] + lat_variation,
+                        "longitude": city["lon"] + lon_variation
+                    },
+                    "city": city["name"],
+                    "address": f"Quartier Centre, {city['name']}"
+                }
+            }
+        )
+        updated += 1
+    
+    return {"success": True, "updated": updated}
+
+
 app.include_router(api_router)
 
 app.add_middleware(
