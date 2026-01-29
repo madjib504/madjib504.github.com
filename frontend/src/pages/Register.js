@@ -197,6 +197,7 @@ const Register = ({ setUser }) => {
                       <SelectItem value="service_domicile" className="cursor-pointer hover:bg-stone-100">Service à Domicile</SelectItem>
                       <SelectItem value="materiel_medical" className="cursor-pointer hover:bg-stone-100">Matériel Médical</SelectItem>
                       <SelectItem value="boutique_bien_etre" className="cursor-pointer hover:bg-stone-100">Boutique Bien-être</SelectItem>
+                      <SelectItem value="autre" className="cursor-pointer hover:bg-stone-100">Autre</SelectItem>
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-stone-500">Choisissez votre type de pratique médicale</p>
