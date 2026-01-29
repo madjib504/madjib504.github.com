@@ -23,7 +23,8 @@ const Search = () => {
     min_rating: searchParams.get('min_rating') || '',
     home_service: searchParams.get('home_service') || '',
     structure_type: searchParams.get('structure_type') || '',
-    keyword: searchParams.get('keyword') || searchParams.get('q') || ''
+    keyword: searchParams.get('keyword') || searchParams.get('q') || '',
+    custom_search: searchParams.get('custom_search') || ''
   });
   const navigate = useNavigate();
 
@@ -46,7 +47,16 @@ const Search = () => {
     try {
       const params = new URLSearchParams();
       if (filters.specialty && filters.specialty !== 'all') params.append('specialty', filters.specialty);
-      if (filters.medical_type && filters.medical_type !== 'all') params.append('medical_type', filters.medical_type);
+      
+      // Si "Autre" est sélectionné, utiliser custom_search comme mot-clé de recherche
+      if (filters.medical_type === 'autre') {
+        if (filters.custom_search) {
+          params.append('custom_search', filters.custom_search);
+        }
+      } else if (filters.medical_type && filters.medical_type !== 'all') {
+        params.append('medical_type', filters.medical_type);
+      }
+      
       if (filters.location) params.append('location', filters.location);
       if (filters.min_rating && filters.min_rating !== 'all') params.append('min_rating', filters.min_rating);
       if (filters.home_service && filters.home_service !== 'all') params.append('home_service', filters.home_service);
