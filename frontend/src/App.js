@@ -103,6 +103,7 @@ function AppContent({ user, setUser, loading }) {
             <VideoCall />
           </ProtectedRoute>
         } />
+        <Route path="/admin" element={<AdminDashboard />} />
       </Routes>
     </Layout>
   );
