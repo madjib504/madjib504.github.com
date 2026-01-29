@@ -1888,6 +1888,269 @@ async def seed_doctors_with_location():
     return {"success": True, "updated": updated}
 
 
+# ============ TABLEAU DE BORD ADMIN ============
+
+class AdminLogin(BaseModel):
+    username: str
+    password: str
+
+
+def verify_admin_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Vérifier le token admin."""
+    try:
+        token = credentials.credentials
+        payload = jwt.decode(token, ADMIN_SECRET, algorithms=[ALGORITHM])
+        if payload.get("role") != "admin":
+            raise HTTPException(status_code=403, detail="Accès admin requis")
+        return payload
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token admin expiré")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Token admin invalide")
+
+
+@api_router.post("/admin/login")
+async def admin_login(data: AdminLogin):
+    """
+    Connexion administrateur.
+    """
+    if data.username != ADMIN_USERNAME or data.password != ADMIN_PASSWORD:
+        raise HTTPException(status_code=401, detail="Identifiants admin incorrects")
+    
+    # Créer un token admin
+    token_data = {
+        "role": "admin",
+        "username": data.username,
+        "exp": datetime.now(timezone.utc) + timedelta(hours=24)
+    }
+    token = jwt.encode(token_data, ADMIN_SECRET, algorithm=ALGORITHM)
+    
+    return {
+        "success": True,
+        "token": token,
+        "message": "Connexion admin réussie"
+    }
+
+
+@api_router.get("/admin/verify")
+async def verify_admin(admin: dict = Depends(verify_admin_token)):
+    """Vérifier si le token admin est valide."""
+    return {"valid": True, "username": admin.get("username")}
+
+
+@api_router.get("/admin/stats")
+async def get_admin_stats(admin: dict = Depends(verify_admin_token)):
+    """
+    Statistiques globales pour le tableau de bord admin.
+    """
+    # Compter les utilisateurs
+    total_users = await db.users.count_documents({})
+    total_patients = await db.users.count_documents({"user_type": "patient"})
+    total_doctors = await db.users.count_documents({"user_type": "doctor"})
+    
+    # Compter les rendez-vous
+    total_appointments = await db.appointments.count_documents({})
+    pending_appointments = await db.appointments.count_documents({"status": "pending"})
+    
+    # Compter les paiements
+    total_payments = await db.payments.count_documents({})
+    successful_payments = await db.payments.count_documents({"status": "SUCCESSFUL"})
+    
+    # Calculer le revenu total
+    payments = await db.payments.find({"status": "SUCCESSFUL"}, {"_id": 0, "amount": 1}).to_list(1000)
+    total_revenue = sum(p.get("amount", 0) for p in payments)
+    
+    # Inscriptions récentes (7 derniers jours)
+    week_ago = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
+    recent_users = await db.users.count_documents({
+        "created_at": {"$gte": week_ago}
+    })
+    
+    return {
+        "users": {
+            "total": total_users,
+            "patients": total_patients,
+            "doctors": total_doctors,
+            "recent_7_days": recent_users
+        },
+        "appointments": {
+            "total": total_appointments,
+            "pending": pending_appointments
+        },
+        "payments": {
+            "total": total_payments,
+            "successful": successful_payments,
+            "revenue": total_revenue
+        }
+    }
+
+
+@api_router.get("/admin/users")
+async def get_all_users(
+    admin: dict = Depends(verify_admin_token),
+    user_type: Optional[str] = None,
+    search: Optional[str] = None,
+    skip: int = 0,
+    limit: int = 50
+):
+    """
+    Récupérer tous les utilisateurs (patients et médecins).
+    """
+    query = {}
+    if user_type and user_type != "all":
+        query["user_type"] = user_type
+    if search:
+        query["$or"] = [
+            {"name": {"$regex": search, "$options": "i"}},
+            {"email": {"$regex": search, "$options": "i"}}
+        ]
+    
+    total = await db.users.count_documents(query)
+    users = await db.users.find(query, {"_id": 0, "password": 0}).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
+    
+    return {
+        "total": total,
+        "users": users,
+        "page": skip // limit + 1,
+        "pages": (total + limit - 1) // limit
+    }
+
+
+@api_router.get("/admin/users/{user_id}")
+async def get_user_detail(user_id: str, admin: dict = Depends(verify_admin_token)):
+    """
+    Détails complets d'un utilisateur.
+    """
+    user = await db.users.find_one({"id": user_id}, {"_id": 0, "password": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
+    
+    # Si c'est un médecin, récupérer son profil
+    doctor_profile = None
+    if user.get("user_type") == "doctor":
+        doctor_profile = await db.doctor_profiles.find_one({"user_id": user_id}, {"_id": 0})
+    
+    # Récupérer ses rendez-vous
+    if user.get("user_type") == "patient":
+        appointments = await db.appointments.find({"patient_id": user_id}, {"_id": 0}).to_list(50)
+    else:
+        appointments = await db.appointments.find({"doctor_id": user_id}, {"_id": 0}).to_list(50)
+    
+    # Récupérer ses paiements
+    payments = await db.payments.find({"email": user.get("email")}, {"_id": 0}).to_list(50)
+    
+    return {
+        "user": user,
+        "doctor_profile": doctor_profile,
+        "appointments": appointments,
+        "payments": payments
+    }
+
+
+@api_router.delete("/admin/users/{user_id}")
+async def delete_user(user_id: str, admin: dict = Depends(verify_admin_token)):
+    """
+    Supprimer un utilisateur.
+    """
+    user = await db.users.find_one({"id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
+    
+    # Supprimer de la collection users
+    await db.users.delete_one({"id": user_id})
+    
+    # Si c'est un médecin, supprimer aussi son profil
+    if user.get("user_type") == "doctor":
+        await db.doctor_profiles.delete_one({"user_id": user_id})
+    
+    return {"success": True, "message": "Utilisateur supprimé"}
+
+
+@api_router.patch("/admin/users/{user_id}/verify")
+async def verify_user(user_id: str, admin: dict = Depends(verify_admin_token)):
+    """
+    Vérifier/Valider un utilisateur (badge vérifié).
+    """
+    result = await db.users.update_one(
+        {"id": user_id},
+        {"$set": {"verified": True}}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
+    
+    # Si c'est un médecin, mettre à jour aussi son profil
+    await db.doctor_profiles.update_one(
+        {"user_id": user_id},
+        {"$set": {"documents_verified": True}}
+    )
+    
+    return {"success": True, "message": "Utilisateur vérifié"}
+
+
+@api_router.get("/admin/appointments")
+async def get_all_appointments(
+    admin: dict = Depends(verify_admin_token),
+    status: Optional[str] = None,
+    skip: int = 0,
+    limit: int = 50
+):
+    """
+    Récupérer tous les rendez-vous.
+    """
+    query = {}
+    if status and status != "all":
+        query["status"] = status
+    
+    total = await db.appointments.count_documents(query)
+    appointments = await db.appointments.find(query, {"_id": 0}).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
+    
+    return {
+        "total": total,
+        "appointments": appointments
+    }
+
+
+@api_router.get("/admin/payments")
+async def get_all_payments(
+    admin: dict = Depends(verify_admin_token),
+    status: Optional[str] = None,
+    skip: int = 0,
+    limit: int = 50
+):
+    """
+    Récupérer tous les paiements.
+    """
+    query = {}
+    if status and status != "all":
+        query["status"] = status
+    
+    total = await db.payments.count_documents(query)
+    payments = await db.payments.find(query, {"_id": 0}).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
+    
+    # Calculer le total
+    total_amount = sum(p.get("amount", 0) for p in payments if p.get("status") == "SUCCESSFUL")
+    
+    return {
+        "total": total,
+        "payments": payments,
+        "total_amount": total_amount
+    }
+
+
+@api_router.get("/admin/export/users")
+async def export_users_csv(admin: dict = Depends(verify_admin_token)):
+    """
+    Exporter tous les utilisateurs en format JSON (pour CSV).
+    """
+    users = await db.users.find({}, {"_id": 0, "password": 0}).to_list(10000)
+    return {
+        "data": users,
+        "count": len(users),
+        "export_date": datetime.now(timezone.utc).isoformat()
+    }
+
+
 app.include_router(api_router)
 
 app.add_middleware(
