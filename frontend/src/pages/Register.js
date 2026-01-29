@@ -184,7 +184,7 @@ const Register = ({ setUser }) => {
                   <Label>Type de médecine *</Label>
                   <Select 
                     value={formData.medical_type} 
-                    onValueChange={(value) => setFormData({ ...formData, medical_type: value, specialties: [] })}
+                    onValueChange={(value) => setFormData({ ...formData, medical_type: value, specialties: [], custom_corps: '' })}
                     required
                   >
                     <SelectTrigger className="bg-white border-stone-200 focus:border-green-800 focus:ring-1 focus:ring-green-800 rounded-lg h-12" data-testid="medical-type-select">
@@ -203,7 +203,24 @@ const Register = ({ setUser }) => {
                   <p className="text-xs text-stone-500">Choisissez votre type de pratique médicale</p>
                 </div>
 
-                {formData.medical_type && (
+                {/* Champ personnalisé pour "Autre" */}
+                {formData.medical_type === 'autre' && (
+                  <div className="space-y-2">
+                    <Label>Précisez votre corps de santé *</Label>
+                    <Input
+                      type="text"
+                      placeholder="Ex: Orthophoniste, Podologue, Ergothérapeute..."
+                      value={formData.custom_corps || ''}
+                      onChange={(e) => setFormData({ ...formData, custom_corps: e.target.value })}
+                      className="bg-white border-stone-200 focus:border-green-800 focus:ring-1 focus:ring-green-800 rounded-lg h-12"
+                      data-testid="custom-corps-input"
+                      required
+                    />
+                    <p className="text-xs text-stone-500">Entrez le nom de votre profession de santé</p>
+                  </div>
+                )}
+
+                {formData.medical_type && formData.medical_type !== 'autre' && (
                   <div className="space-y-2">
                     <Label>Spécialités * (sélectionnez au moins une)</Label>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-64 overflow-y-auto p-4 bg-stone-50 rounded-lg border border-stone-200">
@@ -228,6 +245,22 @@ const Register = ({ setUser }) => {
                     <p className="text-xs text-stone-500">
                       {formData.specialties.length} spécialité(s) sélectionnée(s)
                     </p>
+                  </div>
+                )}
+
+                {/* Pour "Autre", permettre d'entrer des spécialités manuellement */}
+                {formData.medical_type === 'autre' && formData.custom_corps && (
+                  <div className="space-y-2">
+                    <Label>Vos spécialités (optionnel)</Label>
+                    <Input
+                      type="text"
+                      placeholder="Ex: Rééducation, Soins à domicile..."
+                      value={formData.custom_specialties || ''}
+                      onChange={(e) => setFormData({ ...formData, custom_specialties: e.target.value })}
+                      className="bg-white border-stone-200 focus:border-green-800 focus:ring-1 focus:ring-green-800 rounded-lg h-12"
+                      data-testid="custom-specialties-input"
+                    />
+                    <p className="text-xs text-stone-500">Séparez les spécialités par des virgules</p>
                   </div>
                 )}
               </>
