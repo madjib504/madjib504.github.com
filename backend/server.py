@@ -1060,13 +1060,19 @@ async def create_blog_post(
 # Emergency Contacts
 @api_router.get("/emergency/contacts")
 async def get_emergency_contacts():
+    """
+    Numéros d'urgence de Côte d'Ivoire
+    """
     contacts = [
-        {"name": "SAMU", "number": "15", "country": "France", "type": "medical"},
-        {"name": "Pompiers", "number": "18", "country": "France", "type": "fire"},
-        {"name": "Police", "number": "17", "country": "France", "type": "police"},
-        {"name": "Urgences Europe", "number": "112", "country": "Europe", "type": "all"},
-        {"name": "SOS Médecins", "number": "3624", "country": "France", "type": "medical"},
-        {"name": "Centre Anti-Poison", "number": "01 40 05 48 48", "country": "France", "type": "poison"},
+        {"name": "SAMU", "number": "185", "type": "Urgences Médicales", "description": "Service d'Aide Médicale d'Urgence"},
+        {"name": "Pompiers", "number": "180", "type": "Incendie & Secours", "description": "Groupement des Sapeurs-Pompiers"},
+        {"name": "Police Secours", "number": "110", "type": "Police", "description": "Police Nationale d'urgence"},
+        {"name": "Gendarmerie", "number": "111", "type": "Gendarmerie", "description": "Gendarmerie Nationale"},
+        {"name": "GSPM", "number": "170", "type": "Secours", "description": "Groupement de Sapeurs-Pompiers Militaires"},
+        {"name": "CHU Cocody", "number": "+225 22 44 90 00", "type": "Hôpital", "description": "Centre Hospitalier Universitaire de Cocody"},
+        {"name": "CHU Treichville", "number": "+225 21 24 91 00", "type": "Hôpital", "description": "Centre Hospitalier Universitaire de Treichville"},
+        {"name": "Centre Anti-Poison", "number": "+225 21 24 24 24", "type": "Intoxication", "description": "Centre National Anti-Poison"},
+        {"name": "Croix-Rouge CI", "number": "+225 21 35 64 96", "type": "Humanitaire", "description": "Croix-Rouge Côte d'Ivoire"},
     ]
     return contacts
 
