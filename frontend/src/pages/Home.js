@@ -1,14 +1,93 @@
-import { useState, useContext } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
   Menu, X, Search, Stethoscope, Calendar, MessageSquare, Video, 
   Heart, Shield, Users, ChevronRight, Home, ShoppingBag, 
   CreditCard, BookOpen, Award, FileText, Phone, LogOut, User,
-  Leaf, Sparkles, Activity, Truck, Store
+  Leaf, Sparkles, Activity, Truck, Store, Clock, Gift, Zap
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { AuthContext } from '@/App';
+
+// Countdown Component
+const CountdownTimer = () => {
+  // Date de fin de promotion : 1 mois à partir d'aujourd'hui
+  const [endDate] = useState(() => {
+    const end = new Date();
+    end.setMonth(end.getMonth() + 1);
+    return end;
+  });
+  
+  const [timeLeft, setTimeLeft] = useState({
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0
+  });
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const now = new Date().getTime();
+      const distance = endDate.getTime() - now;
+
+      if (distance > 0) {
+        setTimeLeft({
+          days: Math.floor(distance / (1000 * 60 * 60 * 24)),
+          hours: Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+          minutes: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)),
+          seconds: Math.floor((distance % (1000 * 60)) / 1000)
+        });
+      }
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [endDate]);
+
+  return (
+    <div className="bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500 text-white py-3 px-4 relative overflow-hidden">
+      {/* Animated background */}
+      <div className="absolute inset-0 opacity-20">
+        <div className="absolute inset-0 animate-pulse" style={{
+          backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.1) 10px, rgba(255,255,255,0.1) 20px)'
+        }}></div>
+      </div>
+      
+      <div className="relative flex flex-col sm:flex-row items-center justify-center gap-3 text-center">
+        <div className="flex items-center gap-2">
+          <Gift className="w-5 h-5 animate-bounce" />
+          <span className="font-bold text-sm sm:text-base">PROMOTION SPÉCIALE LANCEMENT</span>
+          <Zap className="w-5 h-5 animate-pulse" />
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <span className="text-xs sm:text-sm opacity-90">Fin dans :</span>
+          <div className="flex gap-1">
+            <div className="bg-white/20 backdrop-blur-sm rounded px-2 py-1 min-w-[40px]">
+              <span className="font-bold text-lg">{String(timeLeft.days).padStart(2, '0')}</span>
+              <span className="text-xs block -mt-1">jours</span>
+            </div>
+            <span className="text-xl font-bold self-center">:</span>
+            <div className="bg-white/20 backdrop-blur-sm rounded px-2 py-1 min-w-[40px]">
+              <span className="font-bold text-lg">{String(timeLeft.hours).padStart(2, '0')}</span>
+              <span className="text-xs block -mt-1">hrs</span>
+            </div>
+            <span className="text-xl font-bold self-center">:</span>
+            <div className="bg-white/20 backdrop-blur-sm rounded px-2 py-1 min-w-[40px]">
+              <span className="font-bold text-lg">{String(timeLeft.minutes).padStart(2, '0')}</span>
+              <span className="text-xs block -mt-1">min</span>
+            </div>
+            <span className="text-xl font-bold self-center">:</span>
+            <div className="bg-white/20 backdrop-blur-sm rounded px-2 py-1 min-w-[40px]">
+              <span className="font-bold text-lg">{String(timeLeft.seconds).padStart(2, '0')}</span>
+              <span className="text-xs block -mt-1">sec</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const HomePage = () => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -37,6 +116,7 @@ const HomePage = () => {
         { icon: Leaf, label: 'Médecine Traditionnelle', link: '/search?medical_type=traditionnel_africain', color: 'text-green-600' },
         { icon: Sparkles, label: 'Bien-être & Beauté', link: '/search?medical_type=bien_etre', color: 'text-purple-500' },
         { icon: Truck, label: 'Service à Domicile', link: '/search?medical_type=service_domicile', color: 'text-orange-500' },
+        { icon: Users, label: 'Autre', link: '/search?medical_type=autre', color: 'text-gray-500' },
       ]
     },
     {
@@ -66,9 +146,12 @@ const HomePage = () => {
   ] : [];
 
   return (
-    <div data-testid="home-page" className="min-h-screen h-screen overflow-hidden">
+    <div data-testid="home-page" className="min-h-screen h-screen overflow-hidden flex flex-col">
+      {/* Countdown Banner - Fixed at top */}
+      <CountdownTimer />
+      
       {/* Main Hero - Full Screen */}
-      <div className="h-full flex flex-col items-center justify-center bg-gradient-to-b from-green-900 via-green-800 to-green-900 relative px-6">
+      <div className="flex-1 flex flex-col items-center justify-center bg-gradient-to-b from-green-900 via-green-800 to-green-900 relative px-6">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute inset-0" style={{
