@@ -47,8 +47,11 @@ La fonctionnalité principale est de connecter les patients avec les spécialist
 *In Progress - January 2025*
 - ✅ **Mobile Money** (Orange Money, MTN MoMo, Moov) - Mode Sandbox
 - ✅ **Historique Paiements** dans le dashboard patient (avec statistiques)
+- ✅ **Système de Réservation Amélioré** - Calendrier interactif avec créneaux horaires
+- ✅ **Géolocalisation** - Recherche de médecins à proximité
+- ✅ **Notifications** - Centre de notifications avec badge
 - ⏳ Téléconsultation Vidéo (Twilio)
-- ⏳ Notifications SMS/Email
+- ⏳ Notifications SMS/Email (rappels automatiques)
 - ⏳ Paiement Carte Bancaire (Stripe)
 
 ---
