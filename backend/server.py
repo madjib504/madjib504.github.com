@@ -516,7 +516,8 @@ async def search_doctors(
     min_rating: Optional[float] = None,
     home_service: Optional[bool] = None,
     structure_type: Optional[str] = None,
-    keyword: Optional[str] = None
+    keyword: Optional[str] = None,
+    custom_search: Optional[str] = None
 ):
     query = {}
     if specialty:
@@ -539,6 +540,20 @@ async def search_doctors(
             {"bio": {"$regex": keyword, "$options": "i"}},
             {"specialties": {"$regex": keyword, "$options": "i"}}
         ]
+    
+    # Recherche personnalisée pour "Autre" catégorie
+    # Cherche dans le medical_type personnalisé, les spécialités et le bio
+    if custom_search:
+        custom_or_conditions = [
+            {"specialties": {"$regex": custom_search, "$options": "i"}},
+            {"bio": {"$regex": custom_search, "$options": "i"}},
+            {"name": {"$regex": custom_search, "$options": "i"}},
+            {"custom_medical_type": {"$regex": custom_search, "$options": "i"}}
+        ]
+        if "$or" in query:
+            query["$and"] = [{"$or": query.pop("$or")}, {"$or": custom_or_conditions}]
+        else:
+            query["$or"] = custom_or_conditions
     
     doctors = await db.doctor_profiles.find(query, {"_id": 0}).to_list(100)
     for doctor in doctors:
