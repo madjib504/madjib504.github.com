@@ -18,6 +18,7 @@ import MedicalRecord from '@/pages/MedicalRecord';
 import Loyalty from '@/pages/Loyalty';
 import Blog from '@/pages/Blog';
 import MobileMoneyPayment from '@/pages/MobileMoneyPayment';
+import BookingPage from '@/pages/BookingPage';
 import { SOSButton, MedicalAssistant } from '@/components/HealthTools';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -60,6 +61,11 @@ function AppContent({ user, setUser, loading }) {
         <Route path="/wellness-packs" element={<WellnessPacks />} />
         <Route path="/blog" element={<Blog />} />
         <Route path="/payment" element={<MobileMoneyPayment />} />
+        <Route path="/booking/:doctorId" element={
+          <ProtectedRoute allowedTypes={['patient']}>
+            <BookingPage />
+          </ProtectedRoute>
+        } />
         <Route path="/medical-record" element={
           <ProtectedRoute allowedTypes={['patient']}>
             <MedicalRecord />
