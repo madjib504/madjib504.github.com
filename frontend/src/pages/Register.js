@@ -172,7 +172,7 @@ const Register = ({ setUser }) => {
                   }`}
                   data-testid="user-type-doctor-btn"
                 >
-                  <div className="font-medium text-stone-900">Médecin</div>
+                  <div className="font-medium text-stone-900">Corps de Santé</div>
                   <div className="text-sm text-stone-600">Je suis un praticien</div>
                 </button>
               </div>
