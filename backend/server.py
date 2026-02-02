@@ -264,6 +264,7 @@ async def register(user_data: UserRegister):
         email=user_data.email,
         name=user_data.name,
         user_type=user_data.user_type,
+        whatsapp_number=user_data.whatsapp_number,
         medical_type=user_data.medical_type,
         specialties=user_data.specialties
     )
