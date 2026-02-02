@@ -219,21 +219,22 @@ const AdvertisingCarousel = () => {
                         <h3 className="text-base sm:text-lg md:text-2xl font-bold text-blue-900 mb-1 sm:mb-2">
                           {ad.title}
                         </h3>
-                        <p className="text-stone-600 mb-4 text-sm md:text-base">
+                        <p className="text-stone-600 mb-2 sm:mb-4 text-xs sm:text-sm md:text-base line-clamp-2 sm:line-clamp-none">
                           {ad.description}
                         </p>
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs text-stone-400">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-[10px] sm:text-xs text-stone-400 truncate">
                             Par {ad.advertiser}
                           </span>
                           <a 
                             href={ad.link} 
                             target="_blank" 
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full text-sm font-medium transition-colors"
+                            className="inline-flex items-center gap-1 sm:gap-2 bg-blue-600 hover:bg-blue-700 text-white px-2 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-colors whitespace-nowrap"
                           >
-                            En savoir plus
-                            <ExternalLink className="w-4 h-4" />
+                            <span className="hidden sm:inline">En savoir plus</span>
+                            <span className="sm:hidden">Voir</span>
+                            <ExternalLink className="w-3 h-3 sm:w-4 sm:h-4" />
                           </a>
                         </div>
                       </div>
@@ -247,27 +248,27 @@ const AdvertisingCarousel = () => {
           {/* Navigation Arrows */}
           <button
             onClick={goToPrevious}
-            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 md:-translate-x-4 bg-white/90 hover:bg-white p-2 rounded-full shadow-lg transition-all hover:scale-110"
+            className="absolute left-0 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-1.5 sm:p-2 rounded-full shadow-lg transition-all hover:scale-110"
             aria-label="Précédent"
           >
-            <ChevronLeft className="w-5 h-5 text-blue-900" />
+            <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 text-blue-900" />
           </button>
           <button
             onClick={goToNext}
-            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 md:translate-x-4 bg-white/90 hover:bg-white p-2 rounded-full shadow-lg transition-all hover:scale-110"
+            className="absolute right-0 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-1.5 sm:p-2 rounded-full shadow-lg transition-all hover:scale-110"
             aria-label="Suivant"
           >
-            <ChevronRight className="w-5 h-5 text-blue-900" />
+            <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-blue-900" />
           </button>
         </div>
 
         {/* Dots Navigation */}
-        <div className="flex justify-center gap-2 mt-4">
+        <div className="flex justify-center gap-1.5 sm:gap-2 mt-3 sm:mt-4">
           {ads.map((_, index) => (
             <button
               key={index}
               onClick={() => goToSlide(index)}
-              className={`w-2.5 h-2.5 rounded-full transition-all ${
+              className={`w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full transition-all ${
                 index === currentIndex 
                   ? 'bg-yellow-400 w-6' 
                   : 'bg-white/40 hover:bg-white/60'
