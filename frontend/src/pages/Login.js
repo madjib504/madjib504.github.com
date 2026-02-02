@@ -47,7 +47,7 @@ const Login = ({ setUser }) => {
         <CardHeader className="space-y-1">
           <CardTitle className="text-3xl font-serif font-bold text-blue-900" data-testid="login-title">Connexion</CardTitle>
           <CardDescription className="text-stone-600">
-            Connectez-vous à votre compte SANA VITA
+            Connectez-vous à votre compte SanaVitaFLOW
           </CardDescription>
         </CardHeader>
         <CardContent>
