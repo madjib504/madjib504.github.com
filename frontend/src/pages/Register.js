@@ -178,6 +178,23 @@ const Register = ({ setUser }) => {
             </div>
 
             <div className="space-y-2">
+              <Label htmlFor="whatsapp">Numéro WhatsApp</Label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-green-600 text-lg">📱</span>
+                <Input
+                  id="whatsapp"
+                  type="tel"
+                  placeholder="+225 XX XX XX XX XX"
+                  value={formData.whatsapp_number}
+                  onChange={(e) => setFormData({ ...formData, whatsapp_number: e.target.value })}
+                  className="bg-white border-stone-200 focus:border-blue-800 focus:ring-1 focus:ring-blue-800 rounded-lg h-12 pl-10"
+                  data-testid="register-whatsapp-input"
+                />
+              </div>
+              <p className="text-xs text-stone-500">Pour être contacté facilement par vos patients ou médecins</p>
+            </div>
+
+            <div className="space-y-2">
               <Label>Type de compte</Label>
               <div className="grid grid-cols-2 gap-4">
                 <button
