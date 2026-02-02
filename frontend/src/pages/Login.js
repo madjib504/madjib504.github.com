@@ -93,6 +93,24 @@ const Login = ({ setUser }) => {
                 </button>
               </div>
             </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="whatsapp">Numéro WhatsApp (optionnel)</Label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-green-600 text-lg">📱</span>
+                <Input
+                  id="whatsapp"
+                  type="tel"
+                  placeholder="+225 XX XX XX XX XX"
+                  value={whatsappNumber}
+                  onChange={(e) => setWhatsappNumber(e.target.value)}
+                  className="bg-white border-stone-200 focus:border-blue-800 focus:ring-1 focus:ring-blue-800 rounded-lg h-12 pl-10"
+                  data-testid="login-whatsapp-input"
+                />
+              </div>
+              <p className="text-xs text-stone-500">Ajoutez ou mettez à jour votre numéro WhatsApp</p>
+            </div>
+
             <Button
               type="submit"
               disabled={loading}
