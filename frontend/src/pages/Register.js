@@ -16,6 +16,7 @@ const Register = ({ setUser }) => {
     name: '',
     email: '',
     password: '',
+    whatsapp_number: '',
     user_type: 'patient',
     medical_type: '',
     specialties: [],
