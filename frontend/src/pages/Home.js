@@ -349,12 +349,12 @@ const HomePage = () => {
   ] : [];
 
   return (
-    <div data-testid="home-page" className="min-h-screen h-screen overflow-hidden flex flex-col">
+    <div data-testid="home-page" className="min-h-screen flex flex-col">
       {/* Countdown Banner - Fixed at top */}
       <CountdownTimer />
       
-      {/* Main Hero - Full Screen */}
-      <div className="flex-1 flex flex-col items-center justify-center bg-gradient-to-b from-blue-900 via-blue-800 to-blue-900 relative px-6">
+      {/* Main Hero - Takes remaining viewport height */}
+      <div className="min-h-[calc(100vh-70px)] flex flex-col items-center justify-center bg-gradient-to-b from-blue-900 via-blue-800 to-blue-900 relative px-6 py-8">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute inset-0" style={{
