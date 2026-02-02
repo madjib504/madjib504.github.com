@@ -50,6 +50,8 @@ La fonctionnalité principale est de connecter les patients avec les spécialist
 - ✅ **Système de Réservation Amélioré** - Calendrier interactif avec créneaux horaires
 - ✅ **Géolocalisation** - Recherche de médecins à proximité
 - ✅ **Notifications** - Centre de notifications avec badge
+- ✅ **Dashboard Admin** - Statistiques, gestion utilisateurs (/admin)
+- ✅ **Catégorie "Autre"** - Barre de recherche pour professions non listées (February 2025)
 - ⏳ Téléconsultation Vidéo (Twilio)
 - ⏳ Notifications SMS/Email (rappels automatiques)
 - ⏳ Paiement Carte Bancaire (Stripe)
