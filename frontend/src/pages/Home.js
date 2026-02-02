@@ -175,39 +175,39 @@ const AdvertisingCarousel = () => {
   if (loading || ads.length === 0) return null;
 
   return (
-    <div className="bg-gradient-to-b from-blue-900 to-blue-800 py-8 px-4" data-testid="advertising-section">
+    <div className="bg-gradient-to-b from-blue-900 to-blue-800 py-6 px-2 sm:py-8 sm:px-4" data-testid="advertising-section">
       <div className="max-w-6xl mx-auto">
         {/* Section Header */}
-        <div className="flex items-center justify-center gap-3 mb-6">
-          <Megaphone className="w-6 h-6 text-yellow-400" />
-          <h2 className="text-xl md:text-2xl font-bold text-white">Espace Publicitaire</h2>
-          <Megaphone className="w-6 h-6 text-yellow-400 transform scale-x-[-1]" />
+        <div className="flex items-center justify-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+          <Megaphone className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-400" />
+          <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-white">Espace Publicitaire</h2>
+          <Megaphone className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-400 transform scale-x-[-1]" />
         </div>
-        <p className="text-blue-200 text-center text-sm mb-6">
+        <p className="text-blue-200 text-center text-xs sm:text-sm mb-4 sm:mb-6">
           Découvrez les offres de nos partenaires
         </p>
 
         {/* Carousel Container */}
-        <div className="relative">
+        <div className="relative px-6 sm:px-0">
           {/* Main Carousel */}
-          <div className="overflow-hidden rounded-2xl">
+          <div className="overflow-hidden rounded-xl sm:rounded-2xl">
             <div 
               className="flex transition-transform duration-500 ease-out"
               style={{ transform: `translateX(-${currentIndex * 100}%)` }}
             >
               {ads.map((ad) => (
-                <div key={ad.id} className="w-full flex-shrink-0">
-                  <div className="bg-white rounded-2xl overflow-hidden shadow-2xl mx-2">
-                    <div className="md:flex">
+                <div key={ad.id} className="w-full flex-shrink-0 px-1">
+                  <div className="bg-white rounded-xl sm:rounded-2xl overflow-hidden shadow-2xl">
+                    <div className="flex flex-col sm:flex-row">
                       {/* Image */}
-                      <div className="md:w-1/2 h-48 md:h-64 relative overflow-hidden">
+                      <div className="sm:w-1/2 h-36 sm:h-48 md:h-64 relative overflow-hidden">
                         <img 
                           src={ad.image} 
                           alt={ad.title}
                           className="w-full h-full object-cover"
                         />
-                        <div className="absolute top-3 left-3">
-                          <span className="bg-blue-600 text-white text-xs px-3 py-1 rounded-full font-medium flex items-center gap-1">
+                        <div className="absolute top-2 left-2 sm:top-3 sm:left-3">
+                          <span className="bg-blue-600 text-white text-[10px] sm:text-xs px-2 sm:px-3 py-1 rounded-full font-medium flex items-center gap-1">
                             <Building2 className="w-3 h-3" />
                             {ad.type === 'entreprise' ? 'Entreprise' : ad.type === 'formation' ? 'Formation' : 'Publicité'}
                           </span>
@@ -215,8 +215,8 @@ const AdvertisingCarousel = () => {
                       </div>
                       
                       {/* Content */}
-                      <div className="md:w-1/2 p-6 flex flex-col justify-center">
-                        <h3 className="text-xl md:text-2xl font-bold text-blue-900 mb-2">
+                      <div className="sm:w-1/2 p-3 sm:p-4 md:p-6 flex flex-col justify-center">
+                        <h3 className="text-base sm:text-lg md:text-2xl font-bold text-blue-900 mb-1 sm:mb-2">
                           {ad.title}
                         </h3>
                         <p className="text-stone-600 mb-4 text-sm md:text-base">
