@@ -69,6 +69,7 @@ class UserRegister(UserBase):
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
+    whatsapp_number: Optional[str] = None
 
 class User(UserBase):
     model_config = ConfigDict(extra="ignore")
