@@ -92,6 +92,205 @@ const CountdownTimer = () => {
   );
 };
 
+// Advertising Carousel Component
+const AdvertisingCarousel = () => {
+  const [ads, setAds] = useState([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchAds();
+  }, []);
+
+  const fetchAds = async () => {
+    try {
+      const response = await axios.get(`${API}/ads`);
+      setAds(response.data);
+    } catch (error) {
+      // Publicités par défaut si l'API ne répond pas
+      setAds([
+        {
+          id: '1',
+          title: 'Clinique Santé Plus',
+          description: 'Consultations médicales de qualité à prix abordables. Ouvert 7j/7.',
+          image: 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=800&q=80',
+          link: '#',
+          advertiser: 'Clinique Santé Plus',
+          type: 'entreprise'
+        },
+        {
+          id: '2',
+          title: 'Pharmacie du Bien-Être',
+          description: 'Livraison gratuite de médicaments à domicile. -20% sur les produits naturels.',
+          image: 'https://images.unsplash.com/photo-1587854692152-cbe660dbde88?w=800&q=80',
+          link: '#',
+          advertiser: 'Pharmacie du Bien-Être',
+          type: 'entreprise'
+        },
+        {
+          id: '3',
+          title: 'Formation Massage Traditionnel',
+          description: 'Apprenez les techniques ancestrales de massage africain. Certification reconnue.',
+          image: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800&q=80',
+          link: '#',
+          advertiser: 'Institut Wellness Africa',
+          type: 'formation'
+        },
+        {
+          id: '4',
+          title: 'Équipements Médicaux Pro',
+          description: 'Matériel médical certifié aux meilleurs prix. Garantie 2 ans incluse.',
+          image: 'https://images.unsplash.com/photo-1516549655169-df83a0774514?w=800&q=80',
+          link: '#',
+          advertiser: 'MedEquip CI',
+          type: 'entreprise'
+        }
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Auto-scroll every 5 seconds
+  useEffect(() => {
+    if (ads.length === 0) return;
+    const timer = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % ads.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [ads.length]);
+
+  const goToSlide = (index) => {
+    setCurrentIndex(index);
+  };
+
+  const goToPrevious = () => {
+    setCurrentIndex((prev) => (prev - 1 + ads.length) % ads.length);
+  };
+
+  const goToNext = () => {
+    setCurrentIndex((prev) => (prev + 1) % ads.length);
+  };
+
+  if (loading || ads.length === 0) return null;
+
+  return (
+    <div className="bg-gradient-to-b from-blue-900 to-blue-800 py-8 px-4" data-testid="advertising-section">
+      <div className="max-w-6xl mx-auto">
+        {/* Section Header */}
+        <div className="flex items-center justify-center gap-3 mb-6">
+          <Megaphone className="w-6 h-6 text-yellow-400" />
+          <h2 className="text-xl md:text-2xl font-bold text-white">Espace Publicitaire</h2>
+          <Megaphone className="w-6 h-6 text-yellow-400 transform scale-x-[-1]" />
+        </div>
+        <p className="text-blue-200 text-center text-sm mb-6">
+          Découvrez les offres de nos partenaires
+        </p>
+
+        {/* Carousel Container */}
+        <div className="relative">
+          {/* Main Carousel */}
+          <div className="overflow-hidden rounded-2xl">
+            <div 
+              className="flex transition-transform duration-500 ease-out"
+              style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+            >
+              {ads.map((ad) => (
+                <div key={ad.id} className="w-full flex-shrink-0">
+                  <div className="bg-white rounded-2xl overflow-hidden shadow-2xl mx-2">
+                    <div className="md:flex">
+                      {/* Image */}
+                      <div className="md:w-1/2 h-48 md:h-64 relative overflow-hidden">
+                        <img 
+                          src={ad.image} 
+                          alt={ad.title}
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute top-3 left-3">
+                          <span className="bg-blue-600 text-white text-xs px-3 py-1 rounded-full font-medium flex items-center gap-1">
+                            <Building2 className="w-3 h-3" />
+                            {ad.type === 'entreprise' ? 'Entreprise' : ad.type === 'formation' ? 'Formation' : 'Publicité'}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      {/* Content */}
+                      <div className="md:w-1/2 p-6 flex flex-col justify-center">
+                        <h3 className="text-xl md:text-2xl font-bold text-blue-900 mb-2">
+                          {ad.title}
+                        </h3>
+                        <p className="text-stone-600 mb-4 text-sm md:text-base">
+                          {ad.description}
+                        </p>
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-stone-400">
+                            Par {ad.advertiser}
+                          </span>
+                          <a 
+                            href={ad.link} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full text-sm font-medium transition-colors"
+                          >
+                            En savoir plus
+                            <ExternalLink className="w-4 h-4" />
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Navigation Arrows */}
+          <button
+            onClick={goToPrevious}
+            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 md:-translate-x-4 bg-white/90 hover:bg-white p-2 rounded-full shadow-lg transition-all hover:scale-110"
+            aria-label="Précédent"
+          >
+            <ChevronLeft className="w-5 h-5 text-blue-900" />
+          </button>
+          <button
+            onClick={goToNext}
+            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 md:translate-x-4 bg-white/90 hover:bg-white p-2 rounded-full shadow-lg transition-all hover:scale-110"
+            aria-label="Suivant"
+          >
+            <ChevronRight className="w-5 h-5 text-blue-900" />
+          </button>
+        </div>
+
+        {/* Dots Navigation */}
+        <div className="flex justify-center gap-2 mt-4">
+          {ads.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => goToSlide(index)}
+              className={`w-2.5 h-2.5 rounded-full transition-all ${
+                index === currentIndex 
+                  ? 'bg-yellow-400 w-6' 
+                  : 'bg-white/40 hover:bg-white/60'
+              }`}
+              aria-label={`Aller à la publicité ${index + 1}`}
+            />
+          ))}
+        </div>
+
+        {/* CTA for Advertisers */}
+        <div className="mt-6 text-center">
+          <Link to="/advertise">
+            <button className="inline-flex items-center gap-2 bg-yellow-500 hover:bg-yellow-400 text-blue-900 px-6 py-2.5 rounded-full text-sm font-semibold transition-colors shadow-lg">
+              <Megaphone className="w-4 h-4" />
+              Publier votre annonce
+            </button>
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const HomePage = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
