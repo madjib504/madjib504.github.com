@@ -12,6 +12,7 @@ import { Eye, EyeOff } from 'lucide-react';
 const Login = ({ setUser }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [whatsappNumber, setWhatsappNumber] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -21,7 +22,11 @@ const Login = ({ setUser }) => {
     setLoading(true);
 
     try {
-      const response = await axios.post(`${API}/auth/login`, { email, password });
+      const response = await axios.post(`${API}/auth/login`, { 
+        email, 
+        password,
+        whatsapp_number: whatsappNumber || null
+      });
       localStorage.setItem('token', response.data.token);
       setUser(response.data.user);
       toast.success('Connexion réussie !');
