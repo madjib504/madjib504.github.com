@@ -61,6 +61,7 @@ class UserBase(BaseModel):
 
 class UserRegister(UserBase):
     password: str
+    whatsapp_number: Optional[str] = None
     medical_type: Optional[str] = None  # 'moderne' or 'traditionnel' for doctors
     specialties: Optional[List[str]] = None  # for doctors
     custom_medical_type: Optional[str] = None  # for "autre" category
@@ -72,6 +73,7 @@ class UserLogin(BaseModel):
 class User(UserBase):
     model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    whatsapp_number: Optional[str] = None
     medical_type: Optional[str] = None
     specialties: Optional[List[str]] = None
     verified: bool = False
