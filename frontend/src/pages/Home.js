@@ -1,10 +1,13 @@
 import { useState, useEffect, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { API } from '@/App';
 import { 
   Menu, X, Search, Stethoscope, Calendar, MessageSquare, Video, 
   Heart, Shield, Users, ChevronRight, Home, ShoppingBag, 
   CreditCard, BookOpen, Award, FileText, Phone, LogOut, User,
-  Leaf, Sparkles, Activity, Truck, Store, Clock, Gift, Zap
+  Leaf, Sparkles, Activity, Truck, Store, Clock, Gift, Zap,
+  Megaphone, ChevronLeft, ExternalLink, Building2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
