@@ -114,7 +114,7 @@ La fonctionnalité principale est de connecter les patients avec les spécialist
 
 ### Search & Doctors
 - `GET /api/specialties`
-- `GET /api/doctors/search`
+- `GET /api/doctors/search` - Params: specialty, medical_type, location, min_rating, home_service, structure_type, keyword, **custom_search** (pour catégorie "Autre")
 - `GET /api/doctors/{id}`
 
 ### Payments (NEW - Phase 2)
