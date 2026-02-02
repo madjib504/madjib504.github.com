@@ -2170,6 +2170,166 @@ async def export_users_csv(admin: dict = Depends(verify_admin_token)):
     }
 
 
+
+
+# ============ PUBLICITÉS / ADVERTISEMENTS ============
+
+class AdvertisementCreate(BaseModel):
+    title: str
+    description: str
+    image: str
+    link: Optional[str] = None
+    advertiser_name: str
+    advertiser_email: EmailStr
+    advertiser_phone: str
+    ad_type: str = "entreprise"  # entreprise, particulier, formation
+    duration_days: int = 30
+
+class Advertisement(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    title: str
+    description: str
+    image: str
+    link: Optional[str] = None
+    advertiser: str
+    advertiser_email: str
+    advertiser_phone: str
+    type: str = "entreprise"
+    status: str = "pending"  # pending, active, expired, rejected
+    views: int = 0
+    clicks: int = 0
+    start_date: Optional[datetime] = None
+    end_date: Optional[datetime] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+@api_router.get("/ads")
+async def get_active_ads():
+    """Récupère les publicités actives pour l'affichage sur le site"""
+    ads = await db.advertisements.find(
+        {"status": "active"},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(20)
+    
+    # Si pas de publicités actives, retourner des exemples par défaut
+    if not ads:
+        ads = [
+            {
+                "id": "default_1",
+                "title": "Clinique Santé Plus",
+                "description": "Consultations médicales de qualité à prix abordables. Ouvert 7j/7.",
+                "image": "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=800&q=80",
+                "link": "#",
+                "advertiser": "Clinique Santé Plus",
+                "type": "entreprise"
+            },
+            {
+                "id": "default_2",
+                "title": "Pharmacie du Bien-Être",
+                "description": "Livraison gratuite de médicaments à domicile. -20% sur les produits naturels.",
+                "image": "https://images.unsplash.com/photo-1587854692152-cbe660dbde88?w=800&q=80",
+                "link": "#",
+                "advertiser": "Pharmacie du Bien-Être",
+                "type": "entreprise"
+            },
+            {
+                "id": "default_3",
+                "title": "Formation Massage Traditionnel",
+                "description": "Apprenez les techniques ancestrales de massage africain. Certification reconnue.",
+                "image": "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800&q=80",
+                "link": "#",
+                "advertiser": "Institut Wellness Africa",
+                "type": "formation"
+            },
+            {
+                "id": "default_4",
+                "title": "Équipements Médicaux Pro",
+                "description": "Matériel médical certifié aux meilleurs prix. Garantie 2 ans incluse.",
+                "image": "https://images.unsplash.com/photo-1516549655169-df83a0774514?w=800&q=80",
+                "link": "#",
+                "advertiser": "MedEquip CI",
+                "type": "entreprise"
+            }
+        ]
+    
+    return ads
+
+
+@api_router.post("/ads")
+async def create_advertisement(ad_data: AdvertisementCreate):
+    """Soumettre une nouvelle publicité (nécessite validation admin)"""
+    ad = Advertisement(
+        title=ad_data.title,
+        description=ad_data.description,
+        image=ad_data.image,
+        link=ad_data.link,
+        advertiser=ad_data.advertiser_name,
+        advertiser_email=ad_data.advertiser_email,
+        advertiser_phone=ad_data.advertiser_phone,
+        type=ad_data.ad_type,
+        status="pending"
+    )
+    
+    ad_dict = ad.model_dump()
+    ad_dict['created_at'] = ad_dict['created_at'].isoformat()
+    await db.advertisements.insert_one(ad_dict)
+    
+    return {
+        "success": True,
+        "message": "Votre publicité a été soumise et est en attente de validation.",
+        "ad_id": ad.id
+    }
+
+
+@api_router.get("/ads/{ad_id}")
+async def get_advertisement(ad_id: str):
+    """Récupère une publicité spécifique"""
+    ad = await db.advertisements.find_one({"id": ad_id}, {"_id": 0})
+    if not ad:
+        raise HTTPException(status_code=404, detail="Publicité non trouvée")
+    return ad
+
+
+@api_router.post("/ads/{ad_id}/click")
+async def track_ad_click(ad_id: str):
+    """Enregistre un clic sur une publicité"""
+    await db.advertisements.update_one(
+        {"id": ad_id},
+        {"$inc": {"clicks": 1}}
+    )
+    return {"success": True}
+
+
+@api_router.get("/admin/ads")
+async def get_all_ads_admin():
+    """[ADMIN] Liste toutes les publicités"""
+    ads = await db.advertisements.find({}, {"_id": 0}).sort("created_at", -1).to_list(100)
+    return ads
+
+
+@api_router.patch("/admin/ads/{ad_id}/status")
+async def update_ad_status(ad_id: str, data: Dict[str, str]):
+    """[ADMIN] Approuver ou rejeter une publicité"""
+    status = data.get("status")
+    if status not in ["active", "rejected", "expired"]:
+        raise HTTPException(status_code=400, detail="Statut invalide")
+    
+    update_data = {"status": status}
+    if status == "active":
+        update_data["start_date"] = datetime.now(timezone.utc).isoformat()
+        # Par défaut, 30 jours de diffusion
+        end_date = datetime.now(timezone.utc) + timedelta(days=30)
+        update_data["end_date"] = end_date.isoformat()
+    
+    await db.advertisements.update_one(
+        {"id": ad_id},
+        {"$set": update_data}
+    )
+    
+    return {"success": True, "message": f"Publicité mise à jour: {status}"}
+
+
 app.include_router(api_router)
 
 app.add_middleware(
