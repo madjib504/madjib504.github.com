@@ -113,10 +113,10 @@ const Register = ({ setUser }) => {
   );
 
   return (
-    <div data-testid="register-page" className="min-h-screen flex items-center justify-center bg-gradient-to-br from-stone-50 via-green-50 to-sky-50 px-6 py-24">
+    <div data-testid="register-page" className="min-h-screen flex items-center justify-center bg-gradient-to-br from-stone-50 via-blue-50 to-sky-50 px-6 py-24">
       <Card className="w-full max-w-2xl shadow-xl border-stone-100">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-3xl font-serif font-bold text-green-900" data-testid="register-title">Inscription</CardTitle>
+          <CardTitle className="text-3xl font-serif font-bold text-blue-900" data-testid="register-title">Inscription</CardTitle>
           <CardDescription className="text-stone-600">
             Créez votre compte SANA VITA
           </CardDescription>
@@ -132,7 +132,7 @@ const Register = ({ setUser }) => {
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 required
-                className="bg-white border-stone-200 focus:border-green-800 focus:ring-1 focus:ring-green-800 rounded-lg h-12"
+                className="bg-white border-stone-200 focus:border-blue-800 focus:ring-1 focus:ring-blue-800 rounded-lg h-12"
                 data-testid="register-name-input"
               />
             </div>
@@ -146,7 +146,7 @@ const Register = ({ setUser }) => {
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 required
-                className="bg-white border-stone-200 focus:border-green-800 focus:ring-1 focus:ring-green-800 rounded-lg h-12"
+                className="bg-white border-stone-200 focus:border-blue-800 focus:ring-1 focus:ring-blue-800 rounded-lg h-12"
                 data-testid="register-email-input"
               />
             </div>
@@ -162,7 +162,7 @@ const Register = ({ setUser }) => {
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   required
                   minLength={6}
-                  className="bg-white border-stone-200 focus:border-green-800 focus:ring-1 focus:ring-green-800 rounded-lg h-12 pr-10"
+                  className="bg-white border-stone-200 focus:border-blue-800 focus:ring-1 focus:ring-blue-800 rounded-lg h-12 pr-10"
                   data-testid="register-password-input"
                 />
                 <button
@@ -184,7 +184,7 @@ const Register = ({ setUser }) => {
                   onClick={() => setFormData({ ...formData, user_type: 'patient', medical_type: '', specialties: [] })}
                   className={`p-4 rounded-lg border-2 transition-all ${
                     formData.user_type === 'patient'
-                      ? 'border-green-800 bg-green-50'
+                      ? 'border-blue-800 bg-blue-50'
                       : 'border-stone-200 hover:border-stone-300'
                   }`}
                   data-testid="user-type-patient-btn"
@@ -197,7 +197,7 @@ const Register = ({ setUser }) => {
                   onClick={() => setFormData({ ...formData, user_type: 'doctor' })}
                   className={`p-4 rounded-lg border-2 transition-all ${
                     formData.user_type === 'doctor'
-                      ? 'border-green-800 bg-green-50'
+                      ? 'border-blue-800 bg-blue-50'
                       : 'border-stone-200 hover:border-stone-300'
                   }`}
                   data-testid="user-type-doctor-btn"
@@ -217,7 +217,7 @@ const Register = ({ setUser }) => {
                     onValueChange={(value) => setFormData({ ...formData, medical_type: value, specialties: [], custom_corps: '' })}
                     required
                   >
-                    <SelectTrigger className="bg-white border-stone-200 focus:border-green-800 focus:ring-1 focus:ring-green-800 rounded-lg h-12" data-testid="medical-type-select">
+                    <SelectTrigger className="bg-white border-stone-200 focus:border-blue-800 focus:ring-1 focus:ring-blue-800 rounded-lg h-12" data-testid="medical-type-select">
                       <SelectValue placeholder="Sélectionnez un type" />
                     </SelectTrigger>
                     <SelectContent className="bg-white">
@@ -242,7 +242,7 @@ const Register = ({ setUser }) => {
                       placeholder="Ex: Orthophoniste, Podologue, Ergothérapeute..."
                       value={formData.custom_corps || ''}
                       onChange={(e) => setFormData({ ...formData, custom_corps: e.target.value })}
-                      className="bg-white border-stone-200 focus:border-green-800 focus:ring-1 focus:ring-green-800 rounded-lg h-12"
+                      className="bg-white border-stone-200 focus:border-blue-800 focus:ring-1 focus:ring-blue-800 rounded-lg h-12"
                       data-testid="custom-corps-input"
                       required
                     />
@@ -287,7 +287,7 @@ const Register = ({ setUser }) => {
                       placeholder="Ex: Rééducation, Soins à domicile..."
                       value={formData.custom_specialties || ''}
                       onChange={(e) => setFormData({ ...formData, custom_specialties: e.target.value })}
-                      className="bg-white border-stone-200 focus:border-green-800 focus:ring-1 focus:ring-green-800 rounded-lg h-12"
+                      className="bg-white border-stone-200 focus:border-blue-800 focus:ring-1 focus:ring-blue-800 rounded-lg h-12"
                       data-testid="custom-specialties-input"
                     />
                     <p className="text-xs text-stone-500">Séparez les spécialités par des virgules</p>
@@ -299,7 +299,7 @@ const Register = ({ setUser }) => {
             <Button
               type="submit"
               disabled={loading}
-              className="w-full bg-green-900 text-white hover:bg-green-800 rounded-full h-12 text-lg font-medium"
+              className="w-full bg-blue-900 text-white hover:bg-blue-800 rounded-full h-12 text-lg font-medium"
               data-testid="register-submit-btn"
             >
               {loading ? 'Inscription...' : 'S\'inscrire'}
@@ -307,7 +307,7 @@ const Register = ({ setUser }) => {
           </form>
           <div className="mt-6 text-center text-sm text-stone-600">
             Déjà un compte ?{' '}
-            <Link to="/login" className="text-green-900 font-medium hover:underline" data-testid="register-login-link">
+            <Link to="/login" className="text-blue-900 font-medium hover:underline" data-testid="register-login-link">
               Se connecter
             </Link>
           </div>

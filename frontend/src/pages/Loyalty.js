@@ -64,7 +64,7 @@ const Loyalty = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-stone-50 pt-20">
-        <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-green-900"></div>
+        <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-900"></div>
       </div>
     );
   }
@@ -73,7 +73,7 @@ const Loyalty = () => {
     <div data-testid="loyalty-page" className="min-h-screen bg-gradient-to-br from-stone-50 via-purple-50 to-yellow-50 pt-24 px-6 pb-12">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-serif font-bold text-green-900 mb-2">
+          <h1 className="text-4xl md:text-5xl font-serif font-bold text-blue-900 mb-2">
             Programme HealthPoints
           </h1>
           <p className="text-lg text-stone-600">Gagnez des points à chaque achat et profitez de récompenses exclusives</p>
@@ -86,12 +86,12 @@ const Loyalty = () => {
                 <div className="text-6xl">{getLevelIcon(loyalty?.level || 'Bronze')}</div>
                 <div>
                   <p className="text-sm text-stone-600">Niveau actuel</p>
-                  <h2 className="text-3xl font-bold text-green-900">{loyalty?.level || 'Bronze'}</h2>
+                  <h2 className="text-3xl font-bold text-blue-900">{loyalty?.level || 'Bronze'}</h2>
                 </div>
               </div>
               <div className="text-right">
                 <p className="text-sm text-stone-600">Total de points</p>
-                <h2 className="text-4xl font-bold text-green-900">{loyalty?.total_points || 0}</h2>
+                <h2 className="text-4xl font-bold text-blue-900">{loyalty?.total_points || 0}</h2>
                 <p className="text-xs text-stone-500 mt-1">1€ dépensé = 10 points</p>
               </div>
             </div>
@@ -113,16 +113,16 @@ const Loyalty = () => {
           </CardContent>
         </Card>
 
-        <h2 className="text-3xl font-serif font-bold text-green-900 mb-6">Récompenses Disponibles</h2>
+        <h2 className="text-3xl font-serif font-bold text-blue-900 mb-6">Récompenses Disponibles</h2>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {rewards.map((reward) => {
             const canRedeem = (loyalty?.total_points || 0) >= reward.points;
             return (
-              <Card key={reward.id} className={"hover:shadow-lg transition-all " + (canRedeem ? 'border-green-500' : '')}>
+              <Card key={reward.id} className={"hover:shadow-lg transition-all " + (canRedeem ? 'border-blue-500' : '')}>
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between mb-4">
-                    <Gift className={"w-10 h-10 " + (canRedeem ? 'text-green-600' : 'text-stone-400')} />
-                    <Badge className={canRedeem ? 'bg-green-600' : 'bg-stone-400'}>
+                    <Gift className={"w-10 h-10 " + (canRedeem ? 'text-blue-600' : 'text-stone-400')} />
+                    <Badge className={canRedeem ? 'bg-blue-600' : 'bg-stone-400'}>
                       {reward.points} pts
                     </Badge>
                   </div>
@@ -146,8 +146,8 @@ const Loyalty = () => {
           <CardContent>
             <div className="grid md:grid-cols-3 gap-6">
               <div className="text-center">
-                <div className="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Trophy className="w-8 h-8 text-green-900" />
+                <div className="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Trophy className="w-8 h-8 text-blue-900" />
                 </div>
                 <h4 className="font-bold mb-2">1. Gagnez des points</h4>
                 <p className="text-sm text-stone-600">Chaque euro dépensé = 10 points</p>

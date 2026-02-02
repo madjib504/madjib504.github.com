@@ -43,7 +43,7 @@ const PatientDashboard = () => {
   const getStatusBadge = (status) => {
     const statusConfig = {
       pending: { label: 'En attente', color: 'bg-yellow-100 text-yellow-800', icon: AlertCircle },
-      confirmed: { label: 'Confirmé', color: 'bg-green-100 text-green-800', icon: CheckCircle },
+      confirmed: { label: 'Confirmé', color: 'bg-blue-100 text-blue-800', icon: CheckCircle },
       cancelled: { label: 'Annulé', color: 'bg-red-100 text-red-800', icon: XCircle },
       completed: { label: 'Terminé', color: 'bg-blue-100 text-blue-800', icon: CheckCircle }
     };
@@ -60,7 +60,7 @@ const PatientDashboard = () => {
   const getPaymentStatusBadge = (status) => {
     const statusConfig = {
       PENDING: { label: 'En attente', color: 'bg-yellow-100 text-yellow-800', icon: Clock },
-      SUCCESSFUL: { label: 'Confirmé', color: 'bg-green-100 text-green-800', icon: CheckCircle },
+      SUCCESSFUL: { label: 'Confirmé', color: 'bg-blue-100 text-blue-800', icon: CheckCircle },
       FAILED: { label: 'Échoué', color: 'bg-red-100 text-red-800', icon: XCircle },
       CANCELLED: { label: 'Annulé', color: 'bg-gray-100 text-gray-800', icon: XCircle }
     };
@@ -110,7 +110,7 @@ const PatientDashboard = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-stone-50 pt-20">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-green-900"></div>
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-900"></div>
           <p className="mt-4 text-stone-600">Chargement...</p>
         </div>
       </div>
@@ -128,7 +128,7 @@ const PatientDashboard = () => {
     <div data-testid="patient-dashboard" className="min-h-screen bg-stone-50 pt-24 px-6 pb-12">
       <div className="max-w-7xl mx-auto">
         <div className="mb-12">
-          <h1 className="text-4xl md:text-5xl font-serif font-bold text-green-900 mb-2" data-testid="dashboard-title">
+          <h1 className="text-4xl md:text-5xl font-serif font-bold text-blue-900 mb-2" data-testid="dashboard-title">
             Mon Espace Patient
           </h1>
           <p className="text-lg text-stone-600">Bienvenue, {user?.name}</p>
@@ -141,9 +141,9 @@ const PatientDashboard = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-stone-600 mb-1">Rendez-vous à venir</p>
-                  <p className="text-3xl font-bold text-green-900" data-testid="upcoming-count">{upcomingAppointments.length}</p>
+                  <p className="text-3xl font-bold text-blue-900" data-testid="upcoming-count">{upcomingAppointments.length}</p>
                 </div>
-                <Calendar className="w-12 h-12 text-green-900 opacity-20" />
+                <Calendar className="w-12 h-12 text-blue-900 opacity-20" />
               </div>
             </CardContent>
           </Card>
@@ -152,9 +152,9 @@ const PatientDashboard = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-stone-600 mb-1">Total consultations</p>
-                  <p className="text-3xl font-bold text-green-900" data-testid="total-count">{appointments.length}</p>
+                  <p className="text-3xl font-bold text-blue-900" data-testid="total-count">{appointments.length}</p>
                 </div>
-                <Star className="w-12 h-12 text-green-900 opacity-20" />
+                <Star className="w-12 h-12 text-blue-900 opacity-20" />
               </div>
             </CardContent>
           </Card>
@@ -163,9 +163,9 @@ const PatientDashboard = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-stone-600 mb-1">Paiements réussis</p>
-                  <p className="text-3xl font-bold text-green-900" data-testid="payments-count">{successfulPayments}</p>
+                  <p className="text-3xl font-bold text-blue-900" data-testid="payments-count">{successfulPayments}</p>
                 </div>
-                <CreditCard className="w-12 h-12 text-green-900 opacity-20" />
+                <CreditCard className="w-12 h-12 text-blue-900 opacity-20" />
               </div>
             </CardContent>
           </Card>
@@ -174,9 +174,9 @@ const PatientDashboard = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-stone-600 mb-1">Total dépensé</p>
-                  <p className="text-2xl font-bold text-green-900" data-testid="total-spent">{formatAmount(totalSpent)}</p>
+                  <p className="text-2xl font-bold text-blue-900" data-testid="total-spent">{formatAmount(totalSpent)}</p>
                 </div>
-                <TrendingUp className="w-12 h-12 text-green-900 opacity-20" />
+                <TrendingUp className="w-12 h-12 text-blue-900 opacity-20" />
               </div>
             </CardContent>
           </Card>
@@ -185,7 +185,7 @@ const PatientDashboard = () => {
         {/* Quick Actions */}
         <div className="grid md:grid-cols-3 gap-4 mb-8">
           <Link to="/chat" className="w-full">
-            <Button className="w-full bg-green-900 text-white hover:bg-green-800 rounded-full py-6" data-testid="go-to-messages-btn">
+            <Button className="w-full bg-blue-900 text-white hover:bg-blue-800 rounded-full py-6" data-testid="go-to-messages-btn">
               <MessageSquare className="w-5 h-5 mr-2" />
               Mes Messages
             </Button>
@@ -197,7 +197,7 @@ const PatientDashboard = () => {
             </Button>
           </Link>
           <Link to="/search" className="w-full">
-            <Button variant="outline" className="w-full border-green-900 text-green-900 hover:bg-green-50 rounded-full py-6" data-testid="find-doctor-btn">
+            <Button variant="outline" className="w-full border-blue-900 text-blue-900 hover:bg-blue-50 rounded-full py-6" data-testid="find-doctor-btn">
               <Star className="w-5 h-5 mr-2" />
               Trouver un médecin
             </Button>
@@ -210,7 +210,7 @@ const PatientDashboard = () => {
             onClick={() => setActiveTab('appointments')}
             className={`px-6 py-3 rounded-full font-medium transition-colors ${
               activeTab === 'appointments' 
-                ? 'bg-green-900 text-white' 
+                ? 'bg-blue-900 text-white' 
                 : 'bg-white text-stone-600 hover:bg-stone-100'
             }`}
             data-testid="tab-appointments"
@@ -222,7 +222,7 @@ const PatientDashboard = () => {
             onClick={() => setActiveTab('payments')}
             className={`px-6 py-3 rounded-full font-medium transition-colors ${
               activeTab === 'payments' 
-                ? 'bg-green-900 text-white' 
+                ? 'bg-blue-900 text-white' 
                 : 'bg-white text-stone-600 hover:bg-stone-100'
             }`}
             data-testid="tab-payments"
@@ -241,7 +241,7 @@ const PatientDashboard = () => {
             {/* Upcoming Appointments */}
             <Card className="shadow-md border-stone-100 mb-8">
               <CardHeader>
-                <CardTitle className="text-2xl font-serif text-green-900">Rendez-vous à venir</CardTitle>
+                <CardTitle className="text-2xl font-serif text-blue-900">Rendez-vous à venir</CardTitle>
               </CardHeader>
               <CardContent>
                 {upcomingAppointments.length === 0 ? (
@@ -249,7 +249,7 @@ const PatientDashboard = () => {
                     <Calendar className="w-16 h-16 text-stone-300 mx-auto mb-4" />
                     <p className="text-stone-600 mb-4">Aucun rendez-vous à venir</p>
                     <Link to="/search">
-                      <Button className="bg-green-900 text-white hover:bg-green-800 rounded-full">
+                      <Button className="bg-blue-900 text-white hover:bg-blue-800 rounded-full">
                         Trouver un médecin
                       </Button>
                     </Link>
@@ -272,7 +272,7 @@ const PatientDashboard = () => {
                           {apt.doctor_info?.specialties && (
                             <div className="flex gap-2 mb-2">
                               {apt.doctor_info.specialties.slice(0, 2).map((spec, idx) => (
-                                <span key={idx} className="text-sm bg-green-50 text-green-800 px-2 py-1 rounded-full">
+                                <span key={idx} className="text-sm bg-blue-50 text-blue-800 px-2 py-1 rounded-full">
                                   {spec}
                                 </span>
                               ))}
@@ -294,7 +294,7 @@ const PatientDashboard = () => {
                         </div>
                         <div className="flex gap-2">
                           <Link to={`/chat/${apt.doctor_info?.user_id || apt.doctor_id}`}>
-                            <Button variant="outline" className="border-green-900 text-green-900 hover:bg-green-50 rounded-full" data-testid={`message-btn-${apt.id}`}>
+                            <Button variant="outline" className="border-blue-900 text-blue-900 hover:bg-blue-50 rounded-full" data-testid={`message-btn-${apt.id}`}>
                               <MessageSquare className="w-4 h-4" />
                             </Button>
                           </Link>
@@ -310,7 +310,7 @@ const PatientDashboard = () => {
             {pastAppointments.length > 0 && (
               <Card className="shadow-md border-stone-100">
                 <CardHeader>
-                  <CardTitle className="text-2xl font-serif text-green-900">Historique</CardTitle>
+                  <CardTitle className="text-2xl font-serif text-blue-900">Historique</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4" data-testid="past-list">
@@ -340,7 +340,7 @@ const PatientDashboard = () => {
                         </div>
                         {apt.status === 'completed' && (
                           <Link to={`/doctor/${apt.doctor_id}`}>
-                            <Button variant="outline" className="border-green-900 text-green-900 hover:bg-green-50 rounded-full">
+                            <Button variant="outline" className="border-blue-900 text-blue-900 hover:bg-blue-50 rounded-full">
                               Laisser un avis
                             </Button>
                           </Link>
@@ -358,9 +358,9 @@ const PatientDashboard = () => {
         {activeTab === 'payments' && (
           <Card className="shadow-md border-stone-100">
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-2xl font-serif text-green-900">Historique des Paiements</CardTitle>
+              <CardTitle className="text-2xl font-serif text-blue-900">Historique des Paiements</CardTitle>
               <Link to="/payment">
-                <Button className="bg-green-900 text-white hover:bg-green-800 rounded-full" data-testid="new-payment-from-history">
+                <Button className="bg-blue-900 text-white hover:bg-blue-800 rounded-full" data-testid="new-payment-from-history">
                   <Smartphone className="w-4 h-4 mr-2" />
                   Nouveau Paiement
                 </Button>
@@ -404,7 +404,7 @@ const PatientDashboard = () => {
                           </div>
                         </div>
                         <div className="text-right">
-                          <p className={`text-xl font-bold ${payment.status === 'SUCCESSFUL' ? 'text-green-600' : 'text-stone-900'}`}>
+                          <p className={`text-xl font-bold ${payment.status === 'SUCCESSFUL' ? 'text-blue-600' : 'text-stone-900'}`}>
                             {formatAmount(payment.amount, payment.currency)}
                           </p>
                           <p className="text-xs text-stone-500 font-mono">
@@ -419,20 +419,20 @@ const PatientDashboard = () => {
 
               {/* Payment Summary */}
               {payments.length > 0 && (
-                <div className="mt-6 p-4 bg-green-50 rounded-xl">
-                  <h4 className="font-semibold text-green-900 mb-3">Résumé</h4>
+                <div className="mt-6 p-4 bg-blue-50 rounded-xl">
+                  <h4 className="font-semibold text-blue-900 mb-3">Résumé</h4>
                   <div className="grid md:grid-cols-3 gap-4 text-sm">
                     <div>
                       <p className="text-stone-600">Total paiements</p>
-                      <p className="font-bold text-green-900">{payments.length}</p>
+                      <p className="font-bold text-blue-900">{payments.length}</p>
                     </div>
                     <div>
                       <p className="text-stone-600">Paiements réussis</p>
-                      <p className="font-bold text-green-600">{successfulPayments}</p>
+                      <p className="font-bold text-blue-600">{successfulPayments}</p>
                     </div>
                     <div>
                       <p className="text-stone-600">Montant total</p>
-                      <p className="font-bold text-green-900">{formatAmount(totalSpent)}</p>
+                      <p className="font-bold text-blue-900">{formatAmount(totalSpent)}</p>
                     </div>
                   </div>
                 </div>

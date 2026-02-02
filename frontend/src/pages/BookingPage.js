@@ -108,7 +108,7 @@ const BookingPage = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-stone-50 pt-20">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-900"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-900"></div>
       </div>
     );
   }
@@ -120,12 +120,12 @@ const BookingPage = () => {
         <div className="mb-8">
           <button 
             onClick={() => navigate(-1)}
-            className="flex items-center text-stone-600 hover:text-green-900 mb-4"
+            className="flex items-center text-stone-600 hover:text-blue-900 mb-4"
           >
             <ChevronLeft className="w-5 h-5 mr-1" />
             Retour
           </button>
-          <h1 className="text-3xl font-serif font-bold text-green-900">
+          <h1 className="text-3xl font-serif font-bold text-blue-900">
             Réserver un rendez-vous
           </h1>
         </div>
@@ -135,11 +135,11 @@ const BookingPage = () => {
           <Card className="md:col-span-1 h-fit">
             <CardContent className="p-6">
               <div className="flex flex-col items-center text-center">
-                <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mb-4">
                   {doctor?.profile_image ? (
                     <img src={doctor.profile_image} alt={doctor.name} className="w-full h-full rounded-full object-cover" />
                   ) : (
-                    <User className="w-10 h-10 text-green-600" />
+                    <User className="w-10 h-10 text-blue-600" />
                   )}
                 </div>
                 <h2 className="text-xl font-semibold text-stone-900 mb-1">
@@ -166,7 +166,7 @@ const BookingPage = () => {
                 )}
                 <div className="w-full pt-3 border-t">
                   <p className="text-sm text-stone-600">Consultation</p>
-                  <p className="text-2xl font-bold text-green-600">
+                  <p className="text-2xl font-bold text-blue-600">
                     {doctor?.consultation_fee?.toLocaleString() || '0'} XOF
                   </p>
                 </div>
@@ -181,12 +181,12 @@ const BookingPage = () => {
               {[1, 2, 3].map((s) => (
                 <div key={s} className="flex items-center">
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                    step >= s ? 'bg-green-600 text-white' : 'bg-stone-200 text-stone-500'
+                    step >= s ? 'bg-blue-600 text-white' : 'bg-stone-200 text-stone-500'
                   }`}>
                     {step > s ? <Check className="w-4 h-4" /> : s}
                   </div>
                   {s < 3 && (
-                    <div className={`w-12 h-1 mx-1 ${step > s ? 'bg-green-600' : 'bg-stone-200'}`} />
+                    <div className={`w-12 h-1 mx-1 ${step > s ? 'bg-blue-600' : 'bg-stone-200'}`} />
                   )}
                 </div>
               ))}
@@ -197,7 +197,7 @@ const BookingPage = () => {
               <Card className={step === 1 ? '' : 'opacity-60'}>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-lg flex items-center gap-2">
-                    <Calendar className="w-5 h-5 text-green-600" />
+                    <Calendar className="w-5 h-5 text-blue-600" />
                     1. Choisir une date
                   </CardTitle>
                 </CardHeader>
@@ -213,9 +213,9 @@ const BookingPage = () => {
                           disabled={!hasSlots}
                           className={`p-3 rounded-xl text-center transition-all ${
                             isSelected 
-                              ? 'bg-green-600 text-white shadow-lg' 
+                              ? 'bg-blue-600 text-white shadow-lg' 
                               : hasSlots 
-                                ? 'bg-white hover:bg-green-50 border border-stone-200' 
+                                ? 'bg-white hover:bg-blue-50 border border-stone-200' 
                                 : 'bg-stone-100 text-stone-400 cursor-not-allowed'
                           }`}
                           data-testid={`date-${day.date}`}
@@ -224,7 +224,7 @@ const BookingPage = () => {
                           <p className="text-lg font-bold">
                             {new Date(day.date).getDate()}
                           </p>
-                          <p className={`text-xs ${isSelected ? 'text-green-100' : 'text-green-600'}`}>
+                          <p className={`text-xs ${isSelected ? 'text-blue-100' : 'text-blue-600'}`}>
                             {day.available_count} dispo
                           </p>
                         </button>
@@ -240,7 +240,7 @@ const BookingPage = () => {
               <Card className={step === 2 ? '' : 'opacity-60'}>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-lg flex items-center gap-2">
-                    <Clock className="w-5 h-5 text-green-600" />
+                    <Clock className="w-5 h-5 text-blue-600" />
                     2. Choisir un horaire
                   </CardTitle>
                 </CardHeader>
@@ -254,8 +254,8 @@ const BookingPage = () => {
                           onClick={() => handleTimeSelect(slot.time)}
                           className={`p-3 rounded-lg text-center transition-all ${
                             isSelected 
-                              ? 'bg-green-600 text-white shadow-lg' 
-                              : 'bg-white hover:bg-green-50 border border-stone-200'
+                              ? 'bg-blue-600 text-white shadow-lg' 
+                              : 'bg-white hover:bg-blue-50 border border-stone-200'
                           }`}
                           data-testid={`time-${slot.time}`}
                         >
@@ -278,14 +278,14 @@ const BookingPage = () => {
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-lg flex items-center gap-2">
-                    <Check className="w-5 h-5 text-green-600" />
+                    <Check className="w-5 h-5 text-blue-600" />
                     3. Confirmer la réservation
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {/* Summary */}
-                  <div className="bg-green-50 rounded-xl p-4">
-                    <h3 className="font-semibold text-green-900 mb-2">Résumé</h3>
+                  <div className="bg-blue-50 rounded-xl p-4">
+                    <h3 className="font-semibold text-blue-900 mb-2">Résumé</h3>
                     <div className="space-y-1 text-sm">
                       <p><span className="text-stone-500">Médecin:</span> Dr. {doctor?.name}</p>
                       <p><span className="text-stone-500">Date:</span> {new Date(selectedDate).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
@@ -319,7 +319,7 @@ const BookingPage = () => {
                           onClick={() => setPaymentMethod(method.id)}
                           className={`p-3 rounded-lg border-2 transition-all ${
                             paymentMethod === method.id 
-                              ? 'border-green-600 bg-green-50' 
+                              ? 'border-blue-600 bg-blue-50' 
                               : 'border-stone-200 hover:border-stone-300'
                           }`}
                         >
@@ -336,7 +336,7 @@ const BookingPage = () => {
                   <Button
                     onClick={handleBooking}
                     disabled={booking}
-                    className="w-full bg-green-600 hover:bg-green-700 py-6 text-lg"
+                    className="w-full bg-blue-600 hover:bg-blue-700 py-6 text-lg"
                     data-testid="confirm-booking-btn"
                   >
                     {booking ? (

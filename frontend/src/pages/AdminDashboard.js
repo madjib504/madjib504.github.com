@@ -245,16 +245,16 @@ const AdminDashboard = () => {
           <Card className="bg-slate-800 border-slate-700">
             <CardHeader>
               <CardTitle className="text-white flex items-center gap-3">
-                <div className="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center">
+                <div className="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center">
                   {selectedUser.user?.user_type === 'patient' ? (
-                    <Users className="w-6 h-6 text-green-500" />
+                    <Users className="w-6 h-6 text-blue-500" />
                   ) : (
                     <Stethoscope className="w-6 h-6 text-blue-500" />
                   )}
                 </div>
                 {selectedUser.user?.name}
                 {selectedUser.user?.verified && (
-                  <Badge className="bg-green-500">Vérifié</Badge>
+                  <Badge className="bg-blue-500">Vérifié</Badge>
                 )}
               </CardTitle>
             </CardHeader>
@@ -302,7 +302,7 @@ const AdminDashboard = () => {
                     </div>
                     <div>
                       <p className="text-slate-400 text-sm">Tarif consultation</p>
-                      <p className="text-green-500">{selectedUser.doctor_profile.consultation_fee || 0} XOF</p>
+                      <p className="text-blue-500">{selectedUser.doctor_profile.consultation_fee || 0} XOF</p>
                     </div>
                   </div>
                 </div>
@@ -316,7 +316,7 @@ const AdminDashboard = () => {
                     {selectedUser.payments.map((p, i) => (
                       <div key={i} className="flex justify-between items-center p-2 bg-slate-700/50 rounded">
                         <span className="text-slate-300 text-sm">{p.description}</span>
-                        <span className={`font-medium ${p.status === 'SUCCESSFUL' ? 'text-green-500' : 'text-yellow-500'}`}>
+                        <span className={`font-medium ${p.status === 'SUCCESSFUL' ? 'text-blue-500' : 'text-yellow-500'}`}>
                           {p.amount} XOF
                         </span>
                       </div>
@@ -330,7 +330,7 @@ const AdminDashboard = () => {
                 {!selectedUser.user?.verified && (
                   <Button 
                     onClick={() => handleVerifyUser(selectedUser.user?.id)}
-                    className="bg-green-600 hover:bg-green-700"
+                    className="bg-blue-600 hover:bg-blue-700"
                   >
                     <CheckCircle className="w-4 h-4 mr-2" />
                     Vérifier
@@ -437,9 +437,9 @@ const AdminDashboard = () => {
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="text-slate-400 text-sm">Patients</p>
-                          <p className="text-3xl font-bold text-green-500">{stats.users.patients}</p>
+                          <p className="text-3xl font-bold text-blue-500">{stats.users.patients}</p>
                         </div>
-                        <UserCheck className="w-10 h-10 text-green-500 opacity-50" />
+                        <UserCheck className="w-10 h-10 text-blue-500 opacity-50" />
                       </div>
                     </CardContent>
                   </Card>
@@ -497,7 +497,7 @@ const AdminDashboard = () => {
                         </div>
                         <div className="flex justify-between">
                           <span className="text-slate-400">Réussis</span>
-                          <span className="text-green-500 font-medium">{stats.payments.successful}</span>
+                          <span className="text-blue-500 font-medium">{stats.payments.successful}</span>
                         </div>
                       </div>
                     </CardContent>
@@ -561,10 +561,10 @@ const AdminDashboard = () => {
                               <td className="p-4">
                                 <div className="flex items-center gap-3">
                                   <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                                    user.user_type === 'patient' ? 'bg-green-500/20' : 'bg-blue-500/20'
+                                    user.user_type === 'patient' ? 'bg-blue-500/20' : 'bg-blue-500/20'
                                   }`}>
                                     {user.user_type === 'patient' ? (
-                                      <Users className="w-5 h-5 text-green-500" />
+                                      <Users className="w-5 h-5 text-blue-500" />
                                     ) : (
                                       <Stethoscope className="w-5 h-5 text-blue-500" />
                                     )}
@@ -580,7 +580,7 @@ const AdminDashboard = () => {
                               </td>
                               <td className="p-4">
                                 {user.verified ? (
-                                  <Badge className="bg-green-500/20 text-green-500">Vérifié</Badge>
+                                  <Badge className="bg-blue-500/20 text-blue-500">Vérifié</Badge>
                                 ) : (
                                   <Badge className="bg-yellow-500/20 text-yellow-500">Non vérifié</Badge>
                                 )}
@@ -601,7 +601,7 @@ const AdminDashboard = () => {
                                       size="sm" 
                                       variant="ghost"
                                       onClick={() => handleVerifyUser(user.id)}
-                                      className="text-green-500 hover:text-green-400"
+                                      className="text-blue-500 hover:text-blue-400"
                                     >
                                       <CheckCircle className="w-4 h-4" />
                                     </Button>
@@ -689,7 +689,7 @@ const AdminDashboard = () => {
                             </td>
                             <td className="p-4">
                               <Badge className={
-                                payment.status === 'SUCCESSFUL' ? 'bg-green-500/20 text-green-500' :
+                                payment.status === 'SUCCESSFUL' ? 'bg-blue-500/20 text-blue-500' :
                                 payment.status === 'PENDING' ? 'bg-yellow-500/20 text-yellow-500' :
                                 'bg-red-500/20 text-red-500'
                               }>
@@ -731,7 +731,7 @@ const AdminDashboard = () => {
                             </td>
                             <td className="p-4">
                               <Badge className={
-                                apt.status === 'confirmed' ? 'bg-green-500/20 text-green-500' :
+                                apt.status === 'confirmed' ? 'bg-blue-500/20 text-blue-500' :
                                 apt.status === 'pending' ? 'bg-yellow-500/20 text-yellow-500' :
                                 apt.status === 'cancelled' ? 'bg-red-500/20 text-red-500' :
                                 'bg-blue-500/20 text-blue-500'

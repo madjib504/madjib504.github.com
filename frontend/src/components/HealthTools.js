@@ -36,7 +36,7 @@ export const SOSButton = () => {
       case 'Gendarmerie':
         return <Shield className="w-5 h-5 text-blue-500" />;
       case 'Hôpital':
-        return <Hospital className="w-5 h-5 text-green-500" />;
+        return <Hospital className="w-5 h-5 text-blue-500" />;
       case 'Humanitaire':
         return <Heart className="w-5 h-5 text-red-500" />;
       case 'Intoxication':
@@ -57,7 +57,7 @@ export const SOSButton = () => {
       case 'Gendarmerie':
         return 'bg-blue-50 border-blue-200';
       case 'Hôpital':
-        return 'bg-green-50 border-green-200';
+        return 'bg-blue-50 border-blue-200';
       case 'Humanitaire':
         return 'bg-pink-50 border-pink-200';
       case 'Intoxication':
@@ -134,8 +134,8 @@ export const SOSButton = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Phone className="w-4 h-4 text-green-600" />
-                  <span className="font-bold text-green-800 text-sm">{contact.number}</span>
+                  <Phone className="w-4 h-4 text-blue-600" />
+                  <span className="font-bold text-blue-800 text-sm">{contact.number}</span>
                 </div>
               </a>
             ))}
@@ -180,7 +180,7 @@ export const MedicalAssistant = () => {
       <DialogTrigger asChild>
         <Button 
           data-testid="assistant-button"
-          className="fixed bottom-24 right-6 z-50 bg-green-900 hover:bg-green-800 text-white rounded-full shadow-xl"
+          className="fixed bottom-24 right-6 z-50 bg-blue-900 hover:bg-blue-800 text-white rounded-full shadow-xl"
         >
           <Stethoscope className="w-5 h-5 mr-2" />
           Assistant Santé
@@ -188,7 +188,7 @@ export const MedicalAssistant = () => {
       </DialogTrigger>
       <DialogContent className="bg-white max-w-2xl">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-serif text-green-900">
+          <DialogTitle className="text-2xl font-serif text-blue-900">
             Assistant d'Orientation Médicale
           </DialogTitle>
         </DialogHeader>
@@ -208,7 +208,7 @@ export const MedicalAssistant = () => {
           <Button 
             onClick={handleSuggest}
             disabled={loading || !symptoms.trim()}
-            className="w-full bg-green-900 hover:bg-green-800 rounded-full"
+            className="w-full bg-blue-900 hover:bg-blue-800 rounded-full"
             data-testid="suggest-button"
           >
             {loading ? 'Analyse...' : 'Obtenir des suggestions'}
@@ -219,8 +219,8 @@ export const MedicalAssistant = () => {
               <h3 className="font-bold text-lg mb-4">Spécialités recommandées :</h3>
               <div className="space-y-3">
                 {suggestions.map((sug, idx) => (
-                  <div key={idx} className="p-4 bg-green-50 rounded-lg border border-green-200">
-                    <p className="font-bold text-green-900">{sug.specialty}</p>
+                  <div key={idx} className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    <p className="font-bold text-blue-900">{sug.specialty}</p>
                     <p className="text-sm text-stone-600 capitalize">{sug.medical_type.replace('_', ' ')}</p>
                   </div>
                 ))}

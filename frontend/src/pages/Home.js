@@ -113,7 +113,7 @@ const HomePage = () => {
       title: 'Services Médicaux',
       items: [
         { icon: Activity, label: 'Médecine Moderne', link: '/search?medical_type=moderne', color: 'text-sky-500' },
-        { icon: Leaf, label: 'Médecine Traditionnelle', link: '/search?medical_type=traditionnel_africain', color: 'text-green-600' },
+        { icon: Leaf, label: 'Médecine Traditionnelle', link: '/search?medical_type=traditionnel_africain', color: 'text-blue-600' },
         { icon: Sparkles, label: 'Bien-être & Beauté', link: '/search?medical_type=bien_etre', color: 'text-purple-500' },
         { icon: Truck, label: 'Service à Domicile', link: '/search?medical_type=service_domicile', color: 'text-orange-500' },
         { icon: Users, label: 'Autre', link: '/search?medical_type=autre', color: 'text-gray-500' },
@@ -151,7 +151,7 @@ const HomePage = () => {
       <CountdownTimer />
       
       {/* Main Hero - Full Screen */}
-      <div className="flex-1 flex flex-col items-center justify-center bg-gradient-to-b from-green-900 via-green-800 to-green-900 relative px-6">
+      <div className="flex-1 flex flex-col items-center justify-center bg-gradient-to-b from-blue-900 via-blue-800 to-blue-900 relative px-6">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute inset-0" style={{
@@ -203,24 +203,24 @@ const HomePage = () => {
             SANA VITA
           </h1>
           
-          <p className="text-xl md:text-2xl text-green-100 mb-4 font-light">
+          <p className="text-xl md:text-2xl text-blue-100 mb-4 font-light">
             Votre Santé, Notre Priorité
           </p>
 
-          <p className="text-base md:text-lg text-green-200/80 mb-12 max-w-xl mx-auto">
+          <p className="text-base md:text-lg text-blue-200/80 mb-12 max-w-xl mx-auto">
             Connectez-vous avec les meilleurs spécialistes en médecine moderne et traditionnelle africaine
           </p>
 
           {/* Main CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
             <Link to="/register" data-testid="cta-register-btn">
-              <Button className="bg-white text-green-900 hover:bg-green-50 rounded-full px-10 py-7 text-lg font-semibold shadow-2xl hover:shadow-white/20 transition-all w-full sm:w-auto">
+              <Button className="bg-white text-blue-900 hover:bg-blue-50 rounded-full px-10 py-7 text-lg font-semibold shadow-2xl hover:shadow-white/20 transition-all w-full sm:w-auto">
                 <Users className="w-5 h-5 mr-2" />
                 Créer un Compte
               </Button>
             </Link>
             <Link to="/search?assistant=true" data-testid="cta-assistant-btn">
-              <Button className="bg-green-700/50 backdrop-blur-sm text-white border-2 border-white/30 hover:bg-green-600/50 hover:border-white/50 rounded-full px-10 py-7 text-lg font-semibold transition-all w-full sm:w-auto">
+              <Button className="bg-blue-700/50 backdrop-blur-sm text-white border-2 border-white/30 hover:bg-blue-600/50 hover:border-white/50 rounded-full px-10 py-7 text-lg font-semibold transition-all w-full sm:w-auto">
                 <Heart className="w-5 h-5 mr-2" />
                 Assistance Santé
               </Button>
@@ -228,7 +228,7 @@ const HomePage = () => {
           </div>
 
           {/* Quick Stats */}
-          <div className="flex flex-wrap justify-center gap-8 text-green-100/80 text-sm">
+          <div className="flex flex-wrap justify-center gap-8 text-blue-100/80 text-sm">
             <div className="flex items-center gap-2">
               <Shield className="w-4 h-4" />
               <span>100% Sécurisé</span>
@@ -263,7 +263,7 @@ const HomePage = () => {
         data-testid="side-menu"
       >
         {/* Menu Header */}
-        <div className="bg-green-900 p-6 flex items-center justify-between">
+        <div className="bg-blue-900 p-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Stethoscope className="w-8 h-8 text-white" />
             <span className="text-xl font-serif font-bold text-white">SANA VITA</span>
@@ -291,7 +291,7 @@ const HomePage = () => {
                   className="bg-stone-50 rounded-full pr-10"
                   data-testid="menu-search-input"
                 />
-                <button type="submit" className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-green-900">
+                <button type="submit" className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-blue-900">
                   <Search className="w-5 h-5" />
                 </button>
               </div>
@@ -300,9 +300,9 @@ const HomePage = () => {
 
           {/* User Section (if logged in) */}
           {user && (
-            <div className="p-4 border-b bg-green-50">
+            <div className="p-4 border-b bg-blue-50">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 bg-green-900 rounded-full flex items-center justify-center">
+                <div className="w-10 h-10 bg-blue-900 rounded-full flex items-center justify-center">
                   <User className="w-5 h-5 text-white" />
                 </div>
                 <div>
@@ -316,9 +316,9 @@ const HomePage = () => {
                     key={idx}
                     to={item.link}
                     onClick={() => setMenuOpen(false)}
-                    className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-green-100 transition-colors"
+                    className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-blue-100 transition-colors"
                   >
-                    <item.icon className="w-4 h-4 text-green-700" />
+                    <item.icon className="w-4 h-4 text-blue-700" />
                     <span className="text-sm text-stone-700">{item.label}</span>
                   </Link>
                 ))}
@@ -388,7 +388,7 @@ const HomePage = () => {
                   </Button>
                 </Link>
                 <Link to="/register" onClick={() => setMenuOpen(false)}>
-                  <Button className="w-full bg-green-900 hover:bg-green-800 rounded-lg">
+                  <Button className="w-full bg-blue-900 hover:bg-blue-800 rounded-lg">
                     Créer un Compte
                   </Button>
                 </Link>

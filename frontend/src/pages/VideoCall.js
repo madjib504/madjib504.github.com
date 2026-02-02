@@ -31,7 +31,7 @@ const VideoCall = () => {
           {callStatus === 'connecting' ? (
             <Card className="bg-stone-800 border-stone-700">
               <CardContent className="p-12 text-center">
-                <div className="inline-block animate-spin rounded-full h-16 w-16 border-b-2 border-green-500 mb-6"></div>
+                <div className="inline-block animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500 mb-6"></div>
                 <h2 className="text-2xl font-serif font-bold text-white mb-2">Connexion en cours...</h2>
                 <p className="text-stone-400">Veuillez patienter</p>
               </CardContent>
@@ -43,9 +43,9 @@ const VideoCall = () => {
                 {/* Remote Video */}
                 <Card className="bg-stone-800 border-stone-700 overflow-hidden aspect-video">
                   <CardContent className="p-0 h-full relative">
-                    <div className="w-full h-full bg-gradient-to-br from-green-900 to-sky-900 flex items-center justify-center">
+                    <div className="w-full h-full bg-gradient-to-br from-blue-900 to-sky-900 flex items-center justify-center">
                       <div className="text-center">
-                        <div className="w-24 h-24 bg-green-700 rounded-full flex items-center justify-center mb-4 mx-auto">
+                        <div className="w-24 h-24 bg-blue-700 rounded-full flex items-center justify-center mb-4 mx-auto">
                           <span className="text-4xl text-white font-bold">D</span>
                         </div>
                         <p className="text-white text-lg font-medium">Médecin</p>
@@ -61,7 +61,7 @@ const VideoCall = () => {
                 <Card className="bg-stone-800 border-stone-700 overflow-hidden aspect-video">
                   <CardContent className="p-0 h-full relative">
                     {isVideoEnabled ? (
-                      <div className="w-full h-full bg-gradient-to-br from-sky-900 to-green-900 flex items-center justify-center">
+                      <div className="w-full h-full bg-gradient-to-br from-sky-900 to-blue-900 flex items-center justify-center">
                         <div className="text-center">
                           <div className="w-24 h-24 bg-sky-700 rounded-full flex items-center justify-center mb-4 mx-auto">
                             <span className="text-4xl text-white font-bold">

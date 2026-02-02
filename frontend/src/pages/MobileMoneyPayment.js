@@ -147,7 +147,7 @@ const MobileMoneyPayment = () => {
       case 'PENDING':
         return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800"><Clock className="w-3 h-3 mr-1" /> En attente</Badge>;
       case 'SUCCESSFUL':
-        return <Badge variant="secondary" className="bg-green-100 text-green-800"><CheckCircle className="w-3 h-3 mr-1" /> Confirmé</Badge>;
+        return <Badge variant="secondary" className="bg-blue-100 text-blue-800"><CheckCircle className="w-3 h-3 mr-1" /> Confirmé</Badge>;
       case 'FAILED':
         return <Badge variant="destructive"><XCircle className="w-3 h-3 mr-1" /> Échoué</Badge>;
       default:
@@ -158,13 +158,13 @@ const MobileMoneyPayment = () => {
   // Affichage du statut du paiement
   if (paymentReference) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-green-50 to-white py-8 px-4">
+      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white py-8 px-4">
         <div className="max-w-md mx-auto">
           <Card className="shadow-xl border-0">
             <CardHeader className="text-center pb-2">
               {paymentStatus === 'SUCCESSFUL' ? (
-                <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
-                  <CheckCircle className="w-10 h-10 text-green-600" />
+                <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+                  <CheckCircle className="w-10 h-10 text-blue-600" />
                 </div>
               ) : paymentStatus === 'FAILED' ? (
                 <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
@@ -214,7 +214,7 @@ const MobileMoneyPayment = () => {
                   <Button 
                     onClick={simulateConfirmation} 
                     disabled={loading}
-                    className="w-full bg-green-600 hover:bg-green-700"
+                    className="w-full bg-blue-600 hover:bg-blue-700"
                     data-testid="simulate-confirm-btn"
                   >
                     {loading ? 'Simulation...' : 'Simuler la Confirmation (Sandbox)'}
@@ -223,8 +223,8 @@ const MobileMoneyPayment = () => {
               )}
 
               {paymentStatus === 'SUCCESSFUL' && (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                  <p className="text-sm text-green-800">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <p className="text-sm text-blue-800">
                     Votre paiement a été confirmé avec succès. Des points de fidélité ont été ajoutés à votre compte.
                   </p>
                 </div>
@@ -247,7 +247,7 @@ const MobileMoneyPayment = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-green-50 to-white py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white py-8 px-4">
       <div className="max-w-2xl mx-auto">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Paiement Mobile Money</h1>
@@ -273,7 +273,7 @@ const MobileMoneyPayment = () => {
                   onClick={() => setSelectedProvider(provider.id)}
                   className={`cursor-pointer border-2 rounded-lg p-4 transition-all ${
                     selectedProvider === provider.id 
-                      ? 'border-green-500 bg-green-50 shadow-md' 
+                      ? 'border-blue-500 bg-blue-50 shadow-md' 
                       : 'border-gray-200 hover:border-gray-300 hover:shadow'
                   }`}
                   data-testid={`provider-${provider.id}`}
@@ -285,7 +285,7 @@ const MobileMoneyPayment = () => {
                     <h3 className="font-semibold text-sm mb-1">{provider.name}</h3>
                     <p className="text-xs text-gray-500">{provider.countries?.slice(0, 2).join(', ')}...</p>
                     {selectedProvider === provider.id && (
-                      <CheckCircle className="w-5 h-5 text-green-500 mt-2" />
+                      <CheckCircle className="w-5 h-5 text-blue-500 mt-2" />
                     )}
                   </div>
                 </div>
@@ -400,7 +400,7 @@ const MobileMoneyPayment = () => {
                 </div>
                 <div className="flex justify-between items-center text-sm mt-2">
                   <span className="text-gray-600">Montant à payer:</span>
-                  <span className="font-bold text-lg text-green-600">
+                  <span className="font-bold text-lg text-blue-600">
                     {formData.amount ? `${formData.amount} XOF` : '0 XOF'}
                   </span>
                 </div>
@@ -409,7 +409,7 @@ const MobileMoneyPayment = () => {
               <Button
                 type="submit"
                 disabled={loading || !selectedProvider}
-                className="w-full bg-green-600 hover:bg-green-700 text-white py-3"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3"
                 data-testid="pay-now-btn"
               >
                 {loading ? (

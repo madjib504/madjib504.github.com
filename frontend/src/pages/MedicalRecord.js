@@ -86,7 +86,7 @@ const MedicalRecord = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-stone-50 pt-20">
-        <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-green-900"></div>
+        <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-900"></div>
       </div>
     );
   }
@@ -95,7 +95,7 @@ const MedicalRecord = () => {
     <div data-testid="medical-record-page" className="min-h-screen bg-stone-50 pt-24 px-6 pb-12">
       <div className="max-w-5xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-4xl font-serif font-bold text-green-900 mb-2">Mon Dossier Médical</h1>
+          <h1 className="text-4xl font-serif font-bold text-blue-900 mb-2">Mon Dossier Médical</h1>
           <p className="text-stone-600">Centralisez toutes vos informations de santé</p>
         </div>
 
@@ -146,7 +146,7 @@ const MedicalRecord = () => {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Heart className="w-5 h-5 text-green-600" />
+                <Heart className="w-5 h-5 text-blue-600" />
                 Maladies Chroniques
               </CardTitle>
             </CardHeader>
@@ -235,7 +235,7 @@ const MedicalRecord = () => {
         <div className="mt-6 flex gap-4">
           {editing ? (
             <>
-              <Button onClick={handleUpdate} className="bg-green-900 text-white hover:bg-green-800">
+              <Button onClick={handleUpdate} className="bg-blue-900 text-white hover:bg-blue-800">
                 Enregistrer
               </Button>
               <Button onClick={() => { setEditing(false); fetchRecord(); }} variant="outline">
@@ -243,7 +243,7 @@ const MedicalRecord = () => {
               </Button>
             </>
           ) : (
-            <Button onClick={() => setEditing(true)} className="bg-green-900 text-white hover:bg-green-800">
+            <Button onClick={() => setEditing(true)} className="bg-blue-900 text-white hover:bg-blue-800">
               Modifier
             </Button>
           )}

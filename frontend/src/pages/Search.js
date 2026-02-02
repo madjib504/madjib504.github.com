@@ -91,7 +91,7 @@ const Search = () => {
   const getMedicalTypeBadge = (type) => {
     const badges = {
       'moderne': { label: 'Moderne', color: 'bg-sky-100 text-sky-700' },
-      'traditionnel_africain': { label: 'Traditionnel', color: 'bg-green-100 text-green-700' },
+      'traditionnel_africain': { label: 'Traditionnel', color: 'bg-blue-100 text-blue-700' },
       'bien_etre': { label: 'Bien-être', color: 'bg-purple-100 text-purple-700' },
       'service_domicile': { label: 'Domicile', color: 'bg-orange-100 text-orange-700' },
       'materiel_medical': { label: 'Matériel', color: 'bg-blue-100 text-blue-700' },
@@ -104,7 +104,7 @@ const Search = () => {
     <div data-testid="search-page" className="min-h-screen bg-stone-50 pt-24 px-4 md:px-6 pb-12">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-serif font-bold text-green-900 mb-2" data-testid="search-title">
+          <h1 className="text-3xl md:text-4xl font-serif font-bold text-blue-900 mb-2" data-testid="search-title">
             Trouvez Votre Professionnel
           </h1>
           <p className="text-stone-600">
@@ -118,7 +118,7 @@ const Search = () => {
             onClick={() => setActiveTab('search')}
             className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-medium transition-colors ${
               activeTab === 'search'
-                ? 'bg-green-900 text-white'
+                ? 'bg-blue-900 text-white'
                 : 'bg-white text-stone-600 hover:bg-stone-100'
             }`}
           >
@@ -129,7 +129,7 @@ const Search = () => {
             onClick={() => setActiveTab('nearby')}
             className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-medium transition-colors ${
               activeTab === 'nearby'
-                ? 'bg-green-900 text-white'
+                ? 'bg-blue-900 text-white'
                 : 'bg-white text-stone-600 hover:bg-stone-100'
             }`}
             data-testid="nearby-tab"
@@ -168,7 +168,7 @@ const Search = () => {
                     />
                     <Button
                       onClick={handleSearch}
-                      className="bg-green-900 text-white hover:bg-green-800 rounded-lg h-11 px-6"
+                      className="bg-blue-900 text-white hover:bg-blue-800 rounded-lg h-11 px-6"
                       data-testid="quick-search-btn"
                     >
                       <SearchIcon className="w-4 h-4 md:mr-2" />
@@ -248,7 +248,7 @@ const Search = () => {
             {/* Results */}
             {loading ? (
               <div className="text-center py-12">
-                <div className="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-green-900"></div>
+                <div className="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-blue-900"></div>
                 <p className="mt-3 text-stone-600">Recherche en cours...</p>
               </div>
             ) : doctors.length === 0 ? (
@@ -268,7 +268,7 @@ const Search = () => {
                       className="bg-white rounded-xl border border-stone-100 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 overflow-hidden"
                     >
                       <CardContent className="p-0">
-                        <div className="h-40 bg-gradient-to-br from-green-100 to-sky-100 relative overflow-hidden">
+                        <div className="h-40 bg-gradient-to-br from-blue-100 to-sky-100 relative overflow-hidden">
                           {doctor.profile_image ? (
                             <img
                               src={doctor.profile_image}
@@ -280,7 +280,7 @@ const Search = () => {
                               {doctor.medical_type === 'moderne' ? (
                                 <Stethoscope className="w-16 h-16 text-sky-500/50" />
                               ) : (
-                                <Leaf className="w-16 h-16 text-green-600/50" />
+                                <Leaf className="w-16 h-16 text-blue-600/50" />
                               )}
                             </div>
                           )}
@@ -316,7 +316,7 @@ const Search = () => {
                               </div>
                             )}
                             {doctor.consultation_fee && (
-                              <div className="text-green-600 font-medium">
+                              <div className="text-blue-600 font-medium">
                                 {doctor.consultation_fee.toLocaleString()} XOF
                               </div>
                             )}
@@ -333,7 +333,7 @@ const Search = () => {
                             </Link>
                             <Link to={`/booking/${doctor.id}`}>
                               <Button 
-                                className="bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm h-9 px-3"
+                                className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm h-9 px-3"
                                 data-testid={`book-btn-${doctor.id}`}
                               >
                                 <Calendar className="w-4 h-4" />

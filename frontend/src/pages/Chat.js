@@ -177,7 +177,7 @@ const Chat = () => {
         {/* Conversations List */}
         <div className="w-80 bg-white border-r border-stone-200 flex flex-col">
           <div className="p-6 border-b border-stone-200">
-            <h2 className="text-2xl font-serif font-bold text-green-900" data-testid="conversations-title">Messages</h2>
+            <h2 className="text-2xl font-serif font-bold text-blue-900" data-testid="conversations-title">Messages</h2>
           </div>
           <div className="flex-1 overflow-y-auto">
             {conversations.length === 0 ? (
@@ -191,11 +191,11 @@ const Chat = () => {
                   onClick={() => handleSelectConversation(conv)}
                   data-testid={`conversation-${conv.user_id}`}
                   className={`w-full p-4 flex items-center gap-3 hover:bg-stone-50 transition-colors border-b border-stone-100 ${
-                    selectedConversation?.user_id === conv.user_id ? 'bg-green-50' : ''
+                    selectedConversation?.user_id === conv.user_id ? 'bg-blue-50' : ''
                   }`}
                 >
                   <Avatar className="w-12 h-12">
-                    <AvatarFallback className="bg-green-900 text-white">
+                    <AvatarFallback className="bg-blue-900 text-white">
                       {conv.user_info?.name?.charAt(0)?.toUpperCase() || 'U'}
                     </AvatarFallback>
                   </Avatar>
@@ -208,7 +208,7 @@ const Chat = () => {
                     )}
                   </div>
                   {conv.unread_count > 0 && (
-                    <div className="bg-green-900 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs">
+                    <div className="bg-blue-900 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs">
                       {conv.unread_count}
                     </div>
                   )}
@@ -226,7 +226,7 @@ const Chat = () => {
               <div className="p-6 border-b border-stone-200 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <Avatar className="w-10 h-10">
-                    <AvatarFallback className="bg-green-900 text-white">
+                    <AvatarFallback className="bg-blue-900 text-white">
                       {selectedConversation.user_info?.name?.charAt(0)?.toUpperCase() || 'U'}
                     </AvatarFallback>
                   </Avatar>
@@ -240,7 +240,7 @@ const Chat = () => {
                   </div>
                 </div>
                 <Link to={`/video-call/${[user.id, selectedConversation.user_id].sort().join('_')}`}>
-                  <Button variant="outline" className="border-green-900 text-green-900 hover:bg-green-50 rounded-full" data-testid="start-video-call-btn">
+                  <Button variant="outline" className="border-blue-900 text-blue-900 hover:bg-blue-50 rounded-full" data-testid="start-video-call-btn">
                     <Video className="w-4 h-4 mr-2" />
                     Appel Vidéo
                   </Button>
@@ -260,13 +260,13 @@ const Chat = () => {
                       <div
                         className={`max-w-md px-4 py-3 rounded-2xl ${
                           isOwn
-                            ? 'bg-green-900 text-white rounded-br-sm'
+                            ? 'bg-blue-900 text-white rounded-br-sm'
                             : 'bg-stone-100 text-stone-900 rounded-bl-sm'
                         }`}
                       >
                         <p>{msg.content}</p>
                         <p className={`text-xs mt-1 ${
-                          isOwn ? 'text-green-200' : 'text-stone-500'
+                          isOwn ? 'text-blue-200' : 'text-stone-500'
                         }`}>
                           {new Date(msg.created_at).toLocaleTimeString('fr-FR', {
                             hour: '2-digit',
@@ -294,7 +294,7 @@ const Chat = () => {
                   <Button
                     type="submit"
                     disabled={!newMessage.trim()}
-                    className="bg-green-900 text-white hover:bg-green-800 rounded-full px-6"
+                    className="bg-blue-900 text-white hover:bg-blue-800 rounded-full px-6"
                     data-testid="send-message-btn"
                   >
                     <Send className="w-5 h-5" />

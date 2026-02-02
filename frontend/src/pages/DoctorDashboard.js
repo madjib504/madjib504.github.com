@@ -105,7 +105,7 @@ const DoctorDashboard = () => {
   const getStatusBadge = (status) => {
     const statusConfig = {
       pending: { label: 'En attente', color: 'bg-yellow-100 text-yellow-800', icon: AlertCircle },
-      confirmed: { label: 'Confirmé', color: 'bg-green-100 text-green-800', icon: CheckCircle },
+      confirmed: { label: 'Confirmé', color: 'bg-blue-100 text-blue-800', icon: CheckCircle },
       cancelled: { label: 'Annulé', color: 'bg-red-100 text-red-800', icon: XCircle },
       completed: { label: 'Terminé', color: 'bg-blue-100 text-blue-800', icon: CheckCircle }
     };
@@ -123,7 +123,7 @@ const DoctorDashboard = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-stone-50 pt-20">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-green-900"></div>
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-900"></div>
           <p className="mt-4 text-stone-600">Chargement...</p>
         </div>
       </div>
@@ -139,7 +139,7 @@ const DoctorDashboard = () => {
     <div data-testid="doctor-dashboard" className="min-h-screen bg-stone-50 pt-24 px-6 pb-12">
       <div className="max-w-7xl mx-auto">
         <div className="mb-12">
-          <h1 className="text-4xl md:text-5xl font-serif font-bold text-green-900 mb-2" data-testid="dashboard-title">
+          <h1 className="text-4xl md:text-5xl font-serif font-bold text-blue-900 mb-2" data-testid="dashboard-title">
             Espace Médecin
           </h1>
           <p className="text-lg text-stone-600">Bienvenue, Dr. {user?.name}</p>
@@ -152,9 +152,9 @@ const DoctorDashboard = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-stone-600 mb-1">Aujourd'hui</p>
-                  <p className="text-3xl font-bold text-green-900" data-testid="today-count">{todayAppointments.length}</p>
+                  <p className="text-3xl font-bold text-blue-900" data-testid="today-count">{todayAppointments.length}</p>
                 </div>
-                <Calendar className="w-12 h-12 text-green-900 opacity-20" />
+                <Calendar className="w-12 h-12 text-blue-900 opacity-20" />
               </div>
             </CardContent>
           </Card>
@@ -174,9 +174,9 @@ const DoctorDashboard = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-stone-600 mb-1">Total patients</p>
-                  <p className="text-3xl font-bold text-green-900" data-testid="patients-count">{appointments.length}</p>
+                  <p className="text-3xl font-bold text-blue-900" data-testid="patients-count">{appointments.length}</p>
                 </div>
-                <User className="w-12 h-12 text-green-900 opacity-20" />
+                <User className="w-12 h-12 text-blue-900 opacity-20" />
               </div>
             </CardContent>
           </Card>
@@ -185,7 +185,7 @@ const DoctorDashboard = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-stone-600 mb-1">Note moyenne</p>
-                  <p className="text-3xl font-bold text-green-900" data-testid="rating">{profile?.rating || 0}</p>
+                  <p className="text-3xl font-bold text-blue-900" data-testid="rating">{profile?.rating || 0}</p>
                 </div>
                 <Star className="w-12 h-12 text-yellow-500 opacity-20" />
               </div>
@@ -196,17 +196,17 @@ const DoctorDashboard = () => {
         {/* Profile Card */}
         <Card className="shadow-md border-stone-100 mb-8">
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-2xl font-serif text-green-900">Mon Profil</CardTitle>
+            <CardTitle className="text-2xl font-serif text-blue-900">Mon Profil</CardTitle>
             <Dialog open={editOpen} onOpenChange={setEditOpen}>
               <DialogTrigger asChild>
-                <Button variant="outline" className="border-green-900 text-green-900 hover:bg-green-50 rounded-full" data-testid="edit-profile-btn">
+                <Button variant="outline" className="border-blue-900 text-blue-900 hover:bg-blue-50 rounded-full" data-testid="edit-profile-btn">
                   <Edit className="w-4 h-4 mr-2" />
                   Modifier
                 </Button>
               </DialogTrigger>
               <DialogContent className="bg-white max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
-                  <DialogTitle className="font-serif text-green-900">Modifier mon profil</DialogTitle>
+                  <DialogTitle className="font-serif text-blue-900">Modifier mon profil</DialogTitle>
                   <DialogDescription>Mettez à jour vos informations professionnelles</DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleProfileUpdate} className="space-y-4" data-testid="profile-form">
@@ -284,7 +284,7 @@ const DoctorDashboard = () => {
                       data-testid="image-input"
                     />
                   </div>
-                  <Button type="submit" className="w-full bg-green-900 text-white hover:bg-green-800 rounded-full" data-testid="save-profile-btn">
+                  <Button type="submit" className="w-full bg-blue-900 text-white hover:bg-blue-800 rounded-full" data-testid="save-profile-btn">
                     Enregistrer les modifications
                   </Button>
                 </form>
@@ -298,7 +298,7 @@ const DoctorDashboard = () => {
                   <p className="text-sm text-stone-600 mb-1">Spécialités</p>
                   <div className="flex flex-wrap gap-2">
                     {profile.specialties?.map((spec, idx) => (
-                      <span key={idx} className="bg-green-50 text-green-800 px-3 py-1 rounded-full text-sm">
+                      <span key={idx} className="bg-blue-50 text-blue-800 px-3 py-1 rounded-full text-sm">
                         {spec}
                       </span>
                     ))}
@@ -330,7 +330,7 @@ const DoctorDashboard = () => {
         {/* Appointments List */}
         <Card className="shadow-md border-stone-100">
           <CardHeader>
-            <CardTitle className="text-2xl font-serif text-green-900">Rendez-vous</CardTitle>
+            <CardTitle className="text-2xl font-serif text-blue-900">Rendez-vous</CardTitle>
           </CardHeader>
           <CardContent>
             {appointments.length === 0 ? (
@@ -371,7 +371,7 @@ const DoctorDashboard = () => {
                       <div className="flex gap-2">
                         <Button
                           onClick={() => handleStatusUpdate(apt.id, 'confirmed')}
-                          className="bg-green-900 text-white hover:bg-green-800 rounded-full"
+                          className="bg-blue-900 text-white hover:bg-blue-800 rounded-full"
                           data-testid={`confirm-btn-${apt.id}`}
                         >
                           <CheckCircle className="w-4 h-4 mr-1" />

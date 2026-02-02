@@ -28,7 +28,7 @@ const Blog = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-stone-50 pt-20">
-        <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-green-900"></div>
+        <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-900"></div>
       </div>
     );
   }
@@ -37,7 +37,7 @@ const Blog = () => {
     <div data-testid="blog-page" className="min-h-screen bg-stone-50 pt-24 px-6 pb-12">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-serif font-bold text-green-900 mb-4">
+          <h1 className="text-4xl md:text-5xl font-serif font-bold text-blue-900 mb-4">
             Blog Santé & Bien-être
           </h1>
           <p className="text-lg text-stone-600">

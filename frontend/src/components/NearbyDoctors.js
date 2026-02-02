@@ -104,14 +104,14 @@ const NearbyDoctors = ({ medicalType, specialty, onSelectDoctor }) => {
   return (
     <div className="space-y-4">
       {/* Location Card */}
-      <Card className="border-dashed border-2 border-green-200 bg-green-50/50">
+      <Card className="border-dashed border-2 border-blue-200 bg-blue-50/50">
         <CardContent className="p-6">
           <div className="flex flex-col items-center text-center">
-            <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mb-4">
-              <MapPin className="w-7 h-7 text-green-600" />
+            <div className="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+              <MapPin className="w-7 h-7 text-blue-600" />
             </div>
             
-            <h3 className="text-lg font-semibold text-green-900 mb-2">
+            <h3 className="text-lg font-semibold text-blue-900 mb-2">
               Trouver des professionnels proches
             </h3>
             
@@ -134,8 +134,8 @@ const NearbyDoctors = ({ medicalType, specialty, onSelectDoctor }) => {
                   onClick={() => handleRadiusChange(r)}
                   className={`px-3 py-1.5 rounded-full text-sm transition-colors ${
                     radius === r 
-                      ? 'bg-green-600 text-white' 
-                      : 'bg-white border border-stone-200 text-stone-600 hover:border-green-300'
+                      ? 'bg-blue-600 text-white' 
+                      : 'bg-white border border-stone-200 text-stone-600 hover:border-blue-300'
                   }`}
                 >
                   {r} km
@@ -146,7 +146,7 @@ const NearbyDoctors = ({ medicalType, specialty, onSelectDoctor }) => {
             <Button
               onClick={getCurrentLocation}
               disabled={loading}
-              className="bg-green-600 hover:bg-green-700 text-white rounded-full px-6"
+              className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-6"
               data-testid="locate-me-btn"
             >
               {loading ? (
@@ -182,7 +182,7 @@ const NearbyDoctors = ({ medicalType, specialty, onSelectDoctor }) => {
               variant="ghost" 
               size="sm" 
               onClick={getCurrentLocation}
-              className="text-green-600"
+              className="text-blue-600"
             >
               <RefreshCw className="w-4 h-4 mr-1" />
               Actualiser
@@ -198,7 +198,7 @@ const NearbyDoctors = ({ medicalType, specialty, onSelectDoctor }) => {
               >
                 <CardContent className="p-4">
                   <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
                       {doctor.profile_image ? (
                         <img 
                           src={doctor.profile_image} 
@@ -206,7 +206,7 @@ const NearbyDoctors = ({ medicalType, specialty, onSelectDoctor }) => {
                           className="w-full h-full rounded-full object-cover"
                         />
                       ) : (
-                        <span className="text-xl font-semibold text-green-600">
+                        <span className="text-xl font-semibold text-blue-600">
                           {doctor.name?.charAt(0)}
                         </span>
                       )}
@@ -227,7 +227,7 @@ const NearbyDoctors = ({ medicalType, specialty, onSelectDoctor }) => {
                           </div>
                         </div>
                         <div className="text-right flex-shrink-0">
-                          <Badge className="bg-green-100 text-green-700">
+                          <Badge className="bg-blue-100 text-blue-700">
                             {doctor.distance_km} km
                           </Badge>
                         </div>
@@ -249,7 +249,7 @@ const NearbyDoctors = ({ medicalType, specialty, onSelectDoctor }) => {
                       </div>
                       
                       {doctor.consultation_fee && (
-                        <p className="text-sm font-medium text-green-600 mt-2">
+                        <p className="text-sm font-medium text-blue-600 mt-2">
                           {doctor.consultation_fee.toLocaleString()} XOF
                         </p>
                       )}

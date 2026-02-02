@@ -72,7 +72,7 @@ const NotificationCenter = ({ isOpen, onClose }) => {
   const getNotificationIcon = (type) => {
     switch (type) {
       case 'new_booking':
-        return <Calendar className="w-5 h-5 text-green-500" />;
+        return <Calendar className="w-5 h-5 text-blue-500" />;
       case 'reminder':
         return <Clock className="w-5 h-5 text-orange-500" />;
       case 'message':
@@ -123,7 +123,7 @@ const NotificationCenter = ({ isOpen, onClose }) => {
       {/* Panel */}
       <div className="fixed top-0 right-0 h-full w-full max-w-md bg-white z-50 shadow-2xl transform transition-transform duration-300">
         {/* Header */}
-        <div className="bg-green-900 text-white p-4 flex items-center justify-between">
+        <div className="bg-blue-900 text-white p-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Bell className="w-6 h-6" />
             <h2 className="text-lg font-semibold">Notifications</h2>
@@ -143,7 +143,7 @@ const NotificationCenter = ({ isOpen, onClose }) => {
               variant="ghost" 
               size="sm" 
               onClick={markAllAsRead}
-              className="text-green-600 hover:text-green-700"
+              className="text-blue-600 hover:text-blue-700"
             >
               <CheckCheck className="w-4 h-4 mr-1" />
               Tout marquer comme lu
@@ -155,7 +155,7 @@ const NotificationCenter = ({ isOpen, onClose }) => {
         <div className="overflow-y-auto h-[calc(100%-120px)]">
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
             </div>
           ) : notifications.length === 0 ? (
             <div className="text-center py-12">
@@ -169,7 +169,7 @@ const NotificationCenter = ({ isOpen, onClose }) => {
                   key={notification.id}
                   onClick={() => handleNotificationClick(notification)}
                   className={`p-4 cursor-pointer hover:bg-stone-50 transition-colors flex gap-3 ${
-                    !notification.read ? 'bg-green-50' : ''
+                    !notification.read ? 'bg-blue-50' : ''
                   }`}
                   data-testid={`notification-${notification.id}`}
                 >
@@ -182,7 +182,7 @@ const NotificationCenter = ({ isOpen, onClose }) => {
                         {notification.title}
                       </h3>
                       {!notification.read && (
-                        <div className="w-2 h-2 bg-green-500 rounded-full flex-shrink-0 mt-1.5"></div>
+                        <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-1.5"></div>
                       )}
                     </div>
                     <p className="text-sm text-stone-500 mt-0.5 line-clamp-2">
@@ -238,7 +238,7 @@ export const NotificationBell = () => {
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="relative p-2 text-stone-600 hover:text-green-900 transition-colors"
+        className="relative p-2 text-stone-600 hover:text-blue-900 transition-colors"
         data-testid="notification-bell"
       >
         <Bell className="w-6 h-6" />
