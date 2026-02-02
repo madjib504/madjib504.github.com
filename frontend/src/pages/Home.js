@@ -207,8 +207,8 @@ const HomePage = () => {
             Votre Santé, Notre Priorité
           </p>
 
-          <p className="text-base md:text-lg text-blue-200/80 mb-12 max-w-xl mx-auto">
-            Connectez-vous avec les meilleurs spécialistes en médecine moderne et traditionnelle africaine
+          <p className="text-base md:text-lg text-blue-200/80 mb-12 max-w-2xl mx-auto">
+            Connectez-vous avec les meilleurs spécialistes en médecine moderne, traditionnelle africaine, chinoise et spécialistes de bien-être physique et émotionnel
           </p>
 
           {/* Main CTA Buttons */}
