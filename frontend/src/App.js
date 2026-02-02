@@ -105,6 +105,7 @@ function AppContent({ user, setUser, loading }) {
           </ProtectedRoute>
         } />
         <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/advertise" element={<Advertise />} />
       </Routes>
     </Layout>
   );
