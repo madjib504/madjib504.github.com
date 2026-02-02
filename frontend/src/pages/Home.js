@@ -200,7 +200,7 @@ const HomePage = () => {
 
           {/* Title */}
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-serif font-bold text-white mb-6 leading-tight" data-testid="hero-title">
-            HealthFusion
+            SANA VITA
           </h1>
           
           <p className="text-xl md:text-2xl text-green-100 mb-4 font-light">
@@ -266,7 +266,7 @@ const HomePage = () => {
         <div className="bg-green-900 p-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Stethoscope className="w-8 h-8 text-white" />
-            <span className="text-xl font-serif font-bold text-white">HealthFusion</span>
+            <span className="text-xl font-serif font-bold text-white">SANA VITA</span>
           </div>
           <button
             onClick={() => setMenuOpen(false)}
@@ -398,7 +398,7 @@ const HomePage = () => {
 
           {/* Footer */}
           <div className="p-4 text-center text-xs text-stone-400">
-            © 2025 HealthFusion
+            © 2025 SANA VITA
           </div>
         </div>
       </div>

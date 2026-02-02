@@ -47,7 +47,7 @@ const Login = ({ setUser }) => {
         <CardHeader className="space-y-1">
           <CardTitle className="text-3xl font-serif font-bold text-green-900" data-testid="login-title">Connexion</CardTitle>
           <CardDescription className="text-stone-600">
-            Connectez-vous à votre compte HealthFusion
+            Connectez-vous à votre compte SANA VITA
           </CardDescription>
         </CardHeader>
         <CardContent>

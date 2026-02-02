@@ -21,7 +21,7 @@ const MobileMoneyPayment = () => {
     phone_number: '',
     email: '',
     customer_name: '',
-    description: 'Paiement HealthFusion',
+    description: 'Paiement SANA VITA',
     service_type: 'consultation'
   });
 
@@ -137,7 +137,7 @@ const MobileMoneyPayment = () => {
       phone_number: '',
       email: '',
       customer_name: '',
-      description: 'Paiement HealthFusion',
+      description: 'Paiement SANA VITA',
       service_type: 'consultation'
     });
   };

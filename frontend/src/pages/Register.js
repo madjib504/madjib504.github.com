@@ -118,7 +118,7 @@ const Register = ({ setUser }) => {
         <CardHeader className="space-y-1">
           <CardTitle className="text-3xl font-serif font-bold text-green-900" data-testid="register-title">Inscription</CardTitle>
           <CardDescription className="text-stone-600">
-            Créez votre compte HealthFusion
+            Créez votre compte SANA VITA
           </CardDescription>
         </CardHeader>
         <CardContent>
