@@ -63,6 +63,7 @@ class UserRegister(UserBase):
     password: str
     medical_type: Optional[str] = None  # 'moderne' or 'traditionnel' for doctors
     specialties: Optional[List[str]] = None  # for doctors
+    custom_medical_type: Optional[str] = None  # for "autre" category
 
 class UserLogin(BaseModel):
     email: EmailStr
@@ -281,6 +282,9 @@ async def register(user_data: UserRegister):
         )
         profile_dict = profile.model_dump()
         profile_dict['created_at'] = profile_dict['created_at'].isoformat()
+        # Ajouter custom_medical_type si catégorie "autre"
+        if user_data.medical_type == "autre" and user_data.custom_medical_type:
+            profile_dict['custom_medical_type'] = user_data.custom_medical_type
         await db.doctor_profiles.insert_one(profile_dict)
     
     token = create_access_token({"sub": user.id})
