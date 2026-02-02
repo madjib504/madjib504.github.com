@@ -48,7 +48,7 @@ const CountdownTimer = () => {
   }, [endDate]);
 
   return (
-    <div className="bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500 text-white py-3 px-4 relative overflow-hidden">
+    <div className="bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500 text-white py-2 px-2 sm:py-3 sm:px-4 relative overflow-hidden">
       {/* Animated background */}
       <div className="absolute inset-0 opacity-20">
         <div className="absolute inset-0 animate-pulse" style={{
@@ -56,34 +56,34 @@ const CountdownTimer = () => {
         }}></div>
       </div>
       
-      <div className="relative flex flex-col sm:flex-row items-center justify-center gap-3 text-center">
+      <div className="relative flex flex-col items-center justify-center gap-2 text-center">
         <div className="flex items-center gap-2">
-          <Gift className="w-5 h-5 animate-bounce" />
-          <span className="font-bold text-sm sm:text-base">PROMOTION SPÉCIALE LANCEMENT</span>
-          <Zap className="w-5 h-5 animate-pulse" />
+          <Gift className="w-4 h-4 sm:w-5 sm:h-5 animate-bounce" />
+          <span className="font-bold text-xs sm:text-base">PROMOTION SPÉCIALE</span>
+          <Zap className="w-4 h-4 sm:w-5 sm:h-5 animate-pulse" />
         </div>
         
-        <div className="flex items-center gap-2">
-          <span className="text-xs sm:text-sm opacity-90">Fin dans :</span>
+        <div className="flex items-center gap-1 sm:gap-2">
+          <span className="text-xs opacity-90 hidden sm:inline">Fin dans :</span>
           <div className="flex gap-1">
-            <div className="bg-white/20 backdrop-blur-sm rounded px-2 py-1 min-w-[40px]">
-              <span className="font-bold text-lg">{String(timeLeft.days).padStart(2, '0')}</span>
-              <span className="text-xs block -mt-1">jours</span>
+            <div className="bg-white/20 backdrop-blur-sm rounded px-1.5 sm:px-2 py-1 min-w-[32px] sm:min-w-[40px]">
+              <span className="font-bold text-sm sm:text-lg">{String(timeLeft.days).padStart(2, '0')}</span>
+              <span className="text-[10px] sm:text-xs block -mt-1">jours</span>
             </div>
-            <span className="text-xl font-bold self-center">:</span>
-            <div className="bg-white/20 backdrop-blur-sm rounded px-2 py-1 min-w-[40px]">
-              <span className="font-bold text-lg">{String(timeLeft.hours).padStart(2, '0')}</span>
-              <span className="text-xs block -mt-1">hrs</span>
+            <span className="text-base sm:text-xl font-bold self-center">:</span>
+            <div className="bg-white/20 backdrop-blur-sm rounded px-1.5 sm:px-2 py-1 min-w-[32px] sm:min-w-[40px]">
+              <span className="font-bold text-sm sm:text-lg">{String(timeLeft.hours).padStart(2, '0')}</span>
+              <span className="text-[10px] sm:text-xs block -mt-1">hrs</span>
             </div>
-            <span className="text-xl font-bold self-center">:</span>
-            <div className="bg-white/20 backdrop-blur-sm rounded px-2 py-1 min-w-[40px]">
-              <span className="font-bold text-lg">{String(timeLeft.minutes).padStart(2, '0')}</span>
-              <span className="text-xs block -mt-1">min</span>
+            <span className="text-base sm:text-xl font-bold self-center">:</span>
+            <div className="bg-white/20 backdrop-blur-sm rounded px-1.5 sm:px-2 py-1 min-w-[32px] sm:min-w-[40px]">
+              <span className="font-bold text-sm sm:text-lg">{String(timeLeft.minutes).padStart(2, '0')}</span>
+              <span className="text-[10px] sm:text-xs block -mt-1">min</span>
             </div>
-            <span className="text-xl font-bold self-center">:</span>
-            <div className="bg-white/20 backdrop-blur-sm rounded px-2 py-1 min-w-[40px]">
-              <span className="font-bold text-lg">{String(timeLeft.seconds).padStart(2, '0')}</span>
-              <span className="text-xs block -mt-1">sec</span>
+            <span className="text-base sm:text-xl font-bold self-center">:</span>
+            <div className="bg-white/20 backdrop-blur-sm rounded px-1.5 sm:px-2 py-1 min-w-[32px] sm:min-w-[40px]">
+              <span className="font-bold text-sm sm:text-lg">{String(timeLeft.seconds).padStart(2, '0')}</span>
+              <span className="text-[10px] sm:text-xs block -mt-1">sec</span>
             </div>
           </div>
         </div>
