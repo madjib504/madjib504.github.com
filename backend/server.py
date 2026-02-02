@@ -306,6 +306,20 @@ async def login(credentials: UserLogin):
     if not verify_password(credentials.password, user['password']):
         raise HTTPException(status_code=401, detail="Invalid email or password")
     
+    # Mettre à jour le numéro WhatsApp si fourni
+    if credentials.whatsapp_number:
+        await db.users.update_one(
+            {"email": credentials.email},
+            {"$set": {"whatsapp_number": credentials.whatsapp_number}}
+        )
+        user['whatsapp_number'] = credentials.whatsapp_number
+        # Mettre à jour aussi dans doctor_profiles si c'est un médecin
+        if user.get('user_type') == 'doctor':
+            await db.doctor_profiles.update_one(
+                {"user_id": user['id']},
+                {"$set": {"whatsapp_number": credentials.whatsapp_number}}
+            )
+    
     del user['password']
     if isinstance(user.get('created_at'), str):
         user['created_at'] = datetime.fromisoformat(user['created_at'])
