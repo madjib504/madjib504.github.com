@@ -364,7 +364,7 @@ const AdminDashboard = () => {
             <Shield className="w-8 h-8 text-red-500" />
             <div>
               <h1 className="text-xl font-bold text-white">Administration</h1>
-              <p className="text-slate-400 text-sm">SanaVitaFLOW</p>
+              <p className="text-slate-400 text-sm">keneyakafisa</p>
             </div>
           </div>
           <div className="flex items-center gap-3">

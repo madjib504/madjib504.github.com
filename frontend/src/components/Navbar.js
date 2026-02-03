@@ -20,7 +20,7 @@ const Navbar = ({ user, setUser }) => {
             <div className="bg-blue-900 text-white p-2 rounded-lg group-hover:bg-blue-800 transition-colors">
               <Stethoscope className="w-6 h-6" />
             </div>
-            <span className="text-2xl font-serif font-bold text-blue-900 hidden sm:inline">SanaVitaFLOW</span>
+            <span className="text-2xl font-serif font-bold text-blue-900 hidden sm:inline">keneyakafisa</span>
           </Link>
 
           <div className="flex items-center gap-4 md:gap-6">

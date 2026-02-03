@@ -119,7 +119,7 @@ const Register = ({ setUser }) => {
         <CardHeader className="space-y-1">
           <CardTitle className="text-3xl font-serif font-bold text-blue-900" data-testid="register-title">Inscription</CardTitle>
           <CardDescription className="text-stone-600">
-            Créez votre compte SanaVitaFLOW
+            Créez votre compte keneyakafisa
           </CardDescription>
         </CardHeader>
         <CardContent>

@@ -21,7 +21,7 @@ const MobileMoneyPayment = () => {
     phone_number: '',
     email: '',
     customer_name: '',
-    description: 'Paiement SanaVitaFLOW',
+    description: 'Paiement keneyakafisa',
     service_type: 'consultation'
   });
 
@@ -137,7 +137,7 @@ const MobileMoneyPayment = () => {
       phone_number: '',
       email: '',
       customer_name: '',
-      description: 'Paiement SanaVitaFLOW',
+      description: 'Paiement keneyakafisa',
       service_type: 'consultation'
     });
   };
