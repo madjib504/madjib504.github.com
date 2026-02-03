@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+Allow: /search
+Allow: /login
+Allow: /register
+Allow: /advertise
+
+Disallow: /admin
+Disallow: /patient/dashboard
+Disallow: /doctor/dashboard
+
+Sitemap: https://sanavitaflow.emergentapp.net/sitemap.xml
