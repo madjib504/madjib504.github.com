@@ -1,0 +1,483 @@
+[
+  {
+    "email": "patient_133633@test.com",
+    "name": "Test Patient 133633",
+    "user_type": "patient",
+    "id": "4a5327e2-c5a2-4488-ab08-154fecef9a65",
+    "medical_type": null,
+    "specialties": null,
+    "verified": false,
+    "created_at": "2026-01-19T13:36:33.613977+00:00",
+    "password": "$2b$12$Q.x9/RZogtyc2tFuZtFFOO49HwLys3G6fjTal/bOQ7mHO/O2jRrye"
+  },
+  {
+    "email": "doctor_133633@test.com",
+    "name": "Dr. Test 133633",
+    "user_type": "doctor",
+    "id": "cf637abb-739e-42fc-b855-f1b9700835c5",
+    "medical_type": "moderne",
+    "specialties": [
+      "Médecine Générale",
+      "Cardiologie"
+    ],
+    "verified": false,
+    "created_at": "2026-01-19T13:36:33.919257+00:00",
+    "password": "$2b$12$VLZ2W97HJjWnYHdK2ATX8.4L8LrPch6Sr7rnnrq8hx3a7iNl2Mdt2"
+  },
+  {
+    "email": "login_test_133634@test.com",
+    "name": "Login Test User",
+    "user_type": "patient",
+    "id": "1fe8b5b3-be06-4bfd-a181-4cd4888ec82b",
+    "medical_type": null,
+    "specialties": null,
+    "verified": false,
+    "created_at": "2026-01-19T13:36:34.193283+00:00",
+    "password": "$2b$12$ch4crJLVS256XmqO7nDSeuftVYYHA9A55iNTNg5hbDNR0zexNuXjK"
+  },
+  {
+    "email": "testpatient@ui.com",
+    "name": "Test Patient UI",
+    "user_type": "patient",
+    "id": "f1b3a730-b0ee-4a4a-ae80-f73f6329b1a1",
+    "medical_type": "",
+    "specialties": [],
+    "verified": false,
+    "created_at": "2026-01-19T13:37:18.329134+00:00",
+    "password": "$2b$12$J8iJbQ5ZZff2IOenVSVLquH5mxfX7wrBwGdqUAbe1LcOdjXCjGVqu"
+  },
+  {
+    "email": "patient@test.com",
+    "name": "Test Patient",
+    "user_type": "patient",
+    "id": "1be05c88-31e8-4944-961a-16cf541ce25c",
+    "medical_type": null,
+    "specialties": null,
+    "verified": false,
+    "created_at": "2026-01-19T13:40:40.864997+00:00",
+    "password": "$2b$12$6.BOsVJXvgdojTr3xGWoi.6jz/S2j6NDgXH7BCEaFPbxU4LL7sOlO"
+  },
+  {
+    "email": "doctor@test.com",
+    "name": "Dr. Martin",
+    "user_type": "doctor",
+    "id": "7dc4daab-33d4-47ad-858e-3d7aac1095da",
+    "medical_type": "moderne",
+    "specialties": [
+      "Cardiologie",
+      "Médecine Générale"
+    ],
+    "verified": false,
+    "created_at": "2026-01-19T13:40:47.746758+00:00",
+    "password": "$2b$12$tboO8ocJHwXgYxZeGFbuROdXVh9grwh.TANp8RfhyVZcavq1Um4.y"
+  },
+  {
+    "email": "konanmadjib@gmail.com",
+    "name": "loukou gina",
+    "user_type": "patient",
+    "id": "e6fd13b7-ec70-4506-84bf-eb72788b7adc",
+    "medical_type": "",
+    "specialties": [],
+    "verified": false,
+    "created_at": "2026-01-19T13:59:08.170798+00:00",
+    "password": "$2b$12$ik909zBSV/NVD7Tjt.bEZuVuKassDH6/FrHUGIUMMWRzMCDdcJejm"
+  },
+  {
+    "email": "kouakouph@gmail.com",
+    "name": "kouakou jean philipe",
+    "user_type": "doctor",
+    "id": "b7e8d9e3-421d-4979-aacb-0dd0e63d3b37",
+    "medical_type": "moderne",
+    "specialties": [
+      "Gynécologie",
+      "Cardiologie",
+      "Médecine Générale"
+    ],
+    "verified": false,
+    "created_at": "2026-01-19T14:02:02.235351+00:00",
+    "password": "$2b$12$clYu9DdzRVuQ06ZQ9ILVuuoc7EZY9FKImASHHPR61A3eZZjuy2.o."
+  },
+  {
+    "email": "loukougina@gmail.com",
+    "name": "loukou gina",
+    "user_type": "patient",
+    "id": "7f7d5cd7-7f81-4dd2-b33f-0355dc7c46f2",
+    "medical_type": "",
+    "specialties": [],
+    "verified": false,
+    "created_at": "2026-01-19T14:07:46.112995+00:00",
+    "password": "$2b$12$PpENnaIS4a.XZdADGw9KWeNoD5hW7//Dqw7kScgIJkcCO0BHNdpTG"
+  },
+  {
+    "email": "sophie@wellness.com",
+    "name": "Sophie Wellness",
+    "user_type": "doctor",
+    "id": "3642c599-7c16-44aa-b5b5-649acb1625fd",
+    "medical_type": "bien_etre",
+    "specialties": [
+      "Nutritionniste",
+      "Coach de Vie"
+    ],
+    "verified": false,
+    "created_at": "2026-01-19T15:34:37.650511+00:00",
+    "password": "$2b$12$8Y3VVRMUmZ1MumRTgLaj8Oz6nDQkVfYfOERfgQSHRn1eaVAOHYMSq"
+  },
+  {
+    "email": "mamadou@tradi.com",
+    "name": "Mamadou Tradi",
+    "user_type": "doctor",
+    "id": "78d86179-fb8d-43c1-a13b-8b92630dc23f",
+    "medical_type": "traditionnel_africain",
+    "specialties": [
+      "Tradipraticien Généraliste",
+      "Phytothérapeute Africain"
+    ],
+    "verified": false,
+    "created_at": "2026-01-19T15:35:20.472590+00:00",
+    "password": "$2b$12$NOecrNNWDlzrYjgft/T0X.5Un0aN4PU1YENjek74umuo2yPLXYwLi"
+  },
+  {
+    "email": "marie@soins.com",
+    "name": "Marie Soins",
+    "user_type": "doctor",
+    "id": "704cab2d-a9e2-4efd-8516-b17e845df17d",
+    "medical_type": "service_domicile",
+    "specialties": [
+      "Infirmier à Domicile"
+    ],
+    "verified": false,
+    "created_at": "2026-01-19T15:35:20.748517+00:00",
+    "password": "$2b$12$B9hETeGf/5Q4MfWO4Lc7nuxRB/pfsNAZCHfgd8a1B4S3HU/DIwYuS"
+  },
+  {
+    "email": "medisupply@shop.com",
+    "name": "MediSupply Plus",
+    "user_type": "doctor",
+    "id": "e3761ab4-200e-415c-9605-b8d39b04f944",
+    "medical_type": "materiel_medical",
+    "specialties": [
+      "Fournitures Médicales",
+      "Équipements de Diagnostic",
+      "Matériel de Mobilité"
+    ],
+    "verified": false,
+    "created_at": "2026-01-19T16:20:32.862680+00:00",
+    "password": "$2b$12$BSvCOfgrOSQb8kpb15RDEuGhgoz4Z/z31XzmmIaiNyCgDWaM6yUs."
+  },
+  {
+    "email": "zen@nature.com",
+    "name": "Zen & Nature Shop",
+    "user_type": "doctor",
+    "id": "3c94cce1-6619-4709-96ce-a7e5d6d948ed",
+    "medical_type": "boutique_bien_etre",
+    "specialties": [
+      "Huiles Essentielles",
+      "Pierres & Cristaux",
+      "Tisanes & Infusions",
+      "Tapis de Yoga"
+    ],
+    "verified": false,
+    "created_at": "2026-01-19T16:38:27.457765+00:00",
+    "password": "$2b$12$o0iOJeKVdVsTpvYH5kKg6egVoTKQFPBhnOKjFPl16zgUq7ctuVYuC"
+  },
+  {
+    "email": "franckyv@gmail.com",
+    "name": "Franck yves",
+    "user_type": "doctor",
+    "id": "d2086083-4d18-461d-a1a2-a6e204c09021",
+    "medical_type": "boutique_bien_etre",
+    "specialties": [
+      "Savons Artisanaux",
+      "Huiles Essentielles",
+      "Tisanes & Infusions",
+      "Compléments Naturels",
+      "Tapis de Yoga"
+    ],
+    "verified": false,
+    "created_at": "2026-01-19T19:24:37.022851+00:00",
+    "password": "$2b$12$FBnip2vpBXtl7LW1D8QD3OkRrP68CDNSaZiRYa9wU.ObwaFZWJ8X6"
+  },
+  {
+    "email": "loabi@gmail.com",
+    "name": "loa bi raymond",
+    "user_type": "doctor",
+    "id": "b96148c4-613e-4b60-aad6-976229621dd1",
+    "medical_type": "moderne",
+    "specialties": [
+      "Cardiologie"
+    ],
+    "verified": false,
+    "created_at": "2026-01-20T09:51:13.674708+00:00",
+    "password": "$2b$12$yeZcMXAwq1wlhGvH3oXf..O7jr1c.eLBnwGT2GxBLn0sqM934sE8K"
+  },
+  {
+    "email": "domd@gmail.com",
+    "name": "dominique dom",
+    "user_type": "patient",
+    "id": "beb6b079-4656-4c4a-837d-6a7222eb8c34",
+    "medical_type": "",
+    "specialties": [],
+    "verified": false,
+    "created_at": "2026-01-20T09:59:08.595848+00:00",
+    "password": "$2b$12$jqD8WS2i/lY.yTjXbHL2pObJN10PA8zEkj5sGJEiT5tWbh.sS9.gG"
+  },
+  {
+    "email": "dashboard_test@healthfusion.com",
+    "name": "Patient Test Dashboard",
+    "user_type": "patient",
+    "id": "66d2cde2-4aee-48b5-8894-e210d0ca1254",
+    "medical_type": null,
+    "specialties": null,
+    "verified": false,
+    "created_at": "2026-01-20T11:49:49.007682+00:00",
+    "password": "$2b$12$w4REsigGpPpNIXVIr3ZYzu9tYMMUrAEPZt3dmuGHcjoGUNiNW.m6C"
+  },
+  {
+    "email": "ng.armandine@gmail.com",
+    "name": "Armandine ",
+    "user_type": "patient",
+    "id": "84d31a48-2b1b-4a92-b27d-23f6f63c3ed7",
+    "medical_type": "",
+    "specialties": [],
+    "verified": false,
+    "created_at": "2026-01-26T10:32:15.981838+00:00",
+    "password": "$2b$12$vAHOjgKToDjBBYNzwlUEB.eviKKewsAOywLT5IgrYk/1NWzEvSBEC"
+  },
+  {
+    "email": "dr.test.booking@healthfusion.com",
+    "name": "Dr. Amadou Diallo",
+    "user_type": "doctor",
+    "id": "424bea45-29b5-4406-aec8-fd2574fd05d5",
+    "medical_type": "moderne",
+    "specialties": [
+      "Cardiologie",
+      "Médecine Générale"
+    ],
+    "verified": false,
+    "created_at": "2026-01-29T12:51:41.619132+00:00",
+    "password": "$2b$12$pXuGd1tpkU4x7LJiy02ree6mBKlW/h3lU3xf46q2wAMjPcHx5V0iq"
+  },
+  {
+    "email": "nb.armandine@gmail.com",
+    "name": "Armandine",
+    "user_type": "doctor",
+    "id": "7a555ec7-84f7-4f43-97a7-c15757b140c8",
+    "medical_type": "bien_etre",
+    "specialties": [
+      "Masseur Bien-être"
+    ],
+    "verified": false,
+    "created_at": "2026-01-29T14:36:54.139139+00:00",
+    "password": "$2b$12$j/Et9mInmqYLP5QnmYHrgOEZ.Emc23j0V2yxrNrf446V6HEnSuVKS"
+  },
+  {
+    "email": "marie.kouassi@example.com",
+    "name": "Marie Kouassi",
+    "user_type": "patient",
+    "id": "ec4bcc94-1915-41d2-9e11-efbf11362d9e",
+    "medical_type": null,
+    "specialties": null,
+    "verified": false,
+    "created_at": "2026-01-29T15:00:44.747188+00:00",
+    "password": "$2b$12$v.Ap6vTP7kNpLCirGDcP7urdXDBotQNs/1ruO35c1FaQIRGGl/wka"
+  },
+  {
+    "email": "cabokon@gmail.com",
+    "name": "Abokon Banga",
+    "user_type": "patient",
+    "id": "350f5a10-23ce-4bdd-8ba4-fdc9809d3eb7",
+    "medical_type": "",
+    "specialties": [],
+    "verified": false,
+    "created_at": "2026-01-29T15:09:43.136813+00:00",
+    "password": "$2b$12$8y.9ixVrqdF/jI/jB0oILuwmj8/17xSyTYEdXFwu6ZqJb9Iwiy9V6"
+  },
+  {
+    "email": "orthophoniste_5f4a6569@test.com",
+    "name": "Dr. Orthophoniste 5f4a6569",
+    "user_type": "doctor",
+    "id": "6715cefb-5737-4ff6-b8b4-909e7083bedf",
+    "medical_type": "autre",
+    "specialties": [
+      "Orthophonie",
+      "Rééducation vocale"
+    ],
+    "verified": false,
+    "created_at": "2026-02-02T15:38:12.203751+00:00",
+    "password": "$2b$12$iS8S7VwX9yUienXwoMGjfuz3CtcW/sMHUl0d/6MCY2PreG2wWdlFy"
+  },
+  {
+    "email": "podologue_fd0664cf@test.com",
+    "name": "Dr. Podologue fd0664cf",
+    "user_type": "doctor",
+    "id": "99864588-7bf3-4632-a70f-7165b5dae92d",
+    "medical_type": "autre",
+    "specialties": [
+      "Podologie",
+      "Soins des pieds",
+      "Orthopédie podologique"
+    ],
+    "verified": false,
+    "created_at": "2026-02-02T15:38:12.502664+00:00",
+    "password": "$2b$12$Wl0DpPNcrQPIJIKvM3xute37Ntdnw4ezKsEjPjIWF0hX3UyCwxHIi"
+  },
+  {
+    "email": "ergotherapeute_e4e8088b@test.com",
+    "name": "Dr. Ergothérapeute e4e8088b",
+    "user_type": "doctor",
+    "id": "52041761-ec3a-436c-b596-ba0d0289b559",
+    "medical_type": "autre",
+    "specialties": [
+      "Ergothérapie",
+      "Rééducation fonctionnelle"
+    ],
+    "verified": false,
+    "created_at": "2026-02-02T15:38:12.768434+00:00",
+    "password": "$2b$12$vDfhzff3N1CsjYcRk8rQheHpWoz5GgqqTjegYva3GIwAkuCU./biu"
+  },
+  {
+    "email": "ergotherapeute_3d410850@test.com",
+    "name": "Dr. Ergothérapeute 3d410850",
+    "user_type": "doctor",
+    "id": "3f484d8c-abe5-400f-9c88-6e31360edf12",
+    "medical_type": "autre",
+    "specialties": [
+      "Ergothérapie",
+      "Rééducation fonctionnelle"
+    ],
+    "verified": false,
+    "created_at": "2026-02-02T15:38:13.072274+00:00",
+    "password": "$2b$12$QIF9oyUaUgIyp8Hl3lbRIOk2CxSIiYo5Qc06gprMVgcilFV5KSRue"
+  },
+  {
+    "email": "ergotherapeute_c90cffdf@test.com",
+    "name": "Dr. Ergothérapeute c90cffdf",
+    "user_type": "doctor",
+    "id": "d5d06e11-2603-42e8-a843-8a9baf5c9925",
+    "medical_type": "autre",
+    "specialties": [
+      "Ergothérapie",
+      "Rééducation fonctionnelle"
+    ],
+    "verified": false,
+    "created_at": "2026-02-02T15:38:13.374793+00:00",
+    "password": "$2b$12$iqchtnTa4HxLLcLk.a4Awuwf/ITvYOLmbqr0rsmwuzJ3mY9H9PPQS"
+  },
+  {
+    "email": "ergotherapeute_c3378e1f@test.com",
+    "name": "Dr. Ergothérapeute c3378e1f",
+    "user_type": "doctor",
+    "id": "20e44684-2f04-4dc2-8e36-956f0c2c6a4c",
+    "medical_type": "autre",
+    "specialties": [
+      "Ergothérapie",
+      "Rééducation fonctionnelle"
+    ],
+    "verified": false,
+    "created_at": "2026-02-02T15:38:13.709819+00:00",
+    "password": "$2b$12$c1zyvLRmyaDvhzaNchmKkujkDZubldlEK.Ki6QzH34pejpES9O.Ri"
+  },
+  {
+    "email": "ergotherapeute_c9145c2d@test.com",
+    "name": "Dr. Ergothérapeute c9145c2d",
+    "user_type": "doctor",
+    "id": "366a5702-dc36-4f02-942b-14ef50e3bb93",
+    "medical_type": "autre",
+    "specialties": [
+      "Ergothérapie",
+      "Rééducation fonctionnelle"
+    ],
+    "verified": false,
+    "created_at": "2026-02-02T15:38:14.011189+00:00",
+    "password": "$2b$12$j4qycsjhto.oaFNlN6tWC.hdWBUOJWl8Y5aJ5Xufbqd/iYggyLy1y"
+  },
+  {
+    "email": "ergotherapeute_3e9c6448@test.com",
+    "name": "Dr. Ergothérapeute 3e9c6448",
+    "user_type": "doctor",
+    "id": "92a66217-b5d9-49de-ba9c-a5618f706897",
+    "medical_type": "autre",
+    "specialties": [
+      "Ergothérapie",
+      "Rééducation fonctionnelle"
+    ],
+    "verified": false,
+    "created_at": "2026-02-02T15:38:14.349100+00:00",
+    "password": "$2b$12$auGcwbG4sLoeNEw5maSTnOOukDD2bQP16GFRgTqvAXoC8W0MQopri"
+  },
+  {
+    "email": "osteopathe_fdc5d28f@test.com",
+    "name": "Dr. Ostéopathe fdc5d28f",
+    "user_type": "doctor",
+    "id": "672ac9c7-e599-415a-bea5-493d87c702e4",
+    "medical_type": "autre",
+    "specialties": [
+      "Ostéopathie"
+    ],
+    "verified": false,
+    "created_at": "2026-02-02T15:38:14.647302+00:00",
+    "password": "$2b$12$Gk7ORj9.cfMrSbs.MQ/xEeVIKZEuiRloPywKejwG6jn8rgrq/Whcy"
+  },
+  {
+    "email": "test_chiropracteur_4a740b79@test.com",
+    "name": "Dr. Chiropracteur 4a740b79",
+    "user_type": "doctor",
+    "id": "7457c9f6-3e6a-4f9f-a040-f21497f2d8ad",
+    "medical_type": "autre",
+    "specialties": [
+      "Ajustements vertébraux",
+      "Soins du dos"
+    ],
+    "verified": false,
+    "created_at": "2026-02-02T15:40:25.707004+00:00",
+    "password": "$2b$12$onW3jYuqUUsKC/il.Sq1zuwPzPJCipGJzJ5vqW76ze.bK//jxgZdu"
+  },
+  {
+    "email": "malick@gmail.com",
+    "name": "malick yann",
+    "user_type": "patient",
+    "id": "0fd46fc7-6f78-45ec-95d3-1689f900e526",
+    "whatsapp_number": "0102064877",
+    "medical_type": "",
+    "specialties": [],
+    "verified": false,
+    "created_at": "2026-02-02T16:46:25.665918+00:00",
+    "password": "$2b$12$kgj6iqNWK/GN9CBLRIp6mOE.D5oKYSWv67Pp.szvAeAy8EXlAu/Qm"
+  },
+  {
+    "email": "test.whatsapp@example.com",
+    "name": "Test WhatsApp User",
+    "user_type": "patient",
+    "id": "7c65fd87-14ab-44e0-bcfa-b2c09b8c2ed6",
+    "whatsapp_number": "+225 07 12 34 56 78",
+    "medical_type": null,
+    "specialties": null,
+    "verified": false,
+    "created_at": "2026-02-02T16:48:48.588798+00:00",
+    "password": "$2b$12$IQAUP1ZyREEXVYHO6BtYxuYFu/bm3UDSN0mxIlwxsxMEgMggBaH/y"
+  },
+  {
+    "email": "joel52@gmail.com",
+    "name": "joel hiter",
+    "user_type": "patient",
+    "id": "109dd195-95fb-4ee6-8a86-26014e620aca",
+    "whatsapp_number": "0102064877",
+    "medical_type": "",
+    "specialties": [],
+    "verified": false,
+    "created_at": "2026-02-02T17:06:50.779670+00:00",
+    "password": "$2b$12$qeVEamqJhN.bE6NkEhX3AuiIYYxgHmM5MTk950FCshi21Wt6ss8mm"
+  },
+  {
+    "email": "patient.whatsapp.test@example.com",
+    "name": "Patient WhatsApp Test",
+    "user_type": "patient",
+    "id": "f1c0a206-9314-4b91-9f9c-982800dbee48",
+    "whatsapp_number": "+225 99 88 77 66 55",
+    "medical_type": null,
+    "specialties": null,
+    "verified": false,
+    "created_at": "2026-02-02T17:29:05.750031+00:00",
+    "password": "$2b$12$ASZMMCqKcOsUH6Ye6GNQQuQf2nSEyH6Blyg/bbqnG9dRzOXlPIRRq"
+  }
+]

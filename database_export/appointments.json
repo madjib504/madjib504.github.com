@@ -1,0 +1,22 @@
+[
+  {
+    "id": "01782283-ab63-44c3-b093-52181a8744bb",
+    "patient_id": "4a5327e2-c5a2-4488-ab08-154fecef9a65",
+    "doctor_id": "90d66821-6b3b-4b37-bf7c-4b37ad5067ce",
+    "appointment_date": "2024-12-25",
+    "appointment_time": "10:00",
+    "reason": "Test consultation",
+    "status": "pending",
+    "created_at": "2026-01-19T13:36:34.922452+00:00"
+  },
+  {
+    "id": "7850ef74-2556-4d9d-bec9-c2f559d33a3f",
+    "patient_id": "350f5a10-23ce-4bdd-8ba4-fdc9809d3eb7",
+    "doctor_id": "b08870a2-f16a-4287-8687-54949c5b56a7",
+    "appointment_date": "2026-01-31",
+    "appointment_time": "15:11",
+    "reason": "",
+    "status": "pending",
+    "created_at": "2026-01-29T15:11:29.293998+00:00"
+  }
+]

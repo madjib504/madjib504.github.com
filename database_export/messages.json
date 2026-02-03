@@ -1,0 +1,10 @@
+[
+  {
+    "id": "84b0b701-125b-4145-a716-8791ee58c1ce",
+    "sender_id": "4a5327e2-c5a2-4488-ab08-154fecef9a65",
+    "recipient_id": "90d66821-6b3b-4b37-bf7c-4b37ad5067ce",
+    "content": "Test message from patient",
+    "read": false,
+    "created_at": "2026-01-19T13:36:35.049363+00:00"
+  }
+]
