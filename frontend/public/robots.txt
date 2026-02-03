@@ -9,4 +9,4 @@ Disallow: /admin
 Disallow: /patient/dashboard
 Disallow: /doctor/dashboard
 
-Sitemap: https://sanavitaflow.emergentapp.net/sitemap.xml
+Sitemap: https://sante-fusion.emergent.host/sitemap.xml
