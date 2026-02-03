@@ -9,4 +9,4 @@ Disallow: /admin
 Disallow: /patient/dashboard
 Disallow: /doctor/dashboard
 
-Sitemap: https://sante-fusion.emergent.host/sitemap.xml
+Sitemap: https://keneyakafisa.com/sitemap.xml
