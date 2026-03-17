@@ -1,0 +1,42 @@
+{
+  "name": "keneyakafisa",
+  "short_name": "keneya",
+  "description": "keneyakafisa - Connectez-vous avec les meilleurs spécialistes en médecine moderne, traditionnelle africaine, chinoise et bien-être en Côte d'Ivoire",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "dir": "ltr",
+  "lang": "fr",
+  "background_color": "#ffffff",
+  "theme_color": "#1e3a8a",
+  "icons": [
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["health", "medical", "lifestyle"],
+  "shortcuts": [
+    {
+      "name": "Rechercher un médecin",
+      "short_name": "Recherche",
+      "url": "/search",
+      "icons": [{ "src": "/icon-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Se connecter",
+      "short_name": "Connexion",
+      "url": "/login",
+      "icons": [{ "src": "/icon-192x192.png", "sizes": "192x192" }]
+    }
+  ]
+}
