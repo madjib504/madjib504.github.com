@@ -6,7 +6,7 @@ import {
   Menu, X, Search, Stethoscope, Calendar, MessageSquare, Video, 
   Heart, Shield, Users, ChevronRight, Home, ShoppingBag, 
   CreditCard, BookOpen, Award, FileText, Phone, LogOut, User,
-  Leaf, Sparkles, Activity, Truck, Store, Clock, Gift, Zap,
+  Leaf, Sparkles, Activity, Truck, Store, Clock,
   Megaphone, ChevronLeft, ExternalLink, Building2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
