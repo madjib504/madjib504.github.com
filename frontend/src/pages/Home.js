@@ -533,7 +533,7 @@ const HomePage = () => {
               </div>
               <div className="flex gap-2">
                 <a
-                  href="https://wa.me/2250700000000?text=Bonjour%20keneyakafisa%2C%20j%27ai%20besoin%20d%27aide"
+                  href="https://wa.me/2250777154048?text=Bonjour%20keneyakafisa%2C%20j%27ai%20besoin%20d%27aide"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors"
@@ -543,7 +543,7 @@ const HomePage = () => {
                   <span className="text-sm font-medium">WhatsApp</span>
                 </a>
                 <a
-                  href="tel:+2250700000000"
+                  href="tel:+2250575193929"
                   className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
                   data-testid="call-support-btn"
                 >
