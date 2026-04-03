@@ -16,9 +16,19 @@ import { AuthContext } from '@/App';
 
 // Countdown Component - Disparaît après 2 semaines
 const CountdownTimer = () => {
-  // Date de début fixe (quand la promo commence)
-  const startDate = new Date('2025-04-03'); // Date d'aujourd'hui
-  const endDate = new Date(startDate.getTime() + 14 * 24 * 60 * 60 * 1000); // +2 semaines
+  // Date de fin = maintenant + 2 semaines
+  const [endDate] = useState(() => {
+    // Vérifier si une date de fin est stockée
+    const stored = localStorage.getItem('promo_end_date');
+    if (stored) {
+      return new Date(stored);
+    }
+    // Sinon, créer une nouvelle date de fin (2 semaines à partir de maintenant)
+    const newEndDate = new Date();
+    newEndDate.setDate(newEndDate.getDate() + 14);
+    localStorage.setItem('promo_end_date', newEndDate.toISOString());
+    return newEndDate;
+  });
   
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
@@ -47,7 +57,7 @@ const CountdownTimer = () => {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, []);
+  }, [endDate]);
 
   // Ne rien afficher si le compte à rebours est terminé
   if (isExpired) return null;
