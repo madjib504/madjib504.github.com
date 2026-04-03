@@ -495,6 +495,83 @@ const HomePage = () => {
             </Link>
           </div>
 
+          {/* Invite & Support Section */}
+          <div className="p-4 border-b">
+            <h3 className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-3">
+              Partager & Support
+            </h3>
+            
+            {/* Inviter un ami */}
+            <button
+              onClick={() => {
+                if (navigator.share) {
+                  navigator.share({
+                    title: 'keneyakafisa - Santé pour tous',
+                    text: 'Rejoins keneyakafisa pour trouver les meilleurs spécialistes en médecine moderne et traditionnelle !',
+                    url: 'https://sante-fusion.emergent.host/'
+                  });
+                } else {
+                  navigator.clipboard.writeText('https://sante-fusion.emergent.host/');
+                  alert('Lien copié ! Partagez-le avec vos amis.');
+                }
+              }}
+              className="w-full flex items-center justify-between px-3 py-3 rounded-lg bg-green-50 hover:bg-green-100 transition-colors group mb-2"
+              data-testid="invite-friend-btn"
+            >
+              <div className="flex items-center gap-3">
+                <Share2 className="w-5 h-5 text-green-600" />
+                <span className="text-stone-700 font-medium">Inviter un ami à rejoindre Keneya</span>
+              </div>
+              <ChevronRight className="w-4 h-4 text-green-300 group-hover:text-green-500 transition-colors" />
+            </button>
+
+            {/* Contacter le service client */}
+            <div className="bg-blue-50 rounded-lg p-3 mb-2">
+              <div className="flex items-center gap-2 mb-3">
+                <Headphones className="w-5 h-5 text-blue-600" />
+                <span className="text-stone-700 font-medium">Contacter le service client</span>
+              </div>
+              <div className="flex gap-2">
+                <a
+                  href="https://wa.me/2250700000000?text=Bonjour%20keneyakafisa%2C%20j%27ai%20besoin%20d%27aide"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors"
+                  data-testid="whatsapp-support-btn"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  <span className="text-sm font-medium">WhatsApp</span>
+                </a>
+                <a
+                  href="tel:+2250700000000"
+                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                  data-testid="call-support-btn"
+                >
+                  <Phone className="w-4 h-4" />
+                  <span className="text-sm font-medium">Appel gratuit</span>
+                </a>
+              </div>
+            </div>
+
+            {/* Utiliser un code promo */}
+            <button
+              onClick={() => {
+                const code = prompt('Entrez votre code promo :');
+                if (code) {
+                  alert(`Code promo "${code}" appliqué ! (Fonctionnalité à venir)`);
+                }
+              }}
+              className="w-full flex items-center justify-between px-3 py-3 rounded-lg bg-purple-50 hover:bg-purple-100 transition-colors group"
+              data-testid="promo-code-btn"
+            >
+              <div className="flex items-center gap-3">
+                <Gift className="w-5 h-5 text-purple-600" />
+                <span className="text-stone-700 font-medium">Utiliser un code promo</span>
+              </div>
+              <ChevronRight className="w-4 h-4 text-purple-300 group-hover:text-purple-500 transition-colors" />
+            </button>
+          </div>
+
           {/* Auth Section */}
           <div className="p-4">
             {user ? (
