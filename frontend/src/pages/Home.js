@@ -8,11 +8,94 @@ import {
   CreditCard, BookOpen, Award, FileText, Phone, LogOut, User,
   Leaf, Sparkles, Activity, Truck, Store, Clock,
   Megaphone, ChevronLeft, ExternalLink, Building2,
-  Share2, Headphones, Gift, MessageCircle
+  Share2, Headphones, Gift, MessageCircle, Zap
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { AuthContext } from '@/App';
+
+// Countdown Component - Disparaît après 2 semaines
+const CountdownTimer = () => {
+  // Date de début fixe (quand la promo commence)
+  const startDate = new Date('2025-04-03'); // Date d'aujourd'hui
+  const endDate = new Date(startDate.getTime() + 14 * 24 * 60 * 60 * 1000); // +2 semaines
+  
+  const [timeLeft, setTimeLeft] = useState({
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0
+  });
+  const [isExpired, setIsExpired] = useState(false);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const now = new Date().getTime();
+      const distance = endDate.getTime() - now;
+
+      if (distance <= 0) {
+        setIsExpired(true);
+        clearInterval(timer);
+      } else {
+        setTimeLeft({
+          days: Math.floor(distance / (1000 * 60 * 60 * 24)),
+          hours: Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+          minutes: Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60)),
+          seconds: Math.floor((distance % (1000 * 60)) / 1000)
+        });
+      }
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  // Ne rien afficher si le compte à rebours est terminé
+  if (isExpired) return null;
+
+  return (
+    <div className="bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500 text-white py-2 px-2 sm:py-3 sm:px-4 relative overflow-hidden">
+      {/* Animated background */}
+      <div className="absolute inset-0 opacity-20">
+        <div className="absolute inset-0 animate-pulse" style={{
+          backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.1) 10px, rgba(255,255,255,0.1) 20px)'
+        }}></div>
+      </div>
+      
+      <div className="relative flex flex-col items-center justify-center gap-2 text-center">
+        <div className="flex items-center gap-2">
+          <Gift className="w-4 h-4 sm:w-5 sm:h-5 animate-bounce" />
+          <span className="font-bold text-xs sm:text-base">OFFRE DE LANCEMENT</span>
+          <Zap className="w-4 h-4 sm:w-5 sm:h-5 animate-pulse" />
+        </div>
+        
+        <div className="flex items-center gap-1 sm:gap-2">
+          <span className="text-xs opacity-90 hidden sm:inline">Se termine dans :</span>
+          <div className="flex gap-1">
+            <div className="bg-white/20 backdrop-blur-sm rounded px-1.5 sm:px-2 py-1 min-w-[32px] sm:min-w-[40px]">
+              <span className="font-bold text-sm sm:text-lg">{String(timeLeft.days).padStart(2, '0')}</span>
+              <span className="text-[10px] sm:text-xs block -mt-1">jours</span>
+            </div>
+            <span className="text-base sm:text-xl font-bold self-center">:</span>
+            <div className="bg-white/20 backdrop-blur-sm rounded px-1.5 sm:px-2 py-1 min-w-[32px] sm:min-w-[40px]">
+              <span className="font-bold text-sm sm:text-lg">{String(timeLeft.hours).padStart(2, '0')}</span>
+              <span className="text-[10px] sm:text-xs block -mt-1">hrs</span>
+            </div>
+            <span className="text-base sm:text-xl font-bold self-center">:</span>
+            <div className="bg-white/20 backdrop-blur-sm rounded px-1.5 sm:px-2 py-1 min-w-[32px] sm:min-w-[40px]">
+              <span className="font-bold text-sm sm:text-lg">{String(timeLeft.minutes).padStart(2, '0')}</span>
+              <span className="text-[10px] sm:text-xs block -mt-1">min</span>
+            </div>
+            <span className="text-base sm:text-xl font-bold self-center">:</span>
+            <div className="bg-white/20 backdrop-blur-sm rounded px-1.5 sm:px-2 py-1 min-w-[32px] sm:min-w-[40px]">
+              <span className="font-bold text-sm sm:text-lg">{String(timeLeft.seconds).padStart(2, '0')}</span>
+              <span className="text-[10px] sm:text-xs block -mt-1">sec</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 // Advertising Carousel Component
 const AdvertisingCarousel = () => {
