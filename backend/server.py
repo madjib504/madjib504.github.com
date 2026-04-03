@@ -2106,6 +2106,48 @@ async def delete_user(user_id: str, admin: dict = Depends(verify_admin_token)):
     return {"success": True, "message": "Utilisateur supprimé"}
 
 
+@api_router.delete("/admin/delete-all")
+async def delete_all_data(admin: dict = Depends(verify_admin_token)):
+    """
+    Supprimer TOUTES les données (utilisateurs, médecins, etc.)
+    """
+    results = {}
+    
+    # Supprimer tous les utilisateurs
+    r = await db.users.delete_many({})
+    results["users"] = r.deleted_count
+    
+    # Supprimer tous les profils médecins
+    r = await db.doctor_profiles.delete_many({})
+    results["doctor_profiles"] = r.deleted_count
+    
+    # Supprimer tous les rendez-vous
+    r = await db.appointments.delete_many({})
+    results["appointments"] = r.deleted_count
+    
+    # Supprimer tous les paiements
+    r = await db.payments.delete_many({})
+    results["payments"] = r.deleted_count
+    
+    # Supprimer tous les messages
+    r = await db.messages.delete_many({})
+    results["messages"] = r.deleted_count
+    
+    # Supprimer tous les avis
+    r = await db.reviews.delete_many({})
+    results["reviews"] = r.deleted_count
+    
+    # Supprimer tous les dossiers médicaux
+    r = await db.medical_records.delete_many({})
+    results["medical_records"] = r.deleted_count
+    
+    # Supprimer tous les points fidélité
+    r = await db.loyalty_points.delete_many({})
+    results["loyalty_points"] = r.deleted_count
+    
+    return {"success": True, "deleted": results}
+
+
 @api_router.patch("/admin/users/{user_id}/verify")
 async def verify_user(user_id: str, admin: dict = Depends(verify_admin_token)):
     """
