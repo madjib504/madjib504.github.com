@@ -7,7 +7,8 @@ import {
   Heart, Shield, Users, ChevronRight, Home, ShoppingBag, 
   CreditCard, BookOpen, Award, FileText, Phone, LogOut, User,
   Leaf, Sparkles, Activity, Truck, Store, Clock,
-  Megaphone, ChevronLeft, ExternalLink, Building2
+  Megaphone, ChevronLeft, ExternalLink, Building2,
+  Share2, Headphones, Gift, MessageCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
