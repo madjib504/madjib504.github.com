@@ -1,166 +1,78 @@
-# HealthFusion - PRD (Product Requirements Document)
+# PRD - keneyakafisa
 
 ## Original Problem Statement
-Application de santé pour le marché africain avec deux catégories de médecins:
-- **Médecine moderne** (toutes spécialités: gynécologues, ophtalmologues, chirurgiens, etc.)
-- **Médecine traditionnelle africaine agréée**
-
-La fonctionnalité principale est de connecter les patients avec les spécialistes selon leurs besoins de santé.
+Build a comprehensive health application in French named "keneyakafisa". The platform connects patients with modern medicine, African traditional medicine, and wellness specialists.
 
 ## User Personas
-1. **Patients** - Cherchent des consultations médicales, achètent des produits bien-être
-2. **Professionnels de santé** - Médecins, praticiens traditionnels, pharmaciens
-3. **Fournisseurs** - Matériel médical, boutique bien-être
+- **Patients**: Search doctors, book appointments, manage medical records, earn loyalty points
+- **Health Professionals (Doctors)**: Manage schedules, receive bookings, track stats
+- **Admin**: Manage users, appointments, payments, advertisements via `/admin` dashboard
 
 ## Core Requirements
-- Multi-catégories: Moderne, Traditionnel africain, Bien-être, Service à domicile, Matériel médical, Boutique bien-être
-- Recherche de spécialistes par symptômes
-- Système de rendez-vous
-- Chat et messagerie
-- Paiement Mobile Money (Afrique)
+- User registration (Patient/Health Professional) with WhatsApp field
+- Multi-category doctor search (specialties, location, traditional medicine)
+- Electronic medical records
+- Booking calendar with availability management
+- Loyalty program
+- Advertising system (Carousel on homepage + submission form)
+- PWA capabilities (installable app)
+- SEO optimization (sitemap, robots.txt, meta tags)
 
----
+## Tech Stack
+- Frontend: React.js, TailwindCSS, Shadcn UI
+- Backend: FastAPI (Python)
+- Database: MongoDB Atlas
+- PWA: Service workers, manifest
 
-## What's Been Implemented
+## What's Been Implemented ✅
+- [2025-12] Full authentication system (JWT)
+- [2025-12] Doctor search with multi-category filtering
+- [2025-12] "Autre" (Other) category as search bar
+- [2025-12] Appointment booking system
+- [2025-12] Admin dashboard (`/admin`) with user/appointment/payment management
+- [2025-12] Advertising system (carousel display + `/advertise` submission page)
+- [2025-12] WhatsApp number fields for users and doctors
+- [2025-12] PWA capabilities (manifest.json, service worker, installable)
+- [2025-12] SEO tools (Google Site Verification, sitemap.xml, robots.txt)
+- [2025-12] QR code generation
+- [2025-12] Side menu with quick actions (Inviter un ami, Appel, WhatsApp, Code promo)
+- [2025-12] Promotional countdown timer (14 days)
+- [2025-12] Database migrated from local MongoDB to MongoDB Atlas
+- [2025-12] Database purged of all test data for production launch
+- [2025-12] Admin account verified working (credentials in .env)
 
-### Phase 1 - MVP & Core Features ✅
-*Completed December 2024*
-- Inscription/Connexion utilisateurs (patients, médecins)
-- Recherche multi-catégories avec filtres
-- Profils médecins détaillés
-- Système de rendez-vous
-- Chat en temps réel (Socket.IO)
-- Page d'accueil avec catégories
-- Packs Bien-être thématiques
+## Pending / In Progress
+- 🟡 Google Maps Geolocation (BLOCKED - waiting for user API key)
+- 🟠 Backend refactoring (server.py >2300 lines → modular APIRouter)
 
-### Phase 1.5 - Extended Features ✅
-*Completed January 2025*
-- Dossier Médical Électronique
-- Programme de Fidélité "HealthPoints"
-- Blog Santé & Conseils
-- Bouton SOS Urgence
-- Assistant d'Orientation (symptômes → spécialité)
-- Système d'avis amélioré avec réponses médecins
-- Dashboard statistiques professionnels
+## Phase 2 (Upcoming)
+- P1: Téléconsultation Vidéo (Twilio Video)
+- P1: Notifications SMS/Email (Twilio/SendGrid)
+- P1: Paiement par carte bancaire (Stripe)
+- P2: Push Notifications (Firebase Cloud Messaging)
 
-### Phase 2 - Intégrations Tierces 🔄
-*In Progress - January 2025*
-- ✅ **Mobile Money** (Orange Money, MTN MoMo, Moov) - Mode Sandbox
-- ✅ **Historique Paiements** dans le dashboard patient (avec statistiques)
-- ✅ **Système de Réservation Amélioré** - Calendrier interactif avec créneaux horaires
-- ✅ **Géolocalisation** - Recherche de médecins à proximité
-- ✅ **Notifications** - Centre de notifications avec badge
-- ✅ **Dashboard Admin** - Statistiques, gestion utilisateurs (/admin)
-- ✅ **Catégorie "Autre"** - Barre de recherche pour professions non listées (February 2025)
-- ⏳ Téléconsultation Vidéo (Twilio)
-- ⏳ Notifications SMS/Email (rappels automatiques)
-- ⏳ Paiement Carte Bancaire (Stripe)
+## Future / Backlog
+- Système de Livraison (real-time tracking)
+- Marketplace Multi-vendeurs
+- Abonnements Bien-être
+- Version USSD (offline/rural access)
 
----
+## Mocked Features
+- Mobile Money payments (mock implementation)
+- Geolocation distance calculations (haversine approximation, awaiting Google Maps API)
 
-## Prioritized Backlog
+## Admin Credentials
+- URL: /admin
+- Username: MADJIB (from ADMIN_USERNAME env var)
+- Password: 48851132kl (from ADMIN_PASSWORD env var)
 
-### P0 - Critical (Phase 2 continued)
-- [ ] Intégration Twilio Video pour téléconsultations
-- [ ] Notifications SMS/Email (Twilio/SendGrid)
-- [ ] Intégration Stripe pour paiements carte
+## Key API Endpoints
+- `/health` - Readiness probe
+- `/api/auth/register`, `/api/auth/login` - Authentication
+- `/api/doctors/search` - Doctor search
+- `/api/appointments` - Booking management
+- `/api/ads` - Advertisement system
+- `/api/admin/*` - Admin dashboard APIs
 
-### P1 - High Priority (Phase 3)
-- [ ] Application Mobile Native (React Native)
-- [ ] Système de livraison temps réel
-- [ ] Version USSD pour zones rurales
-
-### P2 - Medium Priority
-- [ ] Marketplace multi-vendeurs
-- [ ] Abonnements bien-être (box mensuelle)
-- [ ] Assistant Santé IA avancé (chatbot)
-- [ ] Intégration assurances santé
-
-### P3 - Future
-- [ ] Télémédecine avec IA diagnostic
-- [ ] Dossier médical partagé inter-établissements
-- [ ] Plateforme formation professionnels santé
-
----
-
-## Technical Architecture
-
-### Backend
-- **Framework**: FastAPI (Python)
-- **Database**: MongoDB
-- **Auth**: JWT tokens
-- **Real-time**: Socket.IO
-
-### Frontend
-- **Framework**: React.js
-- **Styling**: TailwindCSS
-- **Components**: Shadcn UI
-- **Icons**: Lucide-react
-
-### Key Files
-- `/app/backend/server.py` - Main API (~1370 lignes)
-- `/app/backend/services/mobile_money.py` - Service paiement
-- `/app/frontend/src/App.js` - Router principal
-- `/app/frontend/src/pages/` - Toutes les pages
-
----
-
-## API Endpoints
-
-### Auth
-- `POST /api/auth/register`
-- `POST /api/auth/login`
-- `GET /api/auth/me`
-
-### Search & Doctors
-- `GET /api/specialties`
-- `GET /api/doctors/search` - Params: specialty, medical_type, location, min_rating, home_service, structure_type, keyword, **custom_search** (pour catégorie "Autre")
-- `GET /api/doctors/{id}`
-
-### Payments (NEW - Phase 2)
-- `GET /api/payments/providers` - Liste des fournisseurs Mobile Money
-- `POST /api/payments/initiate` - Initier un paiement
-- `GET /api/payments/status/{reference_id}` - Statut paiement
-- `POST /api/payments/simulate-confirmation/{id}` - Simulation sandbox
-- `POST /api/payments/webhook/{provider}` - Webhooks
-
-### Phase 1 Features
-- `GET/POST /api/medical-records`
-- `GET/POST /api/loyalty/points`
-- `GET /api/blog`
-- `GET /api/emergency/contacts`
-- `POST /api/assistant/suggest`
-
----
-
-## Database Collections
-- `users` - Patients et professionnels
-- `doctor_profiles` - Profils détaillés médecins
-- `appointments` - Rendez-vous
-- `messages` - Chat
-- `reviews` - Avis et évaluations
-- `medical_records` - Dossiers médicaux
-- `loyalty_points` - Points fidélité
-- `blog_posts` - Articles blog
-- `payments` - Transactions Mobile Money (NEW)
-
----
-
-## Notes Importantes
-
-### Mode Sandbox Mobile Money
-Les intégrations Mobile Money (Orange, MTN, Moov) fonctionnent en mode **SANDBOX**:
-- Aucune transaction réelle
-- Simulation via endpoint `/simulate-confirmation`
-- Pour production: configurer les vraies clés API des fournisseurs
-
-### Refactoring Recommandé
-Le fichier `server.py` est devenu volumineux (~1370 lignes). À refactoriser en modules:
-- `/routes/auth.py`
-- `/routes/doctors.py`
-- `/routes/payments.py`
-- `/routes/phase1_features.py`
-
----
-
-*Dernière mise à jour: 20 Janvier 2025*
+## Architecture Note
+- `server.py` is a monolith (>2300 lines) that needs to be refactored into modular FastAPI APIRouter files

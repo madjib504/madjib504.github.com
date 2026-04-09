@@ -1,210 +1,157 @@
-<analysis>**original_problem_statement**: The user wants to build a comprehensive health application in French named HealthFusion.
+<analysis>**original_problem_statement**: The user wants to build a comprehensive health application in French, now named keneyakafisa (formerly HealthFusion/SANA VITA/SanaVitaFLOW). The platform connects patients with modern medicine, African traditional medicine, and wellness specialists. 
+PRODUCT REQUIREMENTS:
+- Core: User registration (Patient/Health Professional), multi-category search, login, electronic medical records, booking calendar, loyalty program.
+- New additions: Advertising space (Carousel on homepage, submission form), WhatsApp contact fields for users/doctors, PWA capabilities (installable app), SEO optimization (sitemap, robots.txt, meta tags), Google Maps geolocation (pending).
+- Future Phase 2: Mobile Money (currently mock), Video Teleconsultation, SMS/Email notifications, Credit Card payments.
 
-Initial requirements included connecting patients with modern medicine and African traditional medicine specialists.
+**User's preferred language**: French (You MUST automatically detect the user's primary language from their messages inside the <trajectory> tag and INSTRUCT next agent to respond in the user's preferred language only. All user interactions must be in French).
 
-The scope has since expanded significantly to include:
-- A Wellness (Bien-être) category.
-- Home care services, pharmacists, and medical equipment sales.
-- A wellness shop with natural products and Wellness Packs.
-- **Phase 1 (Completed)**: Electronic Medical Records, HealthPoints Loyalty Program, Advanced Booking Calendar, Professional Statistics Dashboard, Enhanced Rating System, Health Blog, SOS Emergency Button, and a Specialty Guidance Assistant.
-- **Phase 2 (In Progress)**: Integration of Mobile Money, Video Teleconsultation, SMS/Email notifications, and Credit Card payments.
-- **Admin Features**: A secure admin dashboard to view users, statistics, and manage the application.
-- **UI/UX Improvements**: Multiple redesigns of the homepage for a cleaner, mobile-first experience, culminating in a minimal hero section with a slide-out side menu.
-- **Specific Feature Requests**: Geolocation-based search, an improved interactive booking calendar, and push notifications.
-
-**User's preferred language**: French
-
-**what currently exists?**
-A full-stack application with a FastAPI backend and React frontend. The application has a multi-phase feature set.
-- **Core**: User registration (Patient, Health Professional) and login. A multi-category search for professionals and products.
-- **Phase 1**: All features are implemented (Medical Records, Loyalty, Blog, Dashboards, Booking models, SOS button, etc.).
-- **Phase 2 (Partial)**:
-    - **Mobile Money**: A sandboxed, end-to-end mock integration is complete and tested, allowing users to simulate payments.
-- **Additional Features Implemented**:
-    - **Admin Dashboard**: A secure  route with login (/) to view application statistics (users, revenue, appointments) and manage users (view, verify, delete).
-    - **UI Overhaul**: The homepage is now a minimal, full-screen hero section with two main call-to-action buttons and a hamburger menu containing all navigation links.
-    - **Advanced Booking**: A full-fledged multi-step booking page with an interactive calendar and time-slot selection.
-    - **Geolocation Search**: An À proximité (Nearby) tab on the search page to find doctors based on user location and a specified radius.
-    - **Notifications UI**: A notification bell icon and a dropdown panel () have been added to the navbar, but are not yet functional.
-    - **SOS Button**: Updated with emergency contact numbers for Côte d'Ivoire.
-    - **Registration Flow**: Médecin (Doctor) has been changed to Corps de Santé (Health Professional), and an Autre (Other) category was added.
+**what currently exists?** 
+A full-stack web application (React + FastAPI) that has been transitioned into a Progressive Web App (PWA). It features a functional authentication system, an advanced booking system, an admin dashboard (), an advertising submission and display system, and a slide-out side menu with quick actions. The database has been successfully migrated from local storage to a cloud-based MongoDB Atlas cluster, and all test user/doctor data has been purged to prepare for production launch.
 
 **Last working item**:
-    - Last item agent was working: The agent was modifying the registration and search pages to make the Autre (Other) category functional. The goal was to display a text input field when a user selects Autre, allowing them to specify a custom health profession. The agent had modified  and was starting to modify .
-    - Status: IN PROGRESS
-    - Agent Testing Done: N
-    - Which testing method agent to use? screenshot tool (to verify the new input field appears correctly on both  and  when Autre is selected).
+    - Last item agent was working: Deleting all user and doctor profiles from the production database (MongoDB Atlas) to provide a clean slate for the app's official launch. The agent wrote and executed a Python script to delete the 39 existing profiles directly from the DB.
+    - Status: COMPLETED
+    - Agent Testing Done: Y
+    - Which testing method agent to use? python -c (Executed python script on the backend to verify 0 users and 0 doctors remain).
     - User Testing Done: N
 
 **All Pending/In progress Issue list**:
-  - Issue 1: (P0) User cannot access the application on certain mobile phones.
-  - Issue 2: (P1) Implement Autre category as a search bar.
-
-  Issues Detail:
-  - Issue 1: 
-     - Attempted fixes: The agent confirmed that backend and frontend services are running correctly. It checked logs for errors but found nothing critical. The agent was sidetracked by a UI redesign request and never returned to this issue.
-     - Next debug checklist:
-        1. Ask the user for more specific details: which phone model/browser is failing? Is there an error message or just a blank screen?
-        2. Ask for a screenshot of the browser console on the affected device.
-        3. Use a remote device testing tool or emulator to try and reproduce the issue on a similar device/browser combination.
-        4. Review the latest UI changes (, ) for any mobile-specific CSS or JavaScript issues (e.g., use of  units, unsupported flexbox properties).
-     - Why fix this issue and what will be achieved with the fix?: This is a critical blocker. If users cannot access the application on mobile, a large portion of the target audience is lost.
-     - Status:  NOT STARTED
-     - Is recurring issue? N
-     - Should Test frontend/backend/both after fix? frontend
-     - Blocked on other issue: None
-  - Issue 2: 
-     - Attempted fixes: The agent successfully updated  to show a text field when Autre is selected and to handle the custom value in the form state. It was in the process of adding the same functionality to  when the session ended.
-     - Next debug checklist:
-        1. Complete the implementation in  to show a search input when the Autre filter is selected.
-        2. Update the filtering logic in  to use the value from the new custom search input.
-        3. Update the backend search endpoint () in  to accept and process a custom  query parameter.
-     - Why fix this issue and what will be achieved with the fix?: This will complete the user's request, making the search and registration more flexible for health professions not listed in the predefined categories.
-     - Status:  IN PROGRESS
+  Issue 1: (P0) Integrate Google Maps API for genuine Geolocation
+     - Attempted fixes: Agent provided the Google Maps integration playbook and requested the user's Google Maps API key. The user mistakenly provided a Google Site Verification meta tag instead of the Maps API key.
+     - Next debug checklist: 
+        1. Ask the user again for the actual Google Maps API key (). 
+        2. Once received, implement the Google Maps integration in the frontend search ( / ) and backend logic as per the integration playbook.
+     - Why fix this issue and what will be achieved with the fix?: Replaces mock distance calculations with real, accurate distance/routing data for patients finding nearby doctors.
+     - Status: BLOCKED
      - Is recurring issue? N
      - Should Test frontend/backend/both after fix? both
-     - Blocked on other issue: None
+     - Blocked on other issue: Waiting for user to provide the correct API key.
 
 **In progress Task List**:
-- **Task 1**: Complete Autre as a search bar functionality.
-  - **Where to resume**: Modify  to add the conditional input field and update the filtering logic. Then, update the backend search endpoint.
-  - **What will be achieved with this?**: Fulfills the user's request for a more flexible search and registration system.
-  - **Status**: IN PROGRESS
-  - **Should Test frontend/backend/both after fix?** both
-  - **Blocked on something**: None
+  - Task 1: Wait for API Key to finalize Geolocation
+     - Where to resume: Await user response with Google Maps API key.
+     - What will be achieved with this? Real geolocation mapping for doctors.
+     - Status: BLOCKED
+     - Should Test frontend/backend/both after fix? both
+     - Blocked on something: User API key.
 
 **Upcoming and Future Tasks**
+    Upcoming Tasks:
+    - P1: Refactor  into smaller FastAPI APIRouter modules (, , , , ). File is currently >2300 lines and difficult to maintain.
+    - P1: Finish Phase 2 Integrations:
+        - Téléconsultation Vidéo: Implement Twilio Video.
+        - Notifications SMS/Email: Request playbook (Twilio/SendGrid) and implement.
+        - Paiement par carte bancaire: Request playbook for Stripe and integrate.
+    - P2: Make Notifications Functional: Connect backend to push notification service (e.g., Firebase Cloud Messaging).
 
-**Upcoming Tasks:**
-- **P0**: **Finish Phase 2 Integrations**:
-    - **Téléconsultation Vidéo**: Implement Twilio Video. The playbook was already requested in the previous session.
-    - **Notifications SMS/Email**: Request the playbook (e.g., for Twilio/SendGrid) and implement it to make the notification center functional.
-    - **Paiement par carte bancaire**: Request the playbook for Stripe and integrate it.
-- **P1**: **Make Notifications Functional**: Connect the backend to a push notification service (e.g., Firebase Cloud Messaging) to send real appointment reminders. The frontend UI is ready, but the backend logic is missing.
-
-**Future Tasks:**
-- **P2**: **Application Mobile Native**: Develop native iOS and Android applications.
-- **P2**: **Système de Livraison**: Implement real-time delivery tracking for products.
-- **P2**: **Marketplace Multi-vendeurs**: Allow multiple shops to sell on the platform.
-- **P2**: **Abonnements Bien-être**: Create a subscription box service.
-- **P2**: **Version USSD**: Create a version accessible without a smartphone for rural areas.
-- **P2**: **Assistant Santé IA**: Develop an advanced AI chatbot for symptom checking and advice.
-- **P2**: **Admin Dashboard Enhancements**: Add graphs and charts for visual statistics.
+    Future Tasks:
+    - P2: Système de Livraison: Real-time delivery tracking for products.
+    - P2: Marketplace Multi-vendeurs: Multi-vendor shop platform.
+    - P2: Abonnements Bien-être: Subscription boxes.
+    - P2: Version USSD: For offline/rural access.
 
 **Completed work in this session**
-- **Mobile Money Integration (Sandbox)**: Implemented and tested a full, sandboxed payment flow for Orange Money, MTN, and Moov.
-- **Patient Dashboard Enhancement**: Added a Payment History tab to the patient dashboard.
-- **Homepage Redesign**: Completely overhauled the homepage to a minimal, full-screen layout with a hamburger side menu for navigation.
-- **Admin Dashboard Creation**: Built a secure, role-protected  section with login, key statistics, and user management tables. Admin credentials were set and updated per user request.
-- **Advanced Booking System**: Implemented a multi-step booking page with an interactive calendar and time slot selection.
-- **Geolocation Search**: Added a Nearby search tab to find doctors based on user location.
-- **SOS Button Update**: Populated the emergency modal with official numbers for Côte d'Ivoire.
-- **Registration Flow Update**: Changed Médecin to Corps de Santé and added an Autre category.
-- **Promotional Countdown**: Added a promotional countdown timer to the homepage.
+- Completed Autre (Other) category as a functional search bar (frontend + backend).
+- Renamed application to keneyakafisa and changed primary color scheme to blue.
+- Added an Advertising section (Carousel on Home,  submission page, backend endpoints).
+- Added WhatsApp number fields to Registration and Login flows, persisting to  and .
+- Fixed mobile CSS overflow issues causing cut-offs on the Home page.
+- Added  endpoint for Kubernetes deployment readiness.
+- Set up SEO tools: Google Site Verification, , .
+- Guided user through DNS configuration on Hostinger to point custom domain to Emergent deployment.
+- Migrated database from local MongoDB to cloud-based MongoDB Atlas.
+- Generated downloadable QR codes with the app's logo.
+- Integrated PWA capabilities (, , generated icons) making the app installable on mobile.
+- Updated side menu with Inviter un ami, Appel, WhatsApp, and Code promo.
+- Temporarily restored the promotional countdown timer (set for 14 days).
+- Deleted all seed/test data (users and doctors) from the Atlas database for a clean production launch.
 
 **Earlier issues found/mentioned but not fixed**
-   - **Issue 1**: User reported being unable to open the application link on certain phones. The agent performed initial service checks but was redirected by the user to a UI redesign task and never resolved the original issue.
-     - **Debug checklist**: See All Pending/In progress Issue list.
-     - **Why to solve this issue and what will be achieved with this?**: This is a critical access issue that prevents mobile users from using the app.
-     - **Should Test frontend/backend/both after fix**: frontend
-     - **Is recurring issue?** N
+   - Issue 1: User previously reported being unable to open the application link on certain phones.
+     - Debug checklist: While the agent fixed CSS overflow issues and added PWA capabilities (which likely resolves viewport bugs), explicit cross-device verification was not done. Keep an eye out if the user reports mobile blank screens again.
+     - Why to solve this issue and what will be achieved with this?: Ensures app accessibility.
+     - Should Test frontend/backend/both after fix: frontend
+     - Is recurring issue? N
 
 **Known issue recurrence from previous fork**
-  - None.
+  - Issue recurrence in previous fork: None
+  - Recurrence count: 0
+  - Status: RESOLVED
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-- **Backend**: FastAPI (Python)
-- **Frontend**: React.js
-- **Database**: MongoDB
-- **Styling**: TailwindCSS
-- **State Management**: React Hooks (, , )
-- **UI Components**: Shadcn UI, Lucide-react
+- Backend: FastAPI (Python)
+- Frontend: React.js, TailwindCSS, Shadcn UI
+- Database: MongoDB (Migrated to Atlas)
+- PWA: Service workers, manifest, offline caching
+- Architecture: Monolithic backend requiring immediate refactoring
 
 **key DB schema**
-- **users**: Stores , ,  (, , ), .
-- **doctor_profiles**: Stores public doctor info like , , , and  for geolocation.
-- **appointments**: Stores , , Thu Jan 29 16:50:12 UTC 2026, , .
-- **payments**: Stores mocked payment transactions with , , , .
-- **notifications**: Stores user-specific notifications with , , .
+  - users: {email, password, user_type, name, whatsapp_number}
+  - doctor_profiles: {user_id, specialties, location, rating, coordinates, whatsapp_number}
+  - ads (NEW): {title, description, image_url, link, contact, package_type, status, clicks, created_at}
+  - appointments: {patient_id, doctor_id, date, time, status}
 
 **changes in tech stack**
-- No fundamental changes.
+  - Database migrated from local MongoDB to cloud-based **MongoDB Atlas**.
+  - PWA (Progressive Web App) architecture implemented on the frontend.
 
-**All files of reference**
-- : Heavily modified to add admin auth, admin dashboard endpoints, geolocation search, appointment availability, and booking endpoints. Now over 1900 lines.
-- : Completely rewritten twice, now a minimal hero page with a side menu.
-- : Modified to handle conditional rendering of the Navbar and add new routes for , , and .
-- : Modified to change Médecin to Corps de Santé and add logic for the Autre category.
-- : Modified to add the À proximité tab and booking buttons. In progress for the Autre category search bar.
-- : Modified to include the  component.
-- : Updated with  and .
-- **New Files**: , , , , , .
+**All files of reference** 
+- : Huge monolith, added ,  endpoints, WhatsApp updating logic.
+- : Added AdvertisingCarousel, updated Side menu with new actions, restored CountdownTimer.
+-  & : Added WhatsApp input fields.
+- : New page for submitting advertisements.
+-  & : New files for PWA functionality.
+- : Added PWA tags, SEO meta tags, removed Made with Emergent badge.
 
 **Areas that need refactoring**:
-- **CRITICAL**: The  file has grown to over 1900 lines and contains logic for authentication, search, user profiles, payments, admin functions, booking, and more. It urgently needs to be broken down into logical modules using FastAPI's  (e.g., , , , ).
-- Frontend state management could be improved by using a global context for authentication status instead of passing tokens via props or storing them in local storage in multiple components.
+- **CRITICAL**:  is over 2300 lines. It handles auth, admin, profiles, payments, booking, and now ads. It absolutely must be broken down using FastAPI  into modular files (, , etc.) to prevent maintainability collapse.
 
 **key api endpoints**
-- , , 
-- , , 
-- 
-- 
-- 
--  (Updated)
+-  (Readiness probe)
+-  (GET, POST)
+-  (POST)
+-  & 
 
 **Critical Info for New Agent**
-- The user is very hands-on and often changes direction or adds new requests in the middle of a task. Be prepared to re-prioritize, but always keep track of unresolved critical issues (like the mobile access problem).
-- The  monolith is a significant maintainability risk. Proposing a refactor after the current task is highly recommended.
-- Admin credentials are set in  and should be used for testing the admin dashboard. The user is the only one intended to have access.
-- All Phase 2 integrations (Video, SMS, Stripe) still need to be implemented. The user has only approved starting them.
+- The app has been renamed to **keneyakafisa**. Do not refer to it as HealthFusion or SANA VITA.
+- The user is preparing for a live production launch. The database is clean and points to MongoDB Atlas. Ensure  is respected.
+- The user often confuses technical terms (e.g., providing a site verification tag instead of an API key, struggling with DNS). Be highly descriptive, patient, and use clear step-by-step formatting with emojis when guiding them through platform-external tasks.
+- If the user asks about the Made with Emergent badge, note that the previous agent already removed the HTML node from  manually.
 
 **documents and test reports created in this job**
--  (created and updated multiple times)
--  (from testing the Mobile Money feature)
+  -  (Updated with Ads, PWA, WhatsApp features)
+  - 
 
 **Last 10 User Messages and any pending HUMAN messages** 
-1. : User specified that the Other category should function as a search bar. (In Progress)
-2. : User requested to change the admin credentials. (Completed)
-3. : User asked for instructions on how to log in as an admin. (Completed)
-4. : User confirmed they want an integrated admin dashboard. (Completed)
-5. : User asked how to access the database. (Completed, led to admin dashboard creation)
-6. : User asked for an explanation of how the database works. (Completed)
-7. : User requested updating the SOS button numbers. (Completed)
-8. : User selected Advanced Booking, Geolocation, and Push Notifications from a list of suggestions. (Completed)
-9. : User asked for suggestions to improve the whole application. (Completed)
-10. : User requested another major UI redesign for the homepage, leading to the current minimal design with a side menu. (Completed)
+ -  -> User saw profiles on the frontend and wanted them gone. Agent realized data was coming from the Atlas DB and executed a script to drop the collections.
+ -  -> User confirmed they redeployed the app. Agent then successfully purged all 39 test users from the database. (COMPLETED)
+ 
+ *Pending Human Message*: The user still needs to provide the Google Maps API key () for the Geolocation integration they requested earlier.
 
 **Project Health Check:**
-- **Broken**: Potential critical issue where the application is not accessible on some mobile devices. Needs immediate investigation.
-- **Mocked**:
-    - Mobile Money payments are sandbox-only and do not use real APIs.
-    - The Notification Center is a UI-only placeholder; no actual notifications are being generated or sent.
-    - Geolocation doctor data is seeded with random coordinates for testing.
+- Broken: None.
+- Mocked: Mobile Money payments, Geolocation (awaiting Google Maps API key).
 
 **3rd Party Integrations**
-- **Implemented (Mocked)**:
-    - Mobile Money (Orange, MTN, Moov) - Sandbox implementation.
-- **Planned (Phase 2)**:
-    - Twilio Video (Teleconsultation) - Playbook received in a previous session.
-    - Twilio / SendGrid (SMS/Email notifications) - Playbook needs to be requested.
-    - Stripe (Credit Card Payments) - Playbook needs to be requested.
+  - MongoDB Atlas (Database)
+  - Google Search Console (SEO verification)
+  - Google Maps API (Requested, playbook generated, waiting on User API Key)
+  - Twilio Video / SendGrid / Stripe (Planned for Phase 2)
 
 **Testing status**
-  - Testing agent used after significant changes: YES, for the Mobile Money feature.
+  - Testing agent used after significant changes: YES (iteration_3.json for Autre search functionality).
   - Troubleshoot agent used after agent stuck in loop: NO
-  - Test files created: 
-  - Known regressions: The mobile accessibility issue might be a regression from recent UI changes.
+  - Test files created: None this session.
+  - Known regressions: None detected, but  is fragile due to size.
 
 **Credentials to test flow:**
-- **Admin Login**:
-  - **URL**: 
-  - **Username**: 
-  - **Password**: 
-- **User/Doctor**: Register new users via the UI for testing patient/doctor flows.
+- Admin URL: 
+- Note: Admin user  /  may have been deleted during the DB purge. You may need to seed the admin user again or instruct the user to register an account and escalate it via backend script.
 
 **What agent forgot to execute**
-- The agent did not fully resolve the user's report about being unable to access the application on mobile. It performed initial diagnostics but got sidetracked by a new UI request and never returned to the problem.
-- The agent did not complete the implementation of the Other category as a search bar on the  page.</analysis>
+- The agent successfully cleared the DB but forgot to ensure a master Admin user was preserved or recreated, which may lock the user out of the  dashboard.
+- The agent needs to follow up clearly on the missing Google Maps API key, as the conversation got sidetracked by PWA, QR codes, and database purging tasks.</analysis>
