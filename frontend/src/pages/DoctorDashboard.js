@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useCallback, useContext } from 'react';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { API, AuthContext } from '@/App';
@@ -26,26 +26,21 @@ const DoctorDashboard = () => {
     profile_image: ''
   });
 
-  useEffect(() => {
-    fetchAppointments();
-    fetchProfile();
-  }, []);
-
-  const fetchAppointments = async () => {
+  const fetchAppointments = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(`${API}/appointments`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setAppointments(response.data);
-    } catch (error) {
-      console.error('Erreur lors du chargement des rendez-vous');
+    } catch {
+      // Appointments fetch failed
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(`${API}/doctors/search?specialty=`, {
@@ -63,10 +58,15 @@ const DoctorDashboard = () => {
           profile_image: myProfile.profile_image || ''
         });
       }
-    } catch (error) {
-      console.error('Erreur lors du chargement du profil');
+    } catch {
+      // Profile fetch failed
     }
-  };
+  }, [user.id]);
+
+  useEffect(() => {
+    fetchAppointments();
+    fetchProfile();
+  }, [fetchAppointments, fetchProfile]);
 
   const handleStatusUpdate = async (appointmentId, newStatus) => {
     try {
@@ -297,8 +297,8 @@ const DoctorDashboard = () => {
                 <div>
                   <p className="text-sm text-stone-600 mb-1">Spécialités</p>
                   <div className="flex flex-wrap gap-2">
-                    {profile.specialties?.map((spec, idx) => (
-                      <span key={idx} className="bg-blue-50 text-blue-800 px-3 py-1 rounded-full text-sm">
+                    {profile.specialties?.map((spec) => (
+                      <span key={spec} className="bg-blue-50 text-blue-800 px-3 py-1 rounded-full text-sm">
                         {spec}
                       </span>
                     ))}

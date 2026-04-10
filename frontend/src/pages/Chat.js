@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext, useRef } from 'react';
+import { useState, useEffect, useCallback, useContext, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import { io } from 'socket.io-client';
@@ -22,6 +22,18 @@ const Chat = () => {
   const [socket, setSocket] = useState(null);
   const messagesEndRef = useRef(null);
 
+  const fetchConversations = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/conversations`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setConversations(response.data);
+    } catch {
+      // Conversations fetch failed
+    }
+  }, []);
+
   useEffect(() => {
     fetchConversations();
     
@@ -34,7 +46,7 @@ const Chat = () => {
     return () => {
       if (newSocket) newSocket.disconnect();
     };
-  }, []);
+  }, [fetchConversations]);
 
   useEffect(() => {
     if (chatUserId) {
@@ -70,7 +82,7 @@ const Chat = () => {
         socket.off('receive_message');
       }
     };
-  }, [socket, selectedConversation]);
+  }, [socket, selectedConversation, user.id]);
 
   useEffect(() => {
     scrollToBottom();
@@ -78,18 +90,6 @@ const Chat = () => {
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  const fetchConversations = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/conversations`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setConversations(response.data);
-    } catch (error) {
-      console.error('Erreur lors du chargement des conversations');
-    }
   };
 
   const fetchUserInfo = async (userId) => {
@@ -113,8 +113,8 @@ const Chat = () => {
         });
         setMessages([]);
       }
-    } catch (error) {
-      console.error('Erreur lors du chargement des informations utilisateur');
+    } catch {
+      // User info fetch failed
     }
   };
 
@@ -126,8 +126,8 @@ const Chat = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       setMessages(response.data);
-    } catch (error) {
-      console.error('Erreur lors du chargement des messages');
+    } catch {
+      // Messages fetch failed
     }
   };
 
@@ -166,8 +166,8 @@ const Chat = () => {
       }
 
       setNewMessage('');
-    } catch (error) {
-      console.error('Erreur lors de l\'envoi du message');
+    } catch {
+      // Message send failed
     }
   };
 
@@ -253,7 +253,7 @@ const Chat = () => {
                   const isOwn = msg.sender_id === user.id;
                   return (
                     <div
-                      key={idx}
+                      key={msg.created_at + '-' + idx}
                       data-testid={`message-${idx}`}
                       className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}
                     >

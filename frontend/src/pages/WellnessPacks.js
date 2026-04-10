@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { API } from '@/App';
@@ -12,21 +12,20 @@ const WellnessPacks = () => {
   const [packs, setPacks] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchPacks();
-  }, []);
-
-  const fetchPacks = async () => {
+  const fetchPacks = useCallback(async () => {
     try {
       const response = await axios.get(`${API}/packs/wellness`);
       setPacks(response.data);
-    } catch (error) {
-      console.error('Erreur lors du chargement des packs');
+    } catch {
       toast.error('Erreur lors du chargement des packs');
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchPacks();
+  }, [fetchPacks]);
 
   const handleAddToCart = (pack) => {
     toast.success(`${pack.name} ajouté au panier !`);
@@ -94,8 +93,8 @@ const WellnessPacks = () => {
                 <div className="mb-4">
                   <p className="text-sm font-medium text-stone-700 mb-2">Bienfaits :</p>
                   <div className="flex flex-wrap gap-2">
-                    {pack.benefits.map((benefit, idx) => (
-                      <Badge key={idx} variant="outline" className="text-xs bg-blue-50 text-blue-800 border-blue-200">
+                    {pack.benefits.map((benefit) => (
+                      <Badge key={benefit} variant="outline" className="text-xs bg-blue-50 text-blue-800 border-blue-200">
                         {benefit}
                       </Badge>
                     ))}
@@ -106,8 +105,8 @@ const WellnessPacks = () => {
                 <div className="mb-4">
                   <p className="text-sm font-medium text-stone-700 mb-2">Contenu du pack :</p>
                   <div className="space-y-1">
-                    {pack.products.map((product, idx) => (
-                      <div key={idx} className="flex items-start gap-2 text-sm text-stone-600">
+                    {pack.products.map((product) => (
+                      <div key={product} className="flex items-start gap-2 text-sm text-stone-600">
                         <CheckCircle className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
                         <span>{product}</span>
                       </div>

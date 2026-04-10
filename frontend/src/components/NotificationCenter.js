@@ -30,8 +30,8 @@ const NotificationCenter = ({ isOpen, onClose }) => {
       });
       setNotifications(response.data.notifications || []);
       setUnreadCount(response.data.unread_count || 0);
-    } catch (error) {
-      console.error('Erreur notifications:', error);
+    } catch {
+      // Notifications fetch failed
     } finally {
       setLoading(false);
     }
@@ -49,8 +49,8 @@ const NotificationCenter = ({ isOpen, onClose }) => {
         prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
       );
       setUnreadCount(prev => Math.max(0, prev - 1));
-    } catch (error) {
-      console.error('Erreur:', error);
+    } catch {
+      // Mark as read failed
     }
   };
 
@@ -64,8 +64,8 @@ const NotificationCenter = ({ isOpen, onClose }) => {
       );
       setNotifications(prev => prev.map(n => ({ ...n, read: true })));
       setUnreadCount(0);
-    } catch (error) {
-      console.error('Erreur:', error);
+    } catch {
+      // Mark all as read failed
     }
   };
 
@@ -227,8 +227,8 @@ export const NotificationBell = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       setUnreadCount(response.data.unread_count || 0);
-    } catch (error) {
-      console.error('Erreur:', error);
+    } catch {
+      // Unread count fetch failed
     }
   };
 

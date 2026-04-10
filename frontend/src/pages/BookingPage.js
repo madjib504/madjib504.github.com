@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useCallback, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'sonner';
@@ -28,13 +28,7 @@ const BookingPage = () => {
   const [booking, setBooking] = useState(false);
   const [step, setStep] = useState(1); // 1: date, 2: time, 3: confirm
 
-  useEffect(() => {
-    if (doctorId) {
-      fetchDoctorAndAvailability();
-    }
-  }, [doctorId]);
-
-  const fetchDoctorAndAvailability = async () => {
+  const fetchDoctorAndAvailability = useCallback(async () => {
     try {
       const [doctorRes, availRes] = await Promise.all([
         axios.get(`${API}/doctors/${doctorId}`),
@@ -42,13 +36,18 @@ const BookingPage = () => {
       ]);
       setDoctor(doctorRes.data);
       setAvailability(availRes.data.availability || []);
-    } catch (error) {
-      console.error('Erreur:', error);
+    } catch {
       toast.error('Erreur lors du chargement');
     } finally {
       setLoading(false);
     }
-  };
+  }, [doctorId]);
+
+  useEffect(() => {
+    if (doctorId) {
+      fetchDoctorAndAvailability();
+    }
+  }, [doctorId, fetchDoctorAndAvailability]);
 
   const handleDateSelect = (date) => {
     setSelectedDate(date);
@@ -93,7 +92,6 @@ const BookingPage = () => {
         navigate('/patient/dashboard');
       }
     } catch (error) {
-      console.error('Erreur réservation:', error);
       toast.error(error.response?.data?.detail || 'Erreur lors de la réservation');
     } finally {
       setBooking(false);
@@ -146,8 +144,8 @@ const BookingPage = () => {
                   Dr. {doctor?.name}
                 </h2>
                 <div className="flex flex-wrap justify-center gap-1 mb-3">
-                  {doctor?.specialties?.slice(0, 2).map((spec, i) => (
-                    <Badge key={i} variant="secondary" className="text-xs">
+                  {doctor?.specialties?.slice(0, 2).map((spec) => (
+                    <Badge key={spec} variant="secondary" className="text-xs">
                       {spec}
                     </Badge>
                   ))}

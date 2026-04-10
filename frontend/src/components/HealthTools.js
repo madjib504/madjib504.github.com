@@ -20,8 +20,8 @@ export const SOSButton = () => {
     try {
       const response = await axios.get(`${API}/emergency/contacts`);
       setContacts(response.data);
-    } catch (error) {
-      console.error('Erreur');
+    } catch {
+      // Contacts fetch failed
     }
   };
 
@@ -95,9 +95,9 @@ export const SOSButton = () => {
             Numéros d'urgence
           </h3>
           <div className="grid grid-cols-2 gap-2">
-            {urgentContacts.map((contact, idx) => (
+            {urgentContacts.map((contact) => (
               <a
-                key={idx}
+                key={contact.number}
                 href={`tel:${contact.number}`}
                 className={`flex flex-col items-center p-4 rounded-xl border-2 ${getTypeColor(contact.type)} hover:shadow-md transition-all`}
                 data-testid={`emergency-${contact.number}`}
@@ -119,12 +119,12 @@ export const SOSButton = () => {
             Hôpitaux & Services
           </h3>
           <div className="space-y-2">
-            {otherContacts.map((contact, idx) => (
+            {otherContacts.map((contact) => (
               <a
-                key={idx}
+                key={contact.number}
                 href={`tel:${contact.number.replace(/\s/g, '')}`}
                 className={`flex items-center justify-between p-3 rounded-lg border ${getTypeColor(contact.type)} hover:shadow-md transition-all`}
-                data-testid={`contact-${idx}`}
+                data-testid={`contact-${contact.number}`}
               >
                 <div className="flex items-center gap-3">
                   {getIcon(contact.type)}
@@ -168,8 +168,8 @@ export const MedicalAssistant = () => {
     try {
       const response = await axios.post(`${API}/assistant/suggest`, { symptoms });
       setSuggestions(response.data.suggestions);
-    } catch (error) {
-      console.error('Erreur');
+    } catch {
+      // Suggestion failed
     } finally {
       setLoading(false);
     }
@@ -218,8 +218,8 @@ export const MedicalAssistant = () => {
             <div className="mt-6">
               <h3 className="font-bold text-lg mb-4">Spécialités recommandées :</h3>
               <div className="space-y-3">
-                {suggestions.map((sug, idx) => (
-                  <div key={idx} className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                {suggestions.map((sug) => (
+                  <div key={sug.specialty} className="p-4 bg-blue-50 rounded-lg border border-blue-200">
                     <p className="font-bold text-blue-900">{sug.specialty}</p>
                     <p className="text-sm text-stone-600 capitalize">{sug.medical_type.replace('_', ' ')}</p>
                   </div>

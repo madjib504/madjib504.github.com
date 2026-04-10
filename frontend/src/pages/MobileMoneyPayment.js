@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
@@ -25,9 +25,34 @@ const MobileMoneyPayment = () => {
     service_type: 'consultation'
   });
 
+  const fetchProviders = useCallback(async () => {
+    try {
+      const response = await axios.get(`${API}/payments/providers`);
+      setProviders(response.data.providers || []);
+    } catch {
+      toast.error('Erreur lors du chargement des fournisseurs');
+    }
+  }, []);
+
   useEffect(() => {
     fetchProviders();
-  }, []);
+  }, [fetchProviders]);
+
+  const checkPaymentStatus = useCallback(async (referenceId) => {
+    try {
+      const response = await axios.get(`${API}/payments/status/${referenceId}?provider=${selectedProvider}`);
+      if (response.data.status !== 'PENDING') {
+        setPaymentStatus(response.data.status);
+        if (response.data.status === 'SUCCESSFUL') {
+          toast.success('Paiement confirmé avec succès!');
+        } else if (response.data.status === 'FAILED') {
+          toast.error('Le paiement a échoué');
+        }
+      }
+    } catch {
+      // Status check failed silently, will retry
+    }
+  }, [selectedProvider]);
 
   useEffect(() => {
     let interval;
@@ -37,17 +62,7 @@ const MobileMoneyPayment = () => {
       }, 5000);
     }
     return () => clearInterval(interval);
-  }, [paymentReference, paymentStatus]);
-
-  const fetchProviders = async () => {
-    try {
-      const response = await axios.get(`${API}/payments/providers`);
-      setProviders(response.data.providers || []);
-    } catch (error) {
-      console.error('Erreur chargement providers:', error);
-      toast.error('Erreur lors du chargement des fournisseurs');
-    }
-  };
+  }, [paymentReference, paymentStatus, checkPaymentStatus]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -87,26 +102,9 @@ const MobileMoneyPayment = () => {
         toast.error(response.data.error || 'Erreur lors du paiement');
       }
     } catch (error) {
-      console.error('Erreur paiement:', error);
       toast.error(error.response?.data?.detail || 'Erreur lors du paiement');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const checkPaymentStatus = async (referenceId) => {
-    try {
-      const response = await axios.get(`${API}/payments/status/${referenceId}?provider=${selectedProvider}`);
-      if (response.data.status !== 'PENDING') {
-        setPaymentStatus(response.data.status);
-        if (response.data.status === 'SUCCESSFUL') {
-          toast.success('Paiement confirmé avec succès!');
-        } else if (response.data.status === 'FAILED') {
-          toast.error('Le paiement a échoué');
-        }
-      }
-    } catch (error) {
-      console.error('Erreur vérification:', error);
     }
   };
 
@@ -121,7 +119,6 @@ const MobileMoneyPayment = () => {
         toast.success('Paiement simulé confirmé!');
       }
     } catch (error) {
-      console.error('Erreur simulation:', error);
       toast.error(error.response?.data?.detail || 'Erreur lors de la simulation');
     } finally {
       setLoading(false);

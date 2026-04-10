@@ -24,7 +24,7 @@ Build a comprehensive health application in French named "keneyakafisa". The pla
 - Database: MongoDB Atlas
 - PWA: Service workers, manifest
 
-## What's Been Implemented ✅
+## What's Been Implemented
 - [2025-12] Full authentication system (JWT)
 - [2025-12] Doctor search with multi-category filtering
 - [2025-12] "Autre" (Other) category as search bar
@@ -40,21 +40,22 @@ Build a comprehensive health application in French named "keneyakafisa". The pla
 - [2025-12] Database migrated from local MongoDB to MongoDB Atlas
 - [2025-12] Database purged of all test data for production launch
 - [2025-12] Admin account verified working (credentials in .env)
+- [2025-12] Code quality review: Fixed hook dependencies (useCallback), array index keys, removed all console statements
 
 ## Pending / In Progress
-- 🟡 Google Maps Geolocation (BLOCKED - waiting for user API key)
-- 🟠 Backend refactoring (server.py >2300 lines → modular APIRouter)
+- Google Maps Geolocation (BLOCKED - waiting for user API key)
+- Backend refactoring (server.py >2300 lines -> modular APIRouter)
 
 ## Phase 2 (Upcoming)
-- P1: Téléconsultation Vidéo (Twilio Video)
+- P1: Teleconsultation Video (Twilio Video)
 - P1: Notifications SMS/Email (Twilio/SendGrid)
 - P1: Paiement par carte bancaire (Stripe)
 - P2: Push Notifications (Firebase Cloud Messaging)
 
 ## Future / Backlog
-- Système de Livraison (real-time tracking)
+- Systeme de Livraison (real-time tracking)
 - Marketplace Multi-vendeurs
-- Abonnements Bien-être
+- Abonnements Bien-etre
 - Version USSD (offline/rural access)
 
 ## Mocked Features

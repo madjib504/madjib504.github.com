@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useCallback, useContext } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'sonner';
@@ -27,30 +27,30 @@ const DoctorProfilePage = () => {
   const [reviewData, setReviewData] = useState({ rating: 5, comment: '' });
   const navigate = useNavigate();
 
-  useEffect(() => {
-    fetchDoctorProfile();
-    fetchReviews();
-  }, [doctorId]);
-
-  const fetchDoctorProfile = async () => {
+  const fetchDoctorProfile = useCallback(async () => {
     try {
       const response = await axios.get(`${API}/doctors/${doctorId}`);
       setDoctor(response.data);
-    } catch (error) {
+    } catch {
       toast.error('Erreur lors du chargement du profil');
     } finally {
       setLoading(false);
     }
-  };
+  }, [doctorId]);
 
-  const fetchReviews = async () => {
+  const fetchReviews = useCallback(async () => {
     try {
       const response = await axios.get(`${API}/reviews/${doctorId}`);
       setReviews(response.data);
-    } catch (error) {
-      console.error('Erreur lors du chargement des avis');
+    } catch {
+      // Reviews fetch failed
     }
-  };
+  }, [doctorId]);
+
+  useEffect(() => {
+    fetchDoctorProfile();
+    fetchReviews();
+  }, [fetchDoctorProfile, fetchReviews]);
 
   const handleBooking = async (e) => {
     e.preventDefault();
@@ -161,8 +161,8 @@ const DoctorProfilePage = () => {
                   Dr. {doctor.name}
                 </h1>
                 <div className="flex flex-wrap gap-2 mb-6">
-                  {doctor.specialties && doctor.specialties.map((spec, idx) => (
-                    <span key={idx} className="bg-blue-50 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+                  {doctor.specialties && doctor.specialties.map((spec) => (
+                    <span key={spec} className="bg-blue-50 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
                       {spec}
                     </span>
                   ))}
@@ -277,9 +277,9 @@ const DoctorProfilePage = () => {
                           <div>
                             <p className="font-medium text-stone-900">{review.patient_name}</p>
                             <div className="flex items-center mt-1">
-                              {[...Array(5)].map((_, idx) => (
+                              {[...Array(5)].map((_, starIdx) => (
                                 <Star
-                                  key={idx}
+                                  key={`star-${starIdx}`}
                                   className={`w-4 h-4 ${
                                     idx < review.rating
                                       ? 'text-yellow-500 fill-yellow-500'

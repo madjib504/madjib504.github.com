@@ -37,6 +37,7 @@ const AdminDashboard = () => {
     if (isAuthenticated) {
       fetchData();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, activeTab, currentPage, userTypeFilter]);
 
   const checkAuth = async () => {
@@ -102,7 +103,6 @@ const AdminDashboard = () => {
         setAppointments(response.data.appointments);
       }
     } catch (error) {
-      console.error('Erreur:', error);
       if (error.response?.status === 401) {
         handleLogout();
       }
@@ -287,8 +287,8 @@ const AdminDashboard = () => {
                     <div>
                       <p className="text-slate-400 text-sm">Spécialités</p>
                       <div className="flex flex-wrap gap-1 mt-1">
-                        {selectedUser.doctor_profile.specialties?.map((s, i) => (
-                          <Badge key={i} variant="secondary">{s}</Badge>
+                        {selectedUser.doctor_profile.specialties?.map((s) => (
+                          <Badge key={s} variant="secondary">{s}</Badge>
                         ))}
                       </div>
                     </div>
@@ -313,8 +313,8 @@ const AdminDashboard = () => {
                 <div className="border-t border-slate-700 pt-4">
                   <h3 className="text-white font-semibold mb-3">Paiements ({selectedUser.payments.length})</h3>
                   <div className="space-y-2 max-h-40 overflow-y-auto">
-                    {selectedUser.payments.map((p, i) => (
-                      <div key={i} className="flex justify-between items-center p-2 bg-slate-700/50 rounded">
+                    {selectedUser.payments.map((p) => (
+                      <div key={p.reference_id || p.description} className="flex justify-between items-center p-2 bg-slate-700/50 rounded">
                         <span className="text-slate-300 text-sm">{p.description}</span>
                         <span className={`font-medium ${p.status === 'SUCCESSFUL' ? 'text-blue-500' : 'text-yellow-500'}`}>
                           {p.amount} XOF
@@ -670,8 +670,8 @@ const AdminDashboard = () => {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-700">
-                        {payments.map((payment, i) => (
-                          <tr key={i} className="hover:bg-slate-700/30">
+                        {payments.map((payment) => (
+                          <tr key={payment.reference_id || payment.id} className="hover:bg-slate-700/30">
                             <td className="p-4 text-slate-300 font-mono text-xs">
                               {payment.reference_id?.slice(0, 8)}...
                             </td>
@@ -722,8 +722,8 @@ const AdminDashboard = () => {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-700">
-                        {appointments.map((apt, i) => (
-                          <tr key={i} className="hover:bg-slate-700/30">
+                        {appointments.map((apt) => (
+                          <tr key={apt.id || `${apt.patient_name}-${apt.appointment_date}`} className="hover:bg-slate-700/30">
                             <td className="p-4 text-white">{apt.patient_name}</td>
                             <td className="p-4 text-slate-300">{apt.doctor_name}</td>
                             <td className="p-4 text-slate-300">

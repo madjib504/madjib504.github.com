@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useCallback, useContext } from 'react';
 import axios from 'axios';
 import { API, AuthContext } from '@/App';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,11 +17,7 @@ const PatientDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('appointments');
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
       const headers = { Authorization: `Bearer ${token}` };
@@ -33,12 +29,16 @@ const PatientDashboard = () => {
       
       setAppointments(appointmentsRes.data);
       setPayments(paymentsRes.data.payments || []);
-    } catch (error) {
-      console.error('Erreur lors du chargement des données');
+    } catch {
+      // Data fetch failed silently
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const getStatusBadge = (status) => {
     const statusConfig = {
@@ -271,8 +271,8 @@ const PatientDashboard = () => {
                           </div>
                           {apt.doctor_info?.specialties && (
                             <div className="flex gap-2 mb-2">
-                              {apt.doctor_info.specialties.slice(0, 2).map((spec, idx) => (
-                                <span key={idx} className="text-sm bg-blue-50 text-blue-800 px-2 py-1 rounded-full">
+                              {apt.doctor_info.specialties.slice(0, 2).map((spec) => (
+                                <span key={spec} className="text-sm bg-blue-50 text-blue-800 px-2 py-1 rounded-full">
                                   {spec}
                                 </span>
                               ))}

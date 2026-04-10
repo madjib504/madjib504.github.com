@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useCallback, useContext } from 'react';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { API, AuthContext } from '@/App';
@@ -13,33 +13,33 @@ const Loyalty = () => {
   const [rewards, setRewards] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchLoyalty();
-    fetchRewards();
-  }, []);
-
-  const fetchLoyalty = async () => {
+  const fetchLoyalty = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(`${API}/loyalty/points`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setLoyalty(response.data);
-    } catch (error) {
-      console.error('Erreur');
+    } catch {
+      // Loyalty fetch failed
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const fetchRewards = async () => {
+  const fetchRewards = useCallback(async () => {
     try {
       const response = await axios.get(`${API}/loyalty/rewards`);
       setRewards(response.data);
-    } catch (error) {
-      console.error('Erreur');
+    } catch {
+      // Rewards fetch failed
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchLoyalty();
+    fetchRewards();
+  }, [fetchLoyalty, fetchRewards]);
 
   const getLevelColor = (level) => {
     const colors = {

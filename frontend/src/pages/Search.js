@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { API } from '@/App';
@@ -28,19 +28,20 @@ const Search = () => {
   });
   const navigate = useNavigate();
 
-  useEffect(() => {
-    fetchSpecialties();
-    searchDoctors();
-  }, []);
-
-  const fetchSpecialties = async () => {
+  const fetchSpecialties = useCallback(async () => {
     try {
       const response = await axios.get(`${API}/specialties`);
       setSpecialties(response.data);
-    } catch (error) {
-      console.error('Erreur lors du chargement des spécialités');
+    } catch {
+      // Specialties non-critical
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchSpecialties();
+    searchDoctors();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchSpecialties]);
 
   const searchDoctors = async () => {
     setLoading(true);
@@ -65,8 +66,8 @@ const Search = () => {
 
       const response = await axios.get(`${API}/doctors/search?${params.toString()}`);
       setDoctors(response.data);
-    } catch (error) {
-      console.error('Erreur lors de la recherche');
+    } catch {
+      // Search results empty on error
     } finally {
       setLoading(false);
     }
@@ -293,9 +294,9 @@ const Search = () => {
                             Dr. {doctor.name}
                           </h3>
                           <div className="flex flex-wrap gap-1 mb-2">
-                            {doctor.specialties?.slice(0, 2).map((spec, idx) => (
+                            {doctor.specialties?.slice(0, 2).map((spec) => (
                               <span
-                                key={idx}
+                                key={spec}
                                 className="bg-stone-100 text-stone-600 text-xs px-2 py-0.5 rounded-full"
                               >
                                 {spec}

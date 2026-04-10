@@ -47,7 +47,6 @@ const NearbyDoctors = ({ medicalType, specialty, onSelectDoctor }) => {
         await fetchNearbyDoctors(latitude, longitude);
       },
       (err) => {
-        console.error('Erreur géolocalisation:', err);
         switch (err.code) {
           case err.PERMISSION_DENIED:
             setError('Accès à la localisation refusé. Veuillez autoriser la géolocalisation.');
@@ -85,8 +84,7 @@ const NearbyDoctors = ({ medicalType, specialty, onSelectDoctor }) => {
       } else {
         toast.success(`${response.data.count} professionnel(s) trouvé(s)`);
       }
-    } catch (error) {
-      console.error('Erreur recherche:', error);
+    } catch {
       setError('Erreur lors de la recherche des professionnels');
     } finally {
       setLoading(false);
@@ -219,8 +217,8 @@ const NearbyDoctors = ({ medicalType, specialty, onSelectDoctor }) => {
                             Dr. {doctor.name}
                           </h5>
                           <div className="flex flex-wrap gap-1 mt-1">
-                            {doctor.specialties?.slice(0, 2).map((spec, i) => (
-                              <Badge key={i} variant="secondary" className="text-xs">
+                            {doctor.specialties?.slice(0, 2).map((spec) => (
+                              <Badge key={spec} variant="secondary" className="text-xs">
                                 {spec}
                               </Badge>
                             ))}

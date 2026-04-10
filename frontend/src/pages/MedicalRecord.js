@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useCallback, useContext } from 'react';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { API, AuthContext } from '@/App';
@@ -18,23 +18,23 @@ const MedicalRecord = () => {
   const [newAllergy, setNewAllergy] = useState('');
   const [newCondition, setNewCondition] = useState('');
 
-  useEffect(() => {
-    fetchRecord();
-  }, []);
-
-  const fetchRecord = async () => {
+  const fetchRecord = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(`${API}/medical-records`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setRecord(response.data);
-    } catch (error) {
-      console.error('Erreur');
+    } catch {
+      // Record fetch failed
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchRecord();
+  }, [fetchRecord]);
 
   const handleUpdate = async () => {
     try {
@@ -125,7 +125,7 @@ const MedicalRecord = () => {
               <div className="flex flex-wrap gap-2">
                 {record?.allergies?.length > 0 ? (
                   record.allergies.map((allergy, idx) => (
-                    <Badge key={idx} variant="destructive" className="flex items-center gap-1">
+                    <Badge key={allergy} variant="destructive" className="flex items-center gap-1">
                       {allergy}
                       {editing && (
                         <X
@@ -167,7 +167,7 @@ const MedicalRecord = () => {
               <div className="flex flex-wrap gap-2">
                 {record?.chronic_conditions?.length > 0 ? (
                   record.chronic_conditions.map((condition, idx) => (
-                    <Badge key={idx} className="flex items-center gap-1 bg-blue-100 text-blue-800">
+                    <Badge key={condition} className="flex items-center gap-1 bg-blue-100 text-blue-800">
                       {condition}
                       {editing && (
                         <X

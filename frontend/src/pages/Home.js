@@ -279,9 +279,9 @@ const AdvertisingCarousel = () => {
 
         {/* Dots Navigation */}
         <div className="flex justify-center gap-1.5 sm:gap-2 mt-3 sm:mt-4">
-          {ads.map((_, index) => (
+          {ads.map((ad, index) => (
             <button
-              key={index}
+              key={ad.id || `dot-${index}`}
               onClick={() => goToSlide(index)}
               className={`w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full transition-all ${
                 index === currentIndex 
@@ -532,9 +532,9 @@ const HomePage = () => {
                 </div>
               </div>
               <div className="space-y-1">
-                {userMenuItems.map((item, idx) => (
+                {userMenuItems.map((item) => (
                   <Link
-                    key={idx}
+                    key={item.link}
                     to={item.link}
                     onClick={() => setMenuOpen(false)}
                     className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-blue-100 transition-colors"
@@ -548,15 +548,15 @@ const HomePage = () => {
           )}
 
           {/* Menu Sections */}
-          {menuSections.map((section, sectionIdx) => (
-            <div key={sectionIdx} className="p-4 border-b">
+          {menuSections.map((section) => (
+            <div key={section.title} className="p-4 border-b">
               <h3 className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-3">
                 {section.title}
               </h3>
               <div className="space-y-1">
-                {section.items.map((item, itemIdx) => (
+                {section.items.map((item) => (
                   <Link
-                    key={itemIdx}
+                    key={item.link}
                     to={item.link}
                     onClick={() => setMenuOpen(false)}
                     className="flex items-center justify-between px-3 py-3 rounded-lg hover:bg-stone-50 transition-colors group"

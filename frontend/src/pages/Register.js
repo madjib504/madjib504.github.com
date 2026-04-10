@@ -36,8 +36,8 @@ const Register = ({ setUser }) => {
     try {
       const response = await axios.get(`${API}/specialties`);
       setSpecialtiesList(response.data);
-    } catch (error) {
-      console.error('Erreur lors du chargement des spécialités');
+    } catch {
+      // Specialties fetch failed
     }
   };
 
