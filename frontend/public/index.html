@@ -42,28 +42,21 @@
         -->
         <title>keneyakafisa - Santé pour tous</title>
         <script>
-            // Register Service Worker with force update
+            // Force unregister all old service workers and clear all caches
             if ('serviceWorker' in navigator) {
-                window.addEventListener('load', function() {
-                    navigator.serviceWorker.register('/pwabuilder-sw.js')
-                        .then(function(registration) {
-                            // Check for updates immediately
-                            registration.update();
-                            // Auto-update when new SW found
-                            registration.addEventListener('updatefound', function() {
-                                var newWorker = registration.installing;
-                                newWorker.addEventListener('statechange', function() {
-                                    if (newWorker.state === 'activated') {
-                                        window.location.reload();
-                                    }
-                                });
-                            });
-                        });
-                    // Claim control immediately
-                    navigator.serviceWorker.addEventListener('controllerchange', function() {
-                        window.location.reload();
-                    });
+                navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                    for (var i = 0; i < registrations.length; i++) {
+                        registrations[i].unregister();
+                    }
                 });
+                // Clear all caches
+                if ('caches' in window) {
+                    caches.keys().then(function(names) {
+                        for (var i = 0; i < names.length; i++) {
+                            caches.delete(names[i]);
+                        }
+                    });
+                }
             }
         </script>
         <script src="https://assets.emergent.sh/scripts/emergent-main.js"></script>
