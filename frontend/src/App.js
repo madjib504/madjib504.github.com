@@ -21,6 +21,7 @@ import MobileMoneyPayment from '@/pages/MobileMoneyPayment';
 import BookingPage from '@/pages/BookingPage';
 import AdminDashboard from '@/pages/AdminDashboard';
 import Advertise from '@/pages/Advertise';
+import WelcomeDoctor from '@/pages/WelcomeDoctor';
 import { SOSButton, MedicalAssistant } from '@/components/HealthTools';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -106,6 +107,7 @@ function AppContent({ user, setUser, loading }) {
         } />
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/advertise" element={<Advertise />} />
+        <Route path="/welcome-doctor" element={<WelcomeDoctor />} />
       </Routes>
     </Layout>
   );

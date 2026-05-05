@@ -94,12 +94,13 @@ const Register = ({ setUser }) => {
       setUser(response.data.user);
       toast.success('Inscription réussie !');
       
-      // Small delay to ensure state is updated
+      // Redirect based on user type
       setTimeout(() => {
         if (response.data.user.user_type === 'patient') {
           navigate('/patient/dashboard');
         } else {
-          navigate('/doctor/dashboard');
+          // Health professionals go to welcome page with brochure
+          navigate('/welcome-doctor');
         }
       }, 100);
     } catch (error) {
