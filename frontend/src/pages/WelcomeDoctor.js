@@ -6,7 +6,7 @@ import { CheckCircle, Download, MessageCircle, ArrowRight } from 'lucide-react';
 
 const BROCHURE_LINK = "https://docs.google.com/presentation/d/1bIwp7orIlr2wfKgO1WRlF2hUpe3mRk4jLo4lxfofQ2E/edit?usp=sharing";
 const WHATSAPP_NUMBER = "2250777154048";
-const WELCOME_MESSAGE = "Bienvenu sur keneyakafisa !!! Télécharger le catalogue de partenariat";
+const WELCOME_MESSAGE = "Bienvenu sur keneyakafisa !!! Télécharger le catalogue de partenariat. Vous avez 30 jours de gratuité sur toutes les options de keneyakafisa";
 
 const WelcomeDoctor = () => {
   const navigate = useNavigate();
