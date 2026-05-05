@@ -4,8 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { CheckCircle, Download, MessageCircle, ArrowRight } from 'lucide-react';
 
-const BROCHURE_LINK = "https://drive.google.com/file/d/VOTRE_LIEN_ICI/view";
-const WHATSAPP_NUMBER = "2250000000000";
+const BROCHURE_LINK = "https://drive.google.com/file/d/LIEN_A_COMPLETER/view";
+const WHATSAPP_NUMBER = "2250777154048";
 const WELCOME_MESSAGE = "Bienvenu sur keneyakafisa !!! Télécharger le catalogue de partenariat";
 
 const WelcomeDoctor = () => {
