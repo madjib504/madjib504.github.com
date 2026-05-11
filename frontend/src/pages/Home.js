@@ -8,7 +8,7 @@ import {
   CreditCard, BookOpen, Award, FileText, Phone, LogOut, User,
   Leaf, Sparkles, Activity, Truck, Store, Clock,
   Megaphone, ChevronLeft, ExternalLink, Building2,
-  Share2, Headphones, Gift, MessageCircle, Zap
+  Share2, Headphones, Gift, MessageCircle, Zap, FolderOpen, Link2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -354,6 +354,10 @@ const HomePage = () => {
     }
   ];
 
+  const importantDocuments = [
+    { label: 'Catalogue de partenariat', url: 'https://docs.google.com/presentation/d/1bIwp7orIlr2wfKgO1WRlF2hUpe3mRk4jLo4lxfofQ2E/edit?usp=sharing' },
+  ];
+
   const userMenuItems = user ? [
     { icon: Home, label: 'Mon Dashboard', link: user.user_type === 'patient' ? '/patient/dashboard' : '/doctor/dashboard' },
     { icon: MessageSquare, label: 'Mes Messages', link: '/chat' },
@@ -572,6 +576,32 @@ const HomePage = () => {
               </div>
             </div>
           ))}
+
+          {/* Documents Importants */}
+          <div className="p-4 border-b">
+            <h3 className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-3">
+              Documents Importants
+            </h3>
+            <div className="space-y-1">
+              {importantDocuments.map((doc) => (
+                <a
+                  key={doc.url}
+                  href={doc.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setMenuOpen(false)}
+                  className="flex items-center justify-between px-3 py-3 rounded-lg hover:bg-amber-50 transition-colors group"
+                  data-testid={`doc-${doc.label.toLowerCase().replace(/\s+/g, '-')}`}
+                >
+                  <div className="flex items-center gap-3">
+                    <FolderOpen className="w-5 h-5 text-amber-500" />
+                    <span className="text-stone-700 font-medium">{doc.label}</span>
+                  </div>
+                  <ExternalLink className="w-4 h-4 text-stone-300 group-hover:text-amber-500 transition-colors" />
+                </a>
+              ))}
+            </div>
+          </div>
 
           {/* Quick Actions */}
           <div className="p-4 border-b">
