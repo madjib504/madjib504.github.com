@@ -9,7 +9,7 @@ import {
   Users, UserCheck, Stethoscope, Calendar, CreditCard, 
   TrendingUp, Search, Eye, Trash2, CheckCircle, XCircle,
   Lock, LogOut, Download, RefreshCw, ChevronLeft, ChevronRight,
-  Shield, AlertTriangle
+  Shield, AlertTriangle, Bell, MessageCircle, X, UserPlus
 } from 'lucide-react';
 
 const API = process.env.REACT_APP_BACKEND_URL + '/api';
@@ -28,6 +28,9 @@ const AdminDashboard = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [showNotifications, setShowNotifications] = useState(false);
 
   useEffect(() => {
     checkAuth();
@@ -83,8 +86,13 @@ const AdminDashboard = () => {
     setLoading(true);
     try {
       if (activeTab === 'overview') {
-        const response = await axios.get(`${API}/admin/stats`, getAuthHeaders());
-        setStats(response.data);
+        const [statsRes, notifRes] = await Promise.all([
+          axios.get(`${API}/admin/stats`, getAuthHeaders()),
+          axios.get(`${API}/admin/notifications`, getAuthHeaders())
+        ]);
+        setStats(statsRes.data);
+        setNotifications(notifRes.data.notifications || []);
+        setUnreadCount(notifRes.data.unread_count || 0);
       } else if (activeTab === 'users') {
         const params = new URLSearchParams();
         if (userTypeFilter !== 'all') params.append('user_type', userTypeFilter);
@@ -151,6 +159,31 @@ const AdminDashboard = () => {
     } catch (error) {
       toast.error('Erreur lors de l\'export');
     }
+  };
+
+  const markNotificationRead = async (notifId) => {
+    try {
+      await axios.post(`${API}/admin/notifications/${notifId}/read`, {}, getAuthHeaders());
+      setNotifications(prev => prev.map(n => n.id === notifId ? { ...n, read: true } : n));
+      setUnreadCount(prev => Math.max(0, prev - 1));
+    } catch {
+      // Silent fail
+    }
+  };
+
+  const markAllNotificationsRead = async () => {
+    try {
+      await axios.post(`${API}/admin/notifications/read-all`, {}, getAuthHeaders());
+      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+      setUnreadCount(0);
+    } catch {
+      // Silent fail
+    }
+  };
+
+  const openWhatsAppNotif = (notif) => {
+    const msg = `Nouvelle inscription sur keneyakafisa:\n- Nom: ${notif.user_name}\n- Type: ${notif.user_type === 'doctor' ? 'Médecin' : 'Patient'}\n- Email: ${notif.user_email}${notif.whatsapp_number ? '\n- WhatsApp: ' + notif.whatsapp_number : ''}`;
+    window.open(`https://wa.me/2250777154048?text=${encodeURIComponent(msg)}`, '_blank');
   };
 
   const viewUserDetail = async (userId) => {
@@ -356,7 +389,7 @@ const AdminDashboard = () => {
 
   // Main Dashboard
   return (
-    <div className="min-h-screen bg-slate-900">
+    <div className="min-h-screen bg-slate-900 pt-16">
       {/* Header */}
       <header className="bg-slate-800 border-b border-slate-700 px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -368,6 +401,82 @@ const AdminDashboard = () => {
             </div>
           </div>
           <div className="flex items-center gap-3">
+            {/* Notification Bell */}
+            <div className="relative">
+              <Button 
+                variant="ghost" 
+                onClick={() => setShowNotifications(!showNotifications)}
+                className="text-slate-400 hover:text-white relative"
+                data-testid="notification-bell"
+              >
+                <Bell className="w-5 h-5" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
+              </Button>
+
+              {/* Notification Dropdown */}
+              {showNotifications && (
+                <div className="absolute right-0 top-12 w-96 max-h-96 overflow-y-auto bg-slate-800 border border-slate-700 rounded-xl shadow-2xl z-50" data-testid="notification-panel">
+                  <div className="flex items-center justify-between px-4 py-3 border-b border-slate-700">
+                    <h3 className="text-white font-semibold">Notifications</h3>
+                    <div className="flex gap-2">
+                      {unreadCount > 0 && (
+                        <button 
+                          onClick={markAllNotificationsRead}
+                          className="text-xs text-blue-400 hover:text-blue-300"
+                        >
+                          Tout marquer lu
+                        </button>
+                      )}
+                      <button onClick={() => setShowNotifications(false)} className="text-slate-400 hover:text-white">
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                  {notifications.length === 0 ? (
+                    <div className="px-4 py-8 text-center text-slate-500">
+                      Aucune notification
+                    </div>
+                  ) : (
+                    notifications.map((notif) => (
+                      <div 
+                        key={notif.id}
+                        className={`px-4 py-3 border-b border-slate-700/50 hover:bg-slate-700/50 transition-colors ${!notif.read ? 'bg-slate-700/30' : ''}`}
+                        onClick={() => !notif.read && markNotificationRead(notif.id)}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${notif.user_type === 'doctor' ? 'bg-blue-500/20' : 'bg-green-500/20'}`}>
+                            {notif.user_type === 'doctor' 
+                              ? <Stethoscope className="w-4 h-4 text-blue-400" />
+                              : <UserPlus className="w-4 h-4 text-green-400" />
+                            }
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm text-white">{notif.message}</p>
+                            <p className="text-xs text-slate-400 mt-1">{notif.user_email}</p>
+                            <div className="flex items-center gap-2 mt-2">
+                              <span className="text-xs text-slate-500">{formatDate(notif.created_at)}</span>
+                              {!notif.read && <span className="w-2 h-2 bg-blue-500 rounded-full"></span>}
+                            </div>
+                          </div>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); openWhatsAppNotif(notif); }}
+                            className="text-green-400 hover:text-green-300 p-1"
+                            title="Envoyer sur WhatsApp"
+                          >
+                            <MessageCircle className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+
             <Button 
               variant="ghost" 
               onClick={fetchData}

@@ -29,22 +29,26 @@ Build a comprehensive health application in French named "keneyakafisa". The pla
 - [2025-12] Doctor search with multi-category filtering
 - [2025-12] "Autre" (Other) category as search bar
 - [2025-12] Appointment booking system
-- [2025-12] Admin dashboard (`/admin`) with user/appointment/payment management
-- [2025-12] Advertising system (carousel display + `/advertise` submission page)
+- [2025-12] Admin dashboard with user/appointment/payment management
+- [2025-12] Advertising system (carousel + /advertise submission)
 - [2025-12] WhatsApp number fields for users and doctors
 - [2025-12] PWA capabilities (manifest.json, service worker, installable)
 - [2025-12] SEO tools (Google Site Verification, sitemap.xml, robots.txt)
 - [2025-12] QR code generation
-- [2025-12] Side menu with quick actions (Inviter un ami, Appel, WhatsApp, Code promo)
-- [2025-12] Promotional countdown timer (14 days)
-- [2025-12] Database migrated from local MongoDB to MongoDB Atlas
-- [2025-12] Database purged of all test data for production launch
-- [2025-12] Admin account verified working (credentials in .env)
-- [2025-12] Code quality review: Fixed hook dependencies (useCallback), array index keys, removed all console statements
+- [2025-12] Side menu with quick actions
+- [2025-12] Promotional countdown timer
+- [2025-12] Database migrated to MongoDB Atlas
+- [2025-12] Database purged for production launch
+- [2025-12] Code quality: Fixed hook deps (useCallback), array index keys, removed console statements
+- [2025-12] Welcome page for doctors after registration (WhatsApp + brochure link)
+- [2025-12] Documents Importants section in side menu (catalogue de partenariat)
+- [2025-12] Admin notification system (bell icon + dropdown + WhatsApp forward)
+- [2025-12] WhatsApp notification on new registration (patient + doctor)
+- [2025-12] Service Worker v2 with cache versioning and auto-update
 
 ## Pending / In Progress
 - Google Maps Geolocation (BLOCKED - waiting for user API key)
-- Backend refactoring (server.py >2300 lines -> modular APIRouter)
+- Backend refactoring (server.py >2400 lines -> modular APIRouter)
 
 ## Phase 2 (Upcoming)
 - P1: Teleconsultation Video (Twilio Video)
@@ -60,20 +64,17 @@ Build a comprehensive health application in French named "keneyakafisa". The pla
 
 ## Mocked Features
 - Mobile Money payments (mock implementation)
-- Geolocation distance calculations (haversine approximation, awaiting Google Maps API)
+- Geolocation distance calculations (haversine approximation)
 
 ## Admin Credentials
 - URL: /admin
-- Username: MADJIB (from ADMIN_USERNAME env var)
-- Password: 48851132kl (from ADMIN_PASSWORD env var)
+- Username: MADJIB
+- Password: 48851132kl
 
-## Key API Endpoints
-- `/health` - Readiness probe
-- `/api/auth/register`, `/api/auth/login` - Authentication
-- `/api/doctors/search` - Doctor search
-- `/api/appointments` - Booking management
-- `/api/ads` - Advertisement system
-- `/api/admin/*` - Admin dashboard APIs
-
-## Architecture Note
-- `server.py` is a monolith (>2300 lines) that needs to be refactored into modular FastAPI APIRouter files
+## Key Files
+- /app/frontend/src/pages/WelcomeDoctor.js - Welcome page after doctor registration
+- /app/frontend/src/pages/Home.js - Side menu with Documents Importants section
+- /app/frontend/src/pages/AdminDashboard.js - Admin dashboard with notification bell
+- /app/frontend/src/pages/Register.js - Registration with WhatsApp notification
+- /app/frontend/public/pwabuilder-sw.js - Service Worker v2 with cache versioning
+- /app/backend/server.py - Main backend (admin_notifications collection)

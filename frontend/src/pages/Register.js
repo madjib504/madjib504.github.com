@@ -94,6 +94,12 @@ const Register = ({ setUser }) => {
       setUser(response.data.user);
       toast.success('Inscription réussie !');
       
+      // Open WhatsApp notification to admin for both user types
+      const userName = response.data.user.name;
+      const userType = response.data.user.user_type === 'doctor' ? 'Médecin' : 'Patient';
+      const whatsappMsg = `Bonjour keneyakafisa, je viens de m'inscrire en tant que ${userType}. Mon nom est ${userName}.`;
+      window.open(`https://wa.me/2250777154048?text=${encodeURIComponent(whatsappMsg)}`, '_blank');
+
       // Redirect based on user type
       setTimeout(() => {
         if (response.data.user.user_type === 'patient') {

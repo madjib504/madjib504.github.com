@@ -295,6 +295,21 @@ async def register(user_data: UserRegister):
         await db.doctor_profiles.insert_one(profile_dict)
     
     token = create_access_token({"sub": user.id})
+    
+    # Create admin notification for new registration
+    notification = {
+        "id": str(uuid.uuid4()),
+        "type": "new_registration",
+        "user_type": user_data.user_type,
+        "user_name": user_data.name,
+        "user_email": user_data.email,
+        "whatsapp_number": user_data.whatsapp_number or "",
+        "message": f"Nouveau {'médecin' if user_data.user_type == 'doctor' else 'patient'} inscrit : {user_data.name}",
+        "read": False,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.admin_notifications.insert_one(notification)
+    
     return {"token": token, "user": user.model_dump()}
 
 @api_router.post("/auth/login")
@@ -2023,6 +2038,36 @@ async def get_admin_stats(admin: dict = Depends(verify_admin_token)):
             "revenue": total_revenue
         }
     }
+
+
+@api_router.get("/admin/notifications")
+async def get_admin_notifications(admin: dict = Depends(verify_admin_token)):
+    """Get all admin notifications, newest first"""
+    notifications = await db.admin_notifications.find(
+        {}, {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    unread_count = await db.admin_notifications.count_documents({"read": False})
+    return {"notifications": notifications, "unread_count": unread_count}
+
+
+@api_router.post("/admin/notifications/{notification_id}/read")
+async def mark_notification_read(notification_id: str, admin: dict = Depends(verify_admin_token)):
+    """Mark a notification as read"""
+    await db.admin_notifications.update_one(
+        {"id": notification_id},
+        {"$set": {"read": True}}
+    )
+    return {"success": True}
+
+
+@api_router.post("/admin/notifications/read-all")
+async def mark_all_notifications_read(admin: dict = Depends(verify_admin_token)):
+    """Mark all notifications as read"""
+    await db.admin_notifications.update_many(
+        {"read": False},
+        {"$set": {"read": True}}
+    )
+    return {"success": True}
 
 
 @api_router.get("/admin/users")
