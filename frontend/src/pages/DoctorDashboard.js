@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar, Star, Clock, User, CheckCircle, XCircle, AlertCircle, Edit } from 'lucide-react';
+import { Calendar, Star, Clock, User, CheckCircle, XCircle, AlertCircle, Edit, Video, Upload, ExternalLink } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 const DoctorDashboard = () => {
@@ -25,6 +25,13 @@ const DoctorDashboard = () => {
     languages: '',
     profile_image: ''
   });
+  const [socialLinks, setSocialLinks] = useState({
+    tiktok_url: '',
+    facebook_url: '',
+    instagram_url: '',
+    video_url: ''
+  });
+  const [uploading, setUploading] = useState(false);
 
   const fetchAppointments = useCallback(async () => {
     try {
@@ -56,6 +63,12 @@ const DoctorDashboard = () => {
           consultation_fee: myProfile.consultation_fee || '',
           languages: myProfile.languages ? myProfile.languages.join(', ') : '',
           profile_image: myProfile.profile_image || ''
+        });
+        setSocialLinks({
+          tiktok_url: myProfile.tiktok_url || '',
+          facebook_url: myProfile.facebook_url || '',
+          instagram_url: myProfile.instagram_url || '',
+          video_url: myProfile.video_url || ''
         });
       }
     } catch {
@@ -117,6 +130,43 @@ const DoctorDashboard = () => {
         {config.label}
       </span>
     );
+  };
+
+  const handleSaveSocialLinks = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(`${API}/profile/social-links`, socialLinks, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success('Liens mis à jour');
+      fetchProfile();
+    } catch {
+      toast.error('Erreur lors de la mise à jour');
+    }
+  };
+
+  const handleVideoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 50 * 1024 * 1024) {
+      toast.error('La vidéo ne doit pas dépasser 50 Mo');
+      return;
+    }
+    setUploading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const formData = new FormData();
+      formData.append('file', file);
+      const response = await axios.post(`${API}/upload/video`, formData, {
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
+      });
+      toast.success('Vidéo uploadée avec succès');
+      fetchProfile();
+    } catch {
+      toast.error('Erreur lors de l\'upload de la vidéo');
+    } finally {
+      setUploading(false);
+    }
   };
 
   if (loading) {
@@ -324,6 +374,99 @@ const DoctorDashboard = () => {
             ) : (
               <p className="text-stone-600">Chargement du profil...</p>
             )}
+          </CardContent>
+        </Card>
+
+        {/* Social Links & Video */}
+        <Card className="shadow-md border-stone-100">
+          <CardHeader>
+            <CardTitle className="text-2xl font-serif text-blue-900">Réseaux sociaux & Vidéo</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Social Links */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9a6.33 6.33 0 00-.79-.05A6.34 6.34 0 003.15 15.3a6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.34-6.34V8.81a8.23 8.23 0 004.76 1.52V6.88a4.85 4.85 0 01-1-.19z"/></svg>
+                  TikTok
+                </Label>
+                <Input
+                  placeholder="https://tiktok.com/@votre-profil"
+                  value={socialLinks.tiktok_url}
+                  onChange={(e) => setSocialLinks({...socialLinks, tiktok_url: e.target.value})}
+                  data-testid="tiktok-input"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                  Facebook
+                </Label>
+                <Input
+                  placeholder="https://facebook.com/votre-page"
+                  value={socialLinks.facebook_url}
+                  onChange={(e) => setSocialLinks({...socialLinks, facebook_url: e.target.value})}
+                  data-testid="facebook-input"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2">
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+                  Instagram
+                </Label>
+                <Input
+                  placeholder="https://instagram.com/votre-profil"
+                  value={socialLinks.instagram_url}
+                  onChange={(e) => setSocialLinks({...socialLinks, instagram_url: e.target.value})}
+                  data-testid="instagram-input"
+                />
+              </div>
+            </div>
+
+            {/* Video URL */}
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <Video className="w-4 h-4" /> Lien vidéo de présentation (YouTube, TikTok...)
+              </Label>
+              <Input
+                placeholder="https://youtube.com/watch?v=... ou https://tiktok.com/..."
+                value={socialLinks.video_url}
+                onChange={(e) => setSocialLinks({...socialLinks, video_url: e.target.value})}
+                data-testid="video-url-input"
+              />
+            </div>
+
+            <Button onClick={handleSaveSocialLinks} className="bg-blue-900 hover:bg-blue-800 text-white" data-testid="save-social-btn">
+              Enregistrer les liens
+            </Button>
+
+            {/* Video Upload */}
+            <div className="border-t pt-6 space-y-3">
+              <Label className="flex items-center gap-2">
+                <Upload className="w-4 h-4" /> Uploader une vidéo de présentation (max 50 Mo)
+              </Label>
+              {profile?.presentation_video && (
+                <div className="mb-3">
+                  <video
+                    src={`${API.replace('/api', '')}${profile.presentation_video}`}
+                    controls
+                    className="w-full max-w-md rounded-lg"
+                    data-testid="presentation-video"
+                  />
+                </div>
+              )}
+              <div className="flex items-center gap-3">
+                <Input
+                  type="file"
+                  accept="video/mp4,video/webm,video/quicktime"
+                  onChange={handleVideoUpload}
+                  disabled={uploading}
+                  className="max-w-sm"
+                  data-testid="video-upload-input"
+                />
+                {uploading && <span className="text-sm text-blue-600 animate-pulse">Upload en cours...</span>}
+              </div>
+            </div>
           </CardContent>
         </Card>
 

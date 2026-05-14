@@ -1,5 +1,6 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Depends, status, UploadFile, File, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, status, UploadFile, File, WebSocket, WebSocketDisconnect, Query
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.responses import Response
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -15,6 +16,7 @@ import jwt
 import socketio
 import base64
 import aiofiles
+from services.storage import init_storage, put_object, get_object
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -2504,6 +2506,86 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+
+# ============ VIDEO & SOCIAL LINKS ENDPOINTS ============
+
+@api_router.post("/upload/video")
+async def upload_video(file: UploadFile = File(...), current_user: User = Depends(get_current_user)):
+    """Upload a presentation video for doctor or partner profile"""
+    if current_user.user_type not in ("doctor", "partner"):
+        raise HTTPException(status_code=403, detail="Réservé aux professionnels et partenaires")
+    
+    # Validate file type
+    allowed_types = ["video/mp4", "video/webm", "video/quicktime", "video/x-msvideo"]
+    if file.content_type not in allowed_types:
+        raise HTTPException(status_code=400, detail="Format vidéo non supporté. Utilisez MP4, WebM ou MOV.")
+    
+    # Max 50MB
+    content = await file.read()
+    if len(content) > 50 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="La vidéo ne doit pas dépasser 50 Mo")
+    
+    # Upload to object storage
+    ext = file.filename.split('.')[-1] if '.' in file.filename else 'mp4'
+    file_path = f"videos/{current_user.id}/{uuid.uuid4()}.{ext}"
+    
+    try:
+        put_object(file_path, content, file.content_type)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur lors de l'upload: {str(e)}")
+    
+    # Store video URL in profile
+    video_url = f"/api/media/{file_path}"
+    
+    if current_user.user_type == "doctor":
+        await db.doctor_profiles.update_one(
+            {"user_id": current_user.id},
+            {"$set": {"presentation_video": video_url}}
+        )
+    elif current_user.user_type == "partner":
+        await db.partner_profiles.update_one(
+            {"user_id": current_user.id},
+            {"$set": {"presentation_video": video_url}}
+        )
+    
+    return {"success": True, "video_url": video_url}
+
+
+@api_router.get("/media/{path:path}")
+async def serve_media(path: str):
+    """Serve uploaded media files from object storage"""
+    try:
+        content, content_type = get_object(path)
+        return Response(content=content, media_type=content_type)
+    except Exception:
+        raise HTTPException(status_code=404, detail="Fichier non trouvé")
+
+
+@api_router.put("/profile/social-links")
+async def update_social_links(data: dict, current_user: User = Depends(get_current_user)):
+    """Update social links and video URL for doctor or partner"""
+    if current_user.user_type not in ("doctor", "partner"):
+        raise HTTPException(status_code=403, detail="Réservé aux professionnels et partenaires")
+    
+    allowed_fields = {"tiktok_url", "facebook_url", "instagram_url", "video_url"}
+    update_data = {k: v for k, v in data.items() if k in allowed_fields}
+    
+    if current_user.user_type == "doctor":
+        await db.doctor_profiles.update_one(
+            {"user_id": current_user.id},
+            {"$set": update_data}
+        )
+        profile = await db.doctor_profiles.find_one({"user_id": current_user.id}, {"_id": 0})
+    else:
+        await db.partner_profiles.update_one(
+            {"user_id": current_user.id},
+            {"$set": update_data}
+        )
+        profile = await db.partner_profiles.find_one({"user_id": current_user.id}, {"_id": 0})
+    
+    return profile
+
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
