@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar, Star, Clock, User, CheckCircle, XCircle, AlertCircle, Edit, Video, Upload, ExternalLink } from 'lucide-react';
+import { Calendar, Star, Clock, User, CheckCircle, XCircle, AlertCircle, Edit, Video, Upload } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 const DoctorDashboard = () => {
@@ -157,7 +157,7 @@ const DoctorDashboard = () => {
       const token = localStorage.getItem('token');
       const formData = new FormData();
       formData.append('file', file);
-      const response = await axios.post(`${API}/upload/video`, formData, {
+      await axios.post(`${API}/upload/video`, formData, {
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
       });
       toast.success('Vidéo uploadée avec succès');

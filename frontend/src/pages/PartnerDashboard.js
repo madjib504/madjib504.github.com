@@ -9,7 +9,8 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { 
   Building2, MapPin, Phone, Mail, Edit2, Save, 
-  TrendingUp, Users, Award, MessageCircle, ExternalLink, X
+  TrendingUp, Users, Award, MessageCircle, ExternalLink, X,
+  Video, Upload, Facebook, Instagram
 } from 'lucide-react';
 
 const PartnerDashboard = () => {
@@ -18,6 +19,13 @@ const PartnerDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [editData, setEditData] = useState({});
+  const [socialLinks, setSocialLinks] = useState({
+    tiktok_url: '',
+    facebook_url: '',
+    instagram_url: '',
+    video_url: ''
+  });
+  const [uploading, setUploading] = useState(false);
 
   const fetchProfile = useCallback(async () => {
     try {
@@ -31,6 +39,12 @@ const PartnerDashboard = () => {
         activity_type: response.data.activity_type || '',
         address: response.data.address || '',
         whatsapp_number: response.data.whatsapp_number || ''
+      });
+      setSocialLinks({
+        tiktok_url: response.data.tiktok_url || '',
+        facebook_url: response.data.facebook_url || '',
+        instagram_url: response.data.instagram_url || '',
+        video_url: response.data.video_url || ''
       });
     } catch {
       toast.error('Erreur lors du chargement du profil');
@@ -54,6 +68,43 @@ const PartnerDashboard = () => {
       toast.success('Profil mis à jour');
     } catch {
       toast.error('Erreur lors de la mise à jour');
+    }
+  };
+
+  const handleSaveSocialLinks = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(`${API}/profile/social-links`, socialLinks, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success('Liens mis à jour');
+      fetchProfile();
+    } catch {
+      toast.error('Erreur lors de la mise à jour');
+    }
+  };
+
+  const handleVideoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 50 * 1024 * 1024) {
+      toast.error('La vidéo ne doit pas dépasser 50 Mo');
+      return;
+    }
+    setUploading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const formData = new FormData();
+      formData.append('file', file);
+      await axios.post(`${API}/upload/video`, formData, {
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
+      });
+      toast.success('Vidéo uploadée avec succès');
+      fetchProfile();
+    } catch {
+      toast.error('Erreur lors de l\'upload de la vidéo');
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -216,6 +267,102 @@ const PartnerDashboard = () => {
                 </div>
               </div>
             )}
+          </CardContent>
+        </Card>
+
+        {/* Social Links & Video */}
+        <Card className="border-0 shadow-sm" data-testid="partner-social-card">
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Video className="w-5 h-5 text-blue-700" />
+              Réseaux sociaux & Vidéo de présentation
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2 text-sm">
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9a6.33 6.33 0 00-.79-.05A6.34 6.34 0 003.15 15.3a6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.34-6.34V8.81a8.23 8.23 0 004.76 1.52V6.88a4.85 4.85 0 01-1-.19z"/></svg>
+                  TikTok
+                </Label>
+                <Input
+                  placeholder="https://tiktok.com/@votre-entreprise"
+                  value={socialLinks.tiktok_url}
+                  onChange={(e) => setSocialLinks({ ...socialLinks, tiktok_url: e.target.value })}
+                  data-testid="partner-tiktok-input"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2 text-sm">
+                  <Facebook className="w-4 h-4 text-blue-600" /> Facebook
+                </Label>
+                <Input
+                  placeholder="https://facebook.com/votre-page"
+                  value={socialLinks.facebook_url}
+                  onChange={(e) => setSocialLinks({ ...socialLinks, facebook_url: e.target.value })}
+                  data-testid="partner-facebook-input"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2 text-sm">
+                  <Instagram className="w-4 h-4 text-pink-500" /> Instagram
+                </Label>
+                <Input
+                  placeholder="https://instagram.com/votre-profil"
+                  value={socialLinks.instagram_url}
+                  onChange={(e) => setSocialLinks({ ...socialLinks, instagram_url: e.target.value })}
+                  data-testid="partner-instagram-input"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2 text-sm">
+                <Video className="w-4 h-4" /> Lien vidéo externe (YouTube, TikTok…)
+              </Label>
+              <Input
+                placeholder="https://youtube.com/watch?v=…"
+                value={socialLinks.video_url}
+                onChange={(e) => setSocialLinks({ ...socialLinks, video_url: e.target.value })}
+                data-testid="partner-video-url-input"
+              />
+            </div>
+
+            <Button
+              onClick={handleSaveSocialLinks}
+              className="bg-blue-700 hover:bg-blue-800 text-white"
+              data-testid="partner-save-social-btn"
+            >
+              <Save className="w-4 h-4 mr-2" /> Enregistrer les liens
+            </Button>
+
+            {/* Video Upload */}
+            <div className="border-t pt-6 space-y-3">
+              <Label className="flex items-center gap-2 text-sm">
+                <Upload className="w-4 h-4" /> Uploader une vidéo de présentation (max 50 Mo)
+              </Label>
+              {profile?.presentation_video && (
+                <div className="mb-3">
+                  <video
+                    src={`${API.replace('/api', '')}${profile.presentation_video}`}
+                    controls
+                    className="w-full max-w-md rounded-lg bg-black"
+                    data-testid="partner-presentation-video"
+                  />
+                </div>
+              )}
+              <div className="flex items-center gap-3">
+                <Input
+                  type="file"
+                  accept="video/mp4,video/webm,video/quicktime"
+                  onChange={handleVideoUpload}
+                  disabled={uploading}
+                  className="max-w-sm"
+                  data-testid="partner-video-upload-input"
+                />
+                {uploading && <span className="text-sm text-blue-600 animate-pulse">Upload en cours…</span>}
+              </div>
+            </div>
           </CardContent>
         </Card>
 

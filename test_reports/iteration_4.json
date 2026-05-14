@@ -1,0 +1,52 @@
+{
+  "summary": "Tested doctor + partner social media links and presentation video upload feature for keneyakafisa. Backend 11/11 pytest tests pass. Frontend doctor & partner dashboards work and persist values; public doctor profile shows social badges + uploaded video. All previously fixed bugs (EMERGENT_LLM_KEY env, lazy storage init, include_router order) are now confirmed resolved.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "passed_tests": [
+    "Backend POST /api/auth/register -> doctor account (200)",
+    "Backend POST /api/auth/register -> partner account (200)",
+    "Backend POST /api/auth/register -> patient account (200)",
+    "Backend PUT /api/profile/social-links saves tiktok/facebook/instagram/video_url for doctor and returns the profile (no _id) with the new values",
+    "Backend PUT /api/profile/social-links saves the same fields for partner",
+    "Backend POST /api/upload/video by doctor returns {success:true, video_url:'/api/media/keneyakafisa/videos/...'} and persists presentation_video on doctor_profiles",
+    "Backend POST /api/upload/video by partner persists presentation_video on partner_profiles",
+    "Backend POST /api/upload/video returns 403 for patient",
+    "Backend POST /api/upload/video returns 400 for non-video content-type",
+    "Backend GET /api/media/{path} streams the uploaded video back with content-type video/*",
+    "Backend GET /api/doctors/{doctor_id} returns tiktok_url, facebook_url, instagram_url, video_url AND presentation_video fields",
+    "Backend GET /api/partner/profile (auth) returns the same fields for the logged-in partner",
+    "Frontend /doctor/dashboard: 'Réseaux sociaux & Vidéo' card present with data-testids tiktok-input/facebook-input/instagram-input/video-url-input/save-social-btn/video-upload-input. Save persists across reload. Upload of small MP4 makes presentation-video element appear",
+    "Frontend /partner/dashboard: partner-tiktok-input/partner-facebook-input/partner-instagram-input/partner-video-url-input/partner-save-social-btn/partner-video-upload-input present. Save persists across reload",
+    "Frontend /doctor/:doctorId (public): doctor-social-links badges (tiktok/facebook/instagram links), doctor-presentation-video block and doctor-uploaded-video <video> element rendered (uploaded video takes precedence over external video_url, which is the expected branch)"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_social_and_video.py",
+    "/app/test_reports/pytest/social_video_results.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "server.py is 2603 lines — should be modularised (routers/{auth,doctor,partner,media}.py). Not blocking but increasingly hard to maintain.",
+    "/api/profile/social-links accepts a raw dict; should use a Pydantic model so empty body / wrong types return 422 instead of silently no-op.",
+    "/api/upload/video does not check that the doctor_profiles / partner_profiles document actually exists; update_one with no match silently succeeds. Consider using upsert=False with a matched_count check and returning 404.",
+    "Storage URLs are stored as '/api/media/keneyakafisa/videos/<user_id>/<uuid>.<ext>'. The path is publicly fetchable without auth — fine for presentation videos but worth flagging."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_social_and_video.py"
+  ],
+  "success_rate": {
+    "backend": "100% (11/11 pytest)",
+    "frontend": "100% (all expected data-testids present, persistence + upload verified, public profile shows assets)"
+  },
+  "test_credentials": "Tests create their own throwaway doctor / partner / patient via /api/auth/register with timestamped emails (testflow_*@test.com, uitest_*@test.com), password TestPass123!. Admin (MADJIB / 48851132kl) was NOT used.",
+  "seed_data_creation": "Throwaway accounts left in DB: testflow_doctor_<ts>@test.com, testflow_partner_<ts>@test.com, testflow_patient_<ts>@test.com, uitest_doctor_<ts>@test.com, uitest_partner_<ts>@test.com. Each has small (~1 KB) MP4 file in object storage under keneyakafisa/videos/<user_id>/. Safe to delete via admin /admin/users.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Feature is complete. Backend test lives at /app/backend/tests/test_social_and_video.py and can be re-run via `pytest backend/tests/test_social_and_video.py -v`. The MP4 used in tests is a synthetic 1 KB ftyp box (see _minimal_mp4_bytes()); backend only validates content-type + size, so this is enough. Doctor-public-profile route is /doctor/:doctorId where doctorId is doctor_profiles.id (NOT user_id) — found via /api/doctors/search."
+}

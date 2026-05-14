@@ -1,9 +1,7 @@
 import os
-import uuid
 import requests
 
 STORAGE_URL = "https://integrations.emergentagent.com/objstore/api/v1/storage"
-EMERGENT_KEY = os.environ.get("EMERGENT_LLM_KEY")
 APP_NAME = "keneyakafisa"
 storage_key = None
 
@@ -12,9 +10,13 @@ def init_storage():
     global storage_key
     if storage_key:
         return storage_key
+    # Read env var at call time (after load_dotenv has run)
+    emergent_key = os.environ.get("EMERGENT_LLM_KEY")
+    if not emergent_key:
+        raise RuntimeError("EMERGENT_LLM_KEY not set in environment")
     resp = requests.post(
         f"{STORAGE_URL}/init",
-        json={"emergent_key": EMERGENT_KEY},
+        json={"emergent_key": emergent_key},
         timeout=30
     )
     resp.raise_for_status()

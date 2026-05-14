@@ -2486,8 +2486,6 @@ async def update_ad_status(ad_id: str, data: Dict[str, str]):
     return {"success": True, "message": f"Publicité mise à jour: {status}"}
 
 
-app.include_router(api_router)
-
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
@@ -2526,9 +2524,9 @@ async def upload_video(file: UploadFile = File(...), current_user: User = Depend
     if len(content) > 50 * 1024 * 1024:
         raise HTTPException(status_code=400, detail="La vidéo ne doit pas dépasser 50 Mo")
     
-    # Upload to object storage
+    # Upload to object storage (prefixed with app name to avoid bucket collisions)
     ext = file.filename.split('.')[-1] if '.' in file.filename else 'mp4'
-    file_path = f"videos/{current_user.id}/{uuid.uuid4()}.{ext}"
+    file_path = f"keneyakafisa/videos/{current_user.id}/{uuid.uuid4()}.{ext}"
     
     try:
         put_object(file_path, content, file.content_type)
@@ -2585,6 +2583,20 @@ async def update_social_links(data: dict, current_user: User = Depends(get_curre
         profile = await db.partner_profiles.find_one({"user_id": current_user.id}, {"_id": 0})
     
     return profile
+
+
+@app.on_event("startup")
+async def startup_storage():
+    """Initialize Emergent Object Storage on startup"""
+    try:
+        init_storage()
+        logging.info("Object storage initialized")
+    except Exception as e:
+        logging.error(f"Storage init failed at startup (will retry on first upload): {e}")
+
+
+# Register all api routes (must be AFTER all @api_router.* decorators)
+app.include_router(api_router)
 
 
 @app.on_event("shutdown")
