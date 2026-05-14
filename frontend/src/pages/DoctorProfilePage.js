@@ -167,6 +167,62 @@ const DoctorProfilePage = () => {
                     </span>
                   ))}
                 </div>
+
+                {/* Social Links */}
+                {(doctor.tiktok_url || doctor.facebook_url || doctor.instagram_url) && (
+                  <div className="flex flex-wrap items-center gap-3 mb-6" data-testid="doctor-social-links">
+                    <span className="text-sm font-medium text-stone-700">Suivez-moi :</span>
+                    {doctor.tiktok_url && (
+                      <a href={doctor.tiktok_url} target="_blank" rel="noopener noreferrer"
+                         className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-stone-900 text-white text-sm hover:bg-stone-800 transition-colors"
+                         data-testid="doctor-tiktok-link">
+                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9a6.33 6.33 0 00-.79-.05A6.34 6.34 0 003.15 15.3a6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.34-6.34V8.81a8.23 8.23 0 004.76 1.52V6.88a4.85 4.85 0 01-1-.19z"/></svg>
+                        TikTok
+                      </a>
+                    )}
+                    {doctor.facebook_url && (
+                      <a href={doctor.facebook_url} target="_blank" rel="noopener noreferrer"
+                         className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-blue-600 text-white text-sm hover:bg-blue-700 transition-colors"
+                         data-testid="doctor-facebook-link">
+                        <Facebook className="w-4 h-4" /> Facebook
+                      </a>
+                    )}
+                    {doctor.instagram_url && (
+                      <a href={doctor.instagram_url} target="_blank" rel="noopener noreferrer"
+                         className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-gradient-to-tr from-purple-600 to-pink-500 text-white text-sm hover:opacity-90 transition-opacity"
+                         data-testid="doctor-instagram-link">
+                        <Instagram className="w-4 h-4" /> Instagram
+                      </a>
+                    )}
+                  </div>
+                )}
+
+                {/* Presentation Video */}
+                {(doctor.presentation_video || doctor.video_url) && (
+                  <div className="mb-6" data-testid="doctor-presentation-video">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Video className="w-5 h-5 text-blue-900" />
+                      <h3 className="text-lg font-serif font-bold text-stone-900">Vidéo de présentation</h3>
+                    </div>
+                    {doctor.presentation_video ? (
+                      <video
+                        src={`${API.replace('/api', '')}${doctor.presentation_video}`}
+                        controls
+                        className="w-full rounded-lg shadow-md max-h-96 bg-black"
+                        data-testid="doctor-uploaded-video"
+                      >
+                        Votre navigateur ne supporte pas la lecture vidéo.
+                      </video>
+                    ) : (
+                      <a href={doctor.video_url} target="_blank" rel="noopener noreferrer"
+                         className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-900 text-white hover:bg-blue-800 transition-colors"
+                         data-testid="doctor-external-video-link">
+                        <ExternalLink className="w-4 h-4" /> Voir la vidéo
+                      </a>
+                    )}
+                  </div>
+                )}
+
                 {doctor.bio && (
                   <div className="mb-6">
                     <h3 className="text-lg font-serif font-bold text-stone-900 mb-2">À propos</h3>
@@ -200,65 +256,10 @@ const DoctorProfilePage = () => {
                   )}
                 </div>
                 {doctor.rating > 0 && (
-                  <div className="flex items-center mb-6">
+                  <div className="flex items-center mb-2">
                     <Star className="w-6 h-6 text-yellow-500 fill-yellow-500 mr-2" />
                     <span className="text-2xl font-bold text-stone-900">{doctor.rating}</span>
                     <span className="text-stone-600 ml-2">({doctor.total_reviews} avis)</span>
-                  </div>
-                )}
-
-                {/* Social Links */}
-                {(doctor.tiktok_url || doctor.facebook_url || doctor.instagram_url) && (
-                  <div className="flex flex-wrap items-center gap-3 mb-6" data-testid="doctor-social-links">
-                    <span className="text-sm font-medium text-stone-700">Suivez-moi :</span>
-                    {doctor.tiktok_url && (
-                      <a href={doctor.tiktok_url} target="_blank" rel="noopener noreferrer"
-                         className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-stone-900 text-white text-sm hover:bg-stone-800 transition-colors"
-                         data-testid="doctor-tiktok-link">
-                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9a6.33 6.33 0 00-.79-.05A6.34 6.34 0 003.15 15.3a6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.34-6.34V8.81a8.23 8.23 0 004.76 1.52V6.88a4.85 4.85 0 01-1-.19z"/></svg>
-                        TikTok
-                      </a>
-                    )}
-                    {doctor.facebook_url && (
-                      <a href={doctor.facebook_url} target="_blank" rel="noopener noreferrer"
-                         className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-blue-600 text-white text-sm hover:bg-blue-700 transition-colors"
-                         data-testid="doctor-facebook-link">
-                        <Facebook className="w-4 h-4" /> Facebook
-                      </a>
-                    )}
-                    {doctor.instagram_url && (
-                      <a href={doctor.instagram_url} target="_blank" rel="noopener noreferrer"
-                         className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-gradient-to-tr from-purple-600 to-pink-500 text-white text-sm hover:opacity-90 transition-opacity"
-                         data-testid="doctor-instagram-link">
-                        <Instagram className="w-4 h-4" /> Instagram
-                      </a>
-                    )}
-                  </div>
-                )}
-
-                {/* Presentation Video */}
-                {(doctor.presentation_video || doctor.video_url) && (
-                  <div className="mb-2" data-testid="doctor-presentation-video">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Video className="w-5 h-5 text-blue-900" />
-                      <h3 className="text-lg font-serif font-bold text-stone-900">Vidéo de présentation</h3>
-                    </div>
-                    {doctor.presentation_video ? (
-                      <video
-                        src={`${API.replace('/api', '')}${doctor.presentation_video}`}
-                        controls
-                        className="w-full rounded-lg shadow-md max-h-96 bg-black"
-                        data-testid="doctor-uploaded-video"
-                      >
-                        Votre navigateur ne supporte pas la lecture vidéo.
-                      </video>
-                    ) : (
-                      <a href={doctor.video_url} target="_blank" rel="noopener noreferrer"
-                         className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-900 text-white hover:bg-blue-800 transition-colors"
-                         data-testid="doctor-external-video-link">
-                        <ExternalLink className="w-4 h-4" /> Voir la vidéo
-                      </a>
-                    )}
                   </div>
                 )}
               </CardContent>
