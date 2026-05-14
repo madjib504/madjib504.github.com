@@ -57,7 +57,7 @@ socket_app = socketio.ASGIApp(sio, app)
 class UserBase(BaseModel):
     email: EmailStr
     name: str
-    user_type: str  # 'patient' or 'doctor'
+    user_type: str  # 'patient', 'doctor', or 'partner'
 
 class UserRegister(UserBase):
     password: str
@@ -65,6 +65,9 @@ class UserRegister(UserBase):
     medical_type: Optional[str] = None  # 'moderne' or 'traditionnel' for doctors
     specialties: Optional[List[str]] = None  # for doctors
     custom_medical_type: Optional[str] = None  # for "autre" category
+    company_name: Optional[str] = None  # for partners
+    activity_type: Optional[str] = None  # for partners
+    address: Optional[str] = None  # for partners
 
 class UserLogin(BaseModel):
     email: EmailStr
@@ -294,6 +297,22 @@ async def register(user_data: UserRegister):
             profile_dict['custom_medical_type'] = user_data.custom_medical_type
         await db.doctor_profiles.insert_one(profile_dict)
     
+    # If partner, create partner profile
+    if user_data.user_type == "partner":
+        partner_profile = {
+            "id": str(uuid.uuid4()),
+            "user_id": user.id,
+            "name": user.name,
+            "email": user.email,
+            "company_name": user_data.company_name or "",
+            "activity_type": user_data.activity_type or "",
+            "address": user_data.address or "",
+            "whatsapp_number": user_data.whatsapp_number or "",
+            "status": "active",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.partner_profiles.insert_one(partner_profile)
+    
     token = create_access_token({"sub": user.id})
     
     # Create admin notification for new registration
@@ -304,7 +323,7 @@ async def register(user_data: UserRegister):
         "user_name": user_data.name,
         "user_email": user_data.email,
         "whatsapp_number": user_data.whatsapp_number or "",
-        "message": f"Nouveau {'médecin' if user_data.user_type == 'doctor' else 'patient'} inscrit : {user_data.name}",
+        "message": f"Nouveau {'médecin' if user_data.user_type == 'doctor' else 'partenaire' if user_data.user_type == 'partner' else 'patient'} inscrit : {user_data.name}",
         "read": False,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
@@ -2068,6 +2087,33 @@ async def mark_all_notifications_read(admin: dict = Depends(verify_admin_token))
         {"$set": {"read": True}}
     )
     return {"success": True}
+
+
+@api_router.get("/partner/profile")
+async def get_partner_profile(current_user: User = Depends(get_current_user)):
+    """Get partner profile"""
+    if current_user.user_type != "partner":
+        raise HTTPException(status_code=403, detail="Accès réservé aux partenaires")
+    profile = await db.partner_profiles.find_one({"user_id": current_user.id}, {"_id": 0})
+    if not profile:
+        raise HTTPException(status_code=404, detail="Profil partenaire non trouvé")
+    return profile
+
+
+@api_router.put("/partner/profile")
+async def update_partner_profile(data: dict, current_user: User = Depends(get_current_user)):
+    """Update partner profile"""
+    if current_user.user_type != "partner":
+        raise HTTPException(status_code=403, detail="Accès réservé aux partenaires")
+    allowed_fields = {"company_name", "activity_type", "address", "whatsapp_number"}
+    update_data = {k: v for k, v in data.items() if k in allowed_fields}
+    if update_data:
+        await db.partner_profiles.update_one(
+            {"user_id": current_user.id},
+            {"$set": update_data}
+        )
+    profile = await db.partner_profiles.find_one({"user_id": current_user.id}, {"_id": 0})
+    return profile
 
 
 @api_router.get("/admin/users")

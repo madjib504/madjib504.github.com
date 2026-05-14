@@ -21,7 +21,10 @@ const Register = ({ setUser }) => {
     medical_type: '',
     specialties: [],
     custom_corps: '',
-    custom_specialties: ''
+    custom_specialties: '',
+    company_name: '',
+    activity_type: '',
+    address: ''
   });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -75,6 +78,22 @@ const Register = ({ setUser }) => {
       }
     }
 
+    // Validation pour "Partenaire"
+    if (formData.user_type === 'partner') {
+      if (!formData.company_name.trim()) {
+        toast.error('Veuillez entrer le nom de votre entreprise');
+        return;
+      }
+      if (!formData.activity_type) {
+        toast.error('Veuillez sélectionner votre type d\'activité');
+        return;
+      }
+      if (!formData.address.trim()) {
+        toast.error('Veuillez entrer votre adresse');
+        return;
+      }
+    }
+
     setLoading(true);
 
     try {
@@ -104,6 +123,8 @@ const Register = ({ setUser }) => {
       setTimeout(() => {
         if (response.data.user.user_type === 'patient') {
           navigate('/patient/dashboard');
+        } else if (response.data.user.user_type === 'partner') {
+          navigate('/partner/dashboard');
         } else {
           // Health professionals go to welcome page with brochure
           navigate('/welcome-doctor');
@@ -203,10 +224,10 @@ const Register = ({ setUser }) => {
 
             <div className="space-y-2">
               <Label>Type de compte</Label>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-3">
                 <button
                   type="button"
-                  onClick={() => setFormData({ ...formData, user_type: 'patient', medical_type: '', specialties: [] })}
+                  onClick={() => setFormData({ ...formData, user_type: 'patient', medical_type: '', specialties: [], company_name: '', activity_type: '', address: '' })}
                   className={`p-4 rounded-lg border-2 transition-all ${
                     formData.user_type === 'patient'
                       ? 'border-blue-800 bg-blue-50'
@@ -214,12 +235,12 @@ const Register = ({ setUser }) => {
                   }`}
                   data-testid="user-type-patient-btn"
                 >
-                  <div className="font-medium text-stone-900">Patient</div>
-                  <div className="text-sm text-stone-600">Je cherche un médecin</div>
+                  <div className="font-medium text-stone-900 text-sm">Patient</div>
+                  <div className="text-xs text-stone-600">Je cherche un médecin</div>
                 </button>
                 <button
                   type="button"
-                  onClick={() => setFormData({ ...formData, user_type: 'doctor' })}
+                  onClick={() => setFormData({ ...formData, user_type: 'doctor', company_name: '', activity_type: '', address: '' })}
                   className={`p-4 rounded-lg border-2 transition-all ${
                     formData.user_type === 'doctor'
                       ? 'border-blue-800 bg-blue-50'
@@ -227,8 +248,21 @@ const Register = ({ setUser }) => {
                   }`}
                   data-testid="user-type-doctor-btn"
                 >
-                  <div className="font-medium text-stone-900">Corps de Santé</div>
-                  <div className="text-sm text-stone-600">Je suis un praticien</div>
+                  <div className="font-medium text-stone-900 text-sm">Corps de Santé</div>
+                  <div className="text-xs text-stone-600">Je suis praticien</div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, user_type: 'partner', medical_type: '', specialties: [], custom_corps: '', custom_specialties: '' })}
+                  className={`p-4 rounded-lg border-2 transition-all ${
+                    formData.user_type === 'partner'
+                      ? 'border-blue-800 bg-blue-50'
+                      : 'border-stone-200 hover:border-stone-300'
+                  }`}
+                  data-testid="user-type-partner-btn"
+                >
+                  <div className="font-medium text-stone-900 text-sm">Partenaire</div>
+                  <div className="text-xs text-stone-600">Entreprise / Sponsor</div>
                 </button>
               </div>
             </div>
@@ -318,6 +352,59 @@ const Register = ({ setUser }) => {
                     <p className="text-xs text-stone-500">Séparez les spécialités par des virgules</p>
                   </div>
                 )}
+              </>
+            )}
+
+            {formData.user_type === 'partner' && (
+              <>
+                <div className="space-y-2">
+                  <Label>Nom de l'entreprise *</Label>
+                  <Input
+                    type="text"
+                    placeholder="Ex: Pharmacie Santé Plus, Labo Biolim..."
+                    value={formData.company_name}
+                    onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
+                    className="bg-white border-stone-200 focus:border-blue-800 focus:ring-1 focus:ring-blue-800 rounded-lg h-12"
+                    data-testid="partner-company-input"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Type d'activité *</Label>
+                  <Select
+                    value={formData.activity_type}
+                    onValueChange={(value) => setFormData({ ...formData, activity_type: value })}
+                    required
+                  >
+                    <SelectTrigger className="bg-white border-stone-200 focus:border-blue-800 focus:ring-1 focus:ring-blue-800 rounded-lg h-12" data-testid="partner-activity-select">
+                      <SelectValue placeholder="Sélectionnez votre activité" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white">
+                      <SelectItem value="pharmacie" className="cursor-pointer hover:bg-stone-100">Pharmacie</SelectItem>
+                      <SelectItem value="laboratoire" className="cursor-pointer hover:bg-stone-100">Laboratoire</SelectItem>
+                      <SelectItem value="fournisseur" className="cursor-pointer hover:bg-stone-100">Fournisseur de produits</SelectItem>
+                      <SelectItem value="investisseur" className="cursor-pointer hover:bg-stone-100">Investisseur / Sponsor</SelectItem>
+                      <SelectItem value="assurance" className="cursor-pointer hover:bg-stone-100">Assurance</SelectItem>
+                      <SelectItem value="clinique" className="cursor-pointer hover:bg-stone-100">Clinique / Hôpital</SelectItem>
+                      <SelectItem value="ong" className="cursor-pointer hover:bg-stone-100">ONG Santé</SelectItem>
+                      <SelectItem value="autre" className="cursor-pointer hover:bg-stone-100">Autre</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Adresse / Localisation *</Label>
+                  <Input
+                    type="text"
+                    placeholder="Ex: Abidjan, Cocody Riviera 3"
+                    value={formData.address}
+                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                    className="bg-white border-stone-200 focus:border-blue-800 focus:ring-1 focus:ring-blue-800 rounded-lg h-12"
+                    data-testid="partner-address-input"
+                    required
+                  />
+                </div>
               </>
             )}
 
