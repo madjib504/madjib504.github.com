@@ -358,10 +358,18 @@ const HomePage = () => {
     { label: 'Catalogue de partenariat', url: 'https://docs.google.com/presentation/d/1bIwp7orIlr2wfKgO1WRlF2hUpe3mRk4jLo4lxfofQ2E/edit?usp=sharing' },
   ];
 
+  const dashboardLink = user
+    ? user.user_type === 'patient'
+      ? '/patient/dashboard'
+      : user.user_type === 'partner'
+        ? '/partner/dashboard'
+        : '/doctor/dashboard'
+    : '/login';
+
   const userMenuItems = user ? [
-    { icon: Home, label: 'Mon Dashboard', link: user.user_type === 'patient' ? '/patient/dashboard' : '/doctor/dashboard' },
+    { icon: Home, label: 'Mon Dashboard', link: dashboardLink },
     { icon: MessageSquare, label: 'Mes Messages', link: '/chat' },
-    { icon: Calendar, label: 'Mes Rendez-vous', link: user.user_type === 'patient' ? '/patient/dashboard' : '/doctor/dashboard' },
+    { icon: Calendar, label: 'Mes Rendez-vous', link: dashboardLink },
     { icon: CreditCard, label: 'Paiement Mobile', link: '/payment' },
     { icon: Award, label: 'Points Fidélité', link: '/loyalty' },
     ...(user.user_type === 'patient' ? [{ icon: FileText, label: 'Dossier Médical', link: '/medical-record' }] : []),
@@ -435,18 +443,37 @@ const HomePage = () => {
 
           {/* Main CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-            <Link to="/register" data-testid="cta-register-btn">
-              <Button className="bg-white text-blue-900 hover:bg-blue-50 rounded-full px-10 py-7 text-lg font-semibold shadow-2xl hover:shadow-white/20 transition-all w-full sm:w-auto">
-                <Users className="w-5 h-5 mr-2" />
-                Créer un Compte
-              </Button>
-            </Link>
-            <Link to="/search?assistant=true" data-testid="cta-assistant-btn">
-              <Button className="bg-blue-700/50 backdrop-blur-sm text-white border-2 border-white/30 hover:bg-blue-600/50 hover:border-white/50 rounded-full px-10 py-7 text-lg font-semibold transition-all w-full sm:w-auto">
-                <Heart className="w-5 h-5 mr-2" />
-                Assistance Santé
-              </Button>
-            </Link>
+            {user ? (
+              <>
+                <Link to={dashboardLink} data-testid="cta-dashboard-btn">
+                  <Button className="bg-white text-blue-900 hover:bg-blue-50 rounded-full px-10 py-7 text-lg font-semibold shadow-2xl hover:shadow-white/20 transition-all w-full sm:w-auto">
+                    <Home className="w-5 h-5 mr-2" />
+                    Mon Dashboard
+                  </Button>
+                </Link>
+                <Link to="/search" data-testid="cta-search-btn">
+                  <Button className="bg-blue-700/50 backdrop-blur-sm text-white border-2 border-white/30 hover:bg-blue-600/50 hover:border-white/50 rounded-full px-10 py-7 text-lg font-semibold transition-all w-full sm:w-auto">
+                    <Search className="w-5 h-5 mr-2" />
+                    Rechercher
+                  </Button>
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link to="/register" data-testid="cta-register-btn">
+                  <Button className="bg-white text-blue-900 hover:bg-blue-50 rounded-full px-10 py-7 text-lg font-semibold shadow-2xl hover:shadow-white/20 transition-all w-full sm:w-auto">
+                    <Users className="w-5 h-5 mr-2" />
+                    Créer un Compte
+                  </Button>
+                </Link>
+                <Link to="/search?assistant=true" data-testid="cta-assistant-btn">
+                  <Button className="bg-blue-700/50 backdrop-blur-sm text-white border-2 border-white/30 hover:bg-blue-600/50 hover:border-white/50 rounded-full px-10 py-7 text-lg font-semibold transition-all w-full sm:w-auto">
+                    <Heart className="w-5 h-5 mr-2" />
+                    Assistance Santé
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Quick Stats */}
@@ -532,7 +559,7 @@ const HomePage = () => {
                 </div>
                 <div>
                   <p className="font-semibold text-stone-900">{user.name}</p>
-                  <p className="text-xs text-stone-500">{user.user_type === 'patient' ? 'Patient' : 'Professionnel'}</p>
+                  <p className="text-xs text-stone-500">{user.user_type === 'patient' ? 'Patient' : user.user_type === 'partner' ? 'Partenaire' : 'Professionnel'}</p>
                 </div>
               </div>
               <div className="space-y-1">
