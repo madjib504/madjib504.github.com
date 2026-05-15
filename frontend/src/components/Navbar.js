@@ -46,7 +46,7 @@ const Navbar = ({ user, setUser }) => {
                 <Link to="/chat" className="text-stone-600 hover:text-blue-900 transition-colors" data-testid="nav-chat-link">
                   <MessageSquare className="w-5 h-5" />
                 </Link>
-                <Link to={user.user_type === 'patient' ? '/patient/dashboard' : '/doctor/dashboard'} className="text-stone-600 hover:text-blue-900 transition-colors" data-testid="nav-dashboard-link">
+                <Link to={user.user_type === 'patient' ? '/patient/dashboard' : user.user_type === 'partner' ? '/partner/dashboard' : '/doctor/dashboard'} className="text-stone-600 hover:text-blue-900 transition-colors" data-testid="nav-dashboard-link">
                   <Calendar className="w-5 h-5" />
                 </Link>
                 <Button

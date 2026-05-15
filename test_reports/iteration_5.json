@@ -1,0 +1,36 @@
+{
+  "summary": "Verified all 3 fixes end-to-end on keneyakafisa: (1) patient address field is present and persisted to /api/auth/me, (2) doctor search aliases (cardiologue/pédiatre/dermato/kiné/gynéco/ophtalmo) properly resolve to specialties, (3) partner login routes to /partner/dashboard NOT /doctor/dashboard, navbar link also points to /partner/dashboard. 14/14 backend tests pass, full UI flow for patient + partner + doctor routing verified.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "/doctor/dashboard and /patient/dashboard", "issues": ["React console warning: 'Encountered two children with the same key' on both dashboards. Non-blocking but should be fixed by adding unique keys to list children."]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_register_search_routing.py",
+    "/app/test_reports/pytest/register_search_routing_results.xml"
+  ],
+  "action_items": [
+    "Optional: investigate React duplicate-key warning on /patient/dashboard and /doctor/dashboard list rendering (cosmetic, not blocking the 3 fixes)."
+  ],
+  "critical_code_review_comments": [
+    "/app/backend/server.py is 2656 lines - exceeds 700 line guideline; consider splitting into routers (auth, doctors, partners, packs, etc).",
+    "Register.js handleSubmit uses window.open for WhatsApp which may be blocked by popup blockers; consider conditional/optional flow.",
+    "normalize_keyword in search_doctors returns case-preserved aliases but the regex uses $options: 'i' so OK; just note that aliases like 'ORL' or 'spa' are short and may match substrings unintentionally."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_register_search_routing.py (new test file)"
+  ],
+  "success_rate": {"backend": "100% (14/14)", "frontend": "100% (all 3 routing flows + address field visibility + persistence)"},
+  "test_credentials": "Created on the fly: testflow_v2_patient_<ts>@test.com, testflow_v2_partner_<ts>@test.com, testflow_v2_doctor_<ts>@test.com, testflow_v2_uipatient_<ts>@test.com, testflow_v2_uipartner_<ts>@test.com, testflow_v2_uidoctor_<ts>@test.com. Password: TestPass123!",
+  "seed_data_creation": "Registered 1 new doctor with Pédiatrie specialty (testflow_v2_doctor_*) to validate pédiatre→Pédiatrie alias. Multiple TEST_ accounts created; not cleaned up (no cleanup endpoint).",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "All 3 user-reported fixes verified working. Backend test_register_search_routing.py covers register-with-address, all 7 keyword aliases, and login user_type responses for all 3 roles. Frontend automation covered: patient-address-input visibility per user_type, end-to-end patient register→/auth/me persistence, partner login→/partner/dashboard with navbar link, doctor login→/doctor/dashboard with 'Espace Médecin' header. Previous social/video tests from iteration_4 still relevant (test_social_and_video.py).",
+  "rca of the issue": "Original bugs were in: (a) Register.js missing patient-address-input + UserRegister/User pydantic models missing address field for patients - fixed by adding optional address field + conditional UI block. (b) search_doctors only used raw regex on user-typed keyword so 'cardiologue' didn't match 'Cardiologie' - fixed via keyword_aliases dict mapping French practitioner nouns to specialty root stems. (c) Login.js setTimeout had only patient vs default(doctor) branches, so partners landed on /doctor/dashboard and got rejected by doctor route guard - fixed by adding explicit 'partner' branch and updating Navbar dashboard link ternary."
+}

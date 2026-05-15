@@ -33,8 +33,11 @@ const Login = ({ setUser }) => {
       
       // Small delay to ensure state is updated
       setTimeout(() => {
-        if (response.data.user.user_type === 'patient') {
+        const ut = response.data.user.user_type;
+        if (ut === 'patient') {
           navigate('/patient/dashboard');
+        } else if (ut === 'partner') {
+          navigate('/partner/dashboard');
         } else {
           navigate('/doctor/dashboard');
         }

@@ -115,8 +115,9 @@ const Register = ({ setUser }) => {
       
       // Open WhatsApp notification to admin for both user types
       const userName = response.data.user.name;
-      const userType = response.data.user.user_type === 'doctor' ? 'Médecin' : 'Patient';
-      const whatsappMsg = `Bonjour keneyakafisa, je viens de m'inscrire en tant que ${userType}. Mon nom est ${userName}.`;
+      const userTypeRaw = response.data.user.user_type;
+      const userTypeLabel = userTypeRaw === 'doctor' ? 'Médecin' : userTypeRaw === 'partner' ? 'Partenaire' : 'Patient';
+      const whatsappMsg = `Bonjour keneyakafisa, je viens de m'inscrire en tant que ${userTypeLabel}. Mon nom est ${userName}.`;
       window.open(`https://wa.me/2250777154048?text=${encodeURIComponent(whatsappMsg)}`, '_blank');
 
       // Redirect based on user type
@@ -227,7 +228,7 @@ const Register = ({ setUser }) => {
               <div className="grid grid-cols-3 gap-3">
                 <button
                   type="button"
-                  onClick={() => setFormData({ ...formData, user_type: 'patient', medical_type: '', specialties: [], company_name: '', activity_type: '', address: '' })}
+                  onClick={() => setFormData({ ...formData, user_type: 'patient', medical_type: '', specialties: [], company_name: '', activity_type: '' })}
                   className={`p-4 rounded-lg border-2 transition-all ${
                     formData.user_type === 'patient'
                       ? 'border-blue-800 bg-blue-50'
@@ -266,6 +267,23 @@ const Register = ({ setUser }) => {
                 </button>
               </div>
             </div>
+
+            {/* Adresse pour les patients */}
+            {formData.user_type === 'patient' && (
+              <div className="space-y-2">
+                <Label htmlFor="patient-address">Adresse / Localisation</Label>
+                <Input
+                  id="patient-address"
+                  type="text"
+                  placeholder="Ex: Abidjan, Cocody Riviera 3"
+                  value={formData.address}
+                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                  className="bg-white border-stone-200 focus:border-blue-800 focus:ring-1 focus:ring-blue-800 rounded-lg h-12"
+                  data-testid="patient-address-input"
+                />
+                <p className="text-xs text-stone-500">Aide-nous à te proposer des médecins proches de chez toi</p>
+              </div>
+            )}
 
             {formData.user_type === 'doctor' && (
               <>

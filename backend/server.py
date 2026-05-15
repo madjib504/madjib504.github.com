@@ -82,6 +82,7 @@ class User(UserBase):
     whatsapp_number: Optional[str] = None
     medical_type: Optional[str] = None
     specialties: Optional[List[str]] = None
+    address: Optional[str] = None
     verified: bool = False
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
@@ -272,7 +273,8 @@ async def register(user_data: UserRegister):
         user_type=user_data.user_type,
         whatsapp_number=user_data.whatsapp_number,
         medical_type=user_data.medical_type,
-        specialties=user_data.specialties
+        specialties=user_data.specialties,
+        address=user_data.address
     )
     user_dict = user.model_dump()
     user_dict['password'] = hash_password(user_data.password)
@@ -580,6 +582,54 @@ async def search_doctors(
     keyword: Optional[str] = None,
     custom_search: Optional[str] = None
 ):
+    # Dictionnaire d'alias FR (praticien → racine de spécialité)
+    # Permet à "cardiologue", "dermato"… de trouver "Cardiologie", "Dermatologie"…
+    keyword_aliases = {
+        "cardiologue": "cardiolog", "cardio": "cardiolog",
+        "dermatologue": "dermatolog", "dermato": "dermatolog",
+        "gynecologue": "gynéc", "gynécologue": "gynéc", "gyneco": "gynéc", "gynéco": "gynéc",
+        "ophtalmologue": "ophtalmolog", "ophtalmologiste": "ophtalmolog", "ophtalmo": "ophtalmolog", "oculiste": "ophtalmolog",
+        "pediatre": "pédiatr", "pédiatre": "pédiatr",
+        "chirurgien": "chirurgie",
+        "psychiatre": "psychiatr", "psy": "psych",
+        "psychologue": "psycholog",
+        "neurologue": "neurolog", "neuro": "neurolog",
+        "orthopediste": "orthopéd", "orthopédiste": "orthopéd", "ortho": "orthopéd",
+        "pneumologue": "pneumolog",
+        "gastroenterologue": "gastro", "gastroentérologue": "gastro", "gastro": "gastro",
+        "endocrinologue": "endocrinolog", "endocrino": "endocrinolog",
+        "pharmacien": "pharma", "pharmacienne": "pharma", "pharmacie": "pharma",
+        "generaliste": "génér", "généraliste": "génér", "medecin generaliste": "génér", "médecin généraliste": "génér",
+        "kinesitherapeute": "kiné", "kinésithérapeute": "kiné", "kine": "kiné", "kiné": "kiné",
+        "osteopathe": "ostéopath", "ostéopathe": "ostéopath",
+        "nutritionniste": "nutrition",
+        "dieteticien": "diététic", "diététicien": "diététic",
+        "naturopathe": "naturopath",
+        "sophrologue": "sophrolog",
+        "tradipraticien": "tradipratic", "tradi": "tradipratic",
+        "guerisseur": "guérisseur", "guérisseur": "guérisseur",
+        "phytotherapeute": "phyto", "phytothérapeute": "phyto", "phyto": "phyto",
+        "herboriste": "herboriste",
+        "rebouteux": "rebouteux",
+        "infirmier": "infirmier", "infirmiere": "infirmi", "infirmière": "infirmi",
+        "acupuncteur": "acupunct", "acupuncteure": "acupunct",
+        "estheticien": "esthétic", "esthéticien": "esthétic", "esthéticienne": "esthétic", "esthetique": "esthétic", "esthétique": "esthétic",
+        "coiffeur": "coiffeur", "coiffeuse": "coiff",
+        "sage femme": "sage-femme", "sage-femme": "sage-femme",
+        "orl": "ORL",
+        "dentiste": "dent", "dentaire": "dent",
+        "coach sportif": "coach sport", "coach": "coach",
+        "masseur": "masseur", "masseuse": "masseu",
+        "spa": "spa",
+        "maquilleur": "maquill", "maquilleuse": "maquill",
+        "prothesiste": "prothésist", "prothésiste": "prothésist",
+    }
+
+    def normalize_keyword(kw: str) -> str:
+        kw_lower = kw.lower().strip()
+        # Lookup alias; fallback to raw keyword
+        return keyword_aliases.get(kw_lower, kw)
+
     query = {}
     if specialty:
         query["specialties"] = {"$in": [specialty]}
@@ -596,20 +646,22 @@ async def search_doctors(
     
     # Recherche par mots-clés dans nom, bio, spécialités
     if keyword:
+        search_term = normalize_keyword(keyword)
         query["$or"] = [
-            {"name": {"$regex": keyword, "$options": "i"}},
-            {"bio": {"$regex": keyword, "$options": "i"}},
-            {"specialties": {"$regex": keyword, "$options": "i"}}
+            {"name": {"$regex": search_term, "$options": "i"}},
+            {"bio": {"$regex": search_term, "$options": "i"}},
+            {"specialties": {"$regex": search_term, "$options": "i"}}
         ]
     
     # Recherche personnalisée pour "Autre" catégorie
     # Cherche dans le medical_type personnalisé, les spécialités et le bio
     if custom_search:
+        search_term = normalize_keyword(custom_search)
         custom_or_conditions = [
-            {"specialties": {"$regex": custom_search, "$options": "i"}},
-            {"bio": {"$regex": custom_search, "$options": "i"}},
-            {"name": {"$regex": custom_search, "$options": "i"}},
-            {"custom_medical_type": {"$regex": custom_search, "$options": "i"}}
+            {"specialties": {"$regex": search_term, "$options": "i"}},
+            {"bio": {"$regex": search_term, "$options": "i"}},
+            {"name": {"$regex": search_term, "$options": "i"}},
+            {"custom_medical_type": {"$regex": search_term, "$options": "i"}}
         ]
         if "$or" in query:
             query["$and"] = [{"$or": query.pop("$or")}, {"$or": custom_or_conditions}]
