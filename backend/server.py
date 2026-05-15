@@ -730,9 +730,16 @@ async def get_appointments(current_user: User = Depends(get_current_user)):
     if current_user.user_type == "patient":
         query["patient_id"] = current_user.id
     else:
-        query["doctor_id"] = current_user.id
+        # Les RDV sont stockés avec doctor_id = doctor_profiles.id, pas users.id.
+        # On résout d'abord le profil du docteur connecté.
+        doctor_profile = await db.doctor_profiles.find_one(
+            {"user_id": current_user.id}, {"_id": 0, "id": 1}
+        )
+        if not doctor_profile:
+            return []
+        query["doctor_id"] = doctor_profile["id"]
     
-    appointments = await db.appointments.find(query, {"_id": 0}).to_list(100)
+    appointments = await db.appointments.find(query, {"_id": 0}).sort("appointment_date", -1).to_list(100)
     
     # Enrich with doctor/patient info
     for apt in appointments:
@@ -743,7 +750,7 @@ async def get_appointments(current_user: User = Depends(get_current_user)):
             doctor = await db.doctor_profiles.find_one({"id": apt['doctor_id']}, {"_id": 0, "name": 1, "specialties": 1, "profile_image": 1})
             apt['doctor_info'] = doctor
         else:
-            patient = await db.users.find_one({"id": apt['patient_id']}, {"_id": 0, "name": 1, "email": 1})
+            patient = await db.users.find_one({"id": apt['patient_id']}, {"_id": 0, "name": 1, "email": 1, "whatsapp_number": 1})
             apt['patient_info'] = patient
     
     return appointments
