@@ -23,7 +23,7 @@ import AdminDashboard from '@/pages/AdminDashboard';
 import Advertise from '@/pages/Advertise';
 import WelcomeDoctor from '@/pages/WelcomeDoctor';
 import PartnerDashboard from '@/pages/PartnerDashboard';
-import { SOSButton, MedicalAssistant } from '@/components/HealthTools';
+import { SOSButton } from '@/components/HealthTools';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 export const API = `${BACKEND_URL}/api`;
@@ -40,7 +40,6 @@ const Layout = ({ children, user, setUser }) => {
       {!isHomePage && <Navbar user={user} setUser={setUser} />}
       {children}
       {!isHomePage && <SOSButton />}
-      {!isHomePage && <MedicalAssistant />}
     </>
   );
 };

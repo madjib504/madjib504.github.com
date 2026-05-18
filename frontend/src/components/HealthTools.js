@@ -156,8 +156,11 @@ export const SOSButton = () => {
   );
 };
 
-export const MedicalAssistant = () => {
-  const [open, setOpen] = useState(false);
+export const MedicalAssistant = ({ open: controlledOpen, onOpenChange: controlledOnOpenChange, trigger }) => {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
+  const setOpen = isControlled ? controlledOnOpenChange : setInternalOpen;
   const [symptoms, setSymptoms] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -177,15 +180,9 @@ export const MedicalAssistant = () => {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button 
-          data-testid="assistant-button"
-          className="fixed bottom-24 right-6 z-50 bg-blue-900 hover:bg-blue-800 text-white rounded-full shadow-xl"
-        >
-          <Stethoscope className="w-5 h-5 mr-2" />
-          Assistant Santé
-        </Button>
-      </DialogTrigger>
+      {trigger ? (
+        <DialogTrigger asChild>{trigger}</DialogTrigger>
+      ) : null}
       <DialogContent className="bg-white max-w-2xl">
         <DialogHeader>
           <DialogTitle className="text-2xl font-serif text-blue-900">

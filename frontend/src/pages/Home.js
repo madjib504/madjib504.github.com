@@ -13,6 +13,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { AuthContext } from '@/App';
+import { MedicalAssistant } from '@/components/HealthTools';
 
 // Countdown Component - Disparaît après 2 semaines
 const CountdownTimer = () => {
@@ -309,6 +310,7 @@ const AdvertisingCarousel = () => {
 
 const HomePage = () => {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [assistantOpen, setAssistantOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const { user, setUser } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -648,6 +650,25 @@ const HomePage = () => {
             </Link>
           </div>
 
+          {/* Outils Santé */}
+          <div className="p-4 border-b">
+            <h3 className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-3">
+              Outils Santé
+            </h3>
+            <button
+              type="button"
+              onClick={() => { setMenuOpen(false); setAssistantOpen(true); }}
+              className="flex w-full items-center justify-between px-3 py-3 rounded-lg bg-blue-50 hover:bg-blue-100 transition-colors group"
+              data-testid="menu-assistant-btn"
+            >
+              <div className="flex items-center gap-3">
+                <Stethoscope className="w-5 h-5 text-blue-700" />
+                <span className="text-stone-700 font-medium">Assistant Santé</span>
+              </div>
+              <ChevronRight className="w-4 h-4 text-blue-300 group-hover:text-blue-700 transition-colors" />
+            </button>
+          </div>
+
           {/* Invite & Support Section */}
           <div className="p-4 border-b">
             <h3 className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-3">
@@ -757,6 +778,9 @@ const HomePage = () => {
           </div>
         </div>
       </div>
+
+      {/* Medical Assistant Dialog (controlled by menu) */}
+      <MedicalAssistant open={assistantOpen} onOpenChange={setAssistantOpen} />
     </div>
   );
 };
