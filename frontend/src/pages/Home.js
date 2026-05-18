@@ -358,6 +358,7 @@ const HomePage = () => {
 
   const importantDocuments = [
     { label: 'Catalogue de partenariat', url: 'https://docs.google.com/presentation/d/1bIwp7orIlr2wfKgO1WRlF2hUpe3mRk4jLo4lxfofQ2E/edit?usp=sharing' },
+    { label: 'Présentation Partenariat (interactif)', url: 'https://claude.ai/public/artifacts/21a87652-fa31-4a0c-8819-04d0ff10b6b0' },
   ];
 
   const dashboardLink = user
