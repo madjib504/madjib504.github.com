@@ -330,96 +330,6 @@ const DoctorProfilePage = () => {
               </Card>
             )}
 
-            <Card className="shadow-md border-stone-100">
-              <CardContent className="p-8">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-serif font-bold text-stone-900">Avis des patients</h2>
-                  {user && user.user_type === 'patient' && (
-                    <Dialog open={reviewOpen} onOpenChange={setReviewOpen}>
-                      <DialogTrigger asChild>
-                        <Button className="bg-blue-900 text-white hover:bg-blue-800 rounded-full" data-testid="add-review-btn">
-                          Laisser un avis
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="bg-white">
-                        <DialogHeader>
-                          <DialogTitle className="font-serif text-blue-900">Laisser un avis</DialogTitle>
-                          <DialogDescription>Partagez votre expérience avec Dr. {doctor.name}</DialogDescription>
-                        </DialogHeader>
-                        <form onSubmit={handleReview} className="space-y-4" data-testid="review-form">
-                          <div className="space-y-2">
-                            <Label>Note</Label>
-                            <div className="flex gap-2">
-                              {[1, 2, 3, 4, 5].map((star) => (
-                                <button
-                                  key={star}
-                                  type="button"
-                                  onClick={() => setReviewData({ ...reviewData, rating: star })}
-                                  data-testid={`rating-star-${star}`}
-                                >
-                                  <Star
-                                    className={`w-8 h-8 ${
-                                      star <= reviewData.rating
-                                        ? 'text-yellow-500 fill-yellow-500'
-                                        : 'text-stone-300'
-                                    }`}
-                                  />
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="comment">Commentaire</Label>
-                            <Textarea
-                              id="comment"
-                              placeholder="Partagez votre expérience..."
-                              value={reviewData.comment}
-                              onChange={(e) => setReviewData({ ...reviewData, comment: e.target.value })}
-                              className="bg-white border-stone-200 rounded-lg min-h-[100px]"
-                              data-testid="review-comment-input"
-                            />
-                          </div>
-                          <Button type="submit" className="w-full bg-blue-900 text-white hover:bg-blue-800 rounded-full" data-testid="submit-review-btn">
-                            Soumettre l'avis
-                          </Button>
-                        </form>
-                      </DialogContent>
-                    </Dialog>
-                  )}
-                </div>
-                {reviews.length === 0 ? (
-                  <p className="text-stone-600 text-center py-8">Aucun avis pour le moment</p>
-                ) : (
-                  <div className="space-y-4" data-testid="reviews-list">
-                    {reviews.map((review) => (
-                      <div key={review.id} className="border-b border-stone-100 pb-4 last:border-0" data-testid={`review-${review.id}`}>
-                        <div className="flex items-center justify-between mb-2">
-                          <div>
-                            <p className="font-medium text-stone-900">{review.patient_name}</p>
-                            <div className="flex items-center mt-1">
-                              {[...Array(5)].map((_, starIdx) => (
-                                <Star
-                                  key={`star-${starIdx}`}
-                                  className={`w-4 h-4 ${
-                                    starIdx < review.rating
-                                      ? 'text-yellow-500 fill-yellow-500'
-                                      : 'text-stone-300'
-                                  }`}
-                                />
-                              ))}
-                            </div>
-                          </div>
-                          <span className="text-sm text-stone-500">
-                            {new Date(review.created_at).toLocaleDateString('fr-FR')}
-                          </span>
-                        </div>
-                        {review.comment && <p className="text-stone-600">{review.comment}</p>}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
           </div>
 
           {/* Sidebar Actions */}
@@ -496,6 +406,100 @@ const DoctorProfilePage = () => {
               </CardContent>
             </Card>
           </div>
+        </div>
+
+        {/* Reviews Section - Full width, bottom */}
+        <div className="mt-8">
+          <Card className="shadow-md border-stone-100" data-testid="reviews-section">
+            <CardContent className="p-8">
+              <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
+                <h2 className="text-2xl font-serif font-bold text-stone-900">Avis des patients</h2>
+                {user && user.user_type === 'patient' && (
+                  <Dialog open={reviewOpen} onOpenChange={setReviewOpen}>
+                    <DialogTrigger asChild>
+                      <Button className="bg-blue-900 text-white hover:bg-blue-800 rounded-full" data-testid="add-review-btn">
+                        Laisser un avis
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="bg-white">
+                      <DialogHeader>
+                        <DialogTitle className="font-serif text-blue-900">Laisser un avis</DialogTitle>
+                        <DialogDescription>Partagez votre expérience avec Dr. {doctor.name}</DialogDescription>
+                      </DialogHeader>
+                      <form onSubmit={handleReview} className="space-y-4" data-testid="review-form">
+                        <div className="space-y-2">
+                          <Label>Note</Label>
+                          <div className="flex gap-2">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <button
+                                key={star}
+                                type="button"
+                                onClick={() => setReviewData({ ...reviewData, rating: star })}
+                                data-testid={`rating-star-${star}`}
+                              >
+                                <Star
+                                  className={`w-8 h-8 ${
+                                    star <= reviewData.rating
+                                      ? 'text-yellow-500 fill-yellow-500'
+                                      : 'text-stone-300'
+                                  }`}
+                                />
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="comment">Commentaire</Label>
+                          <Textarea
+                            id="comment"
+                            placeholder="Partagez votre expérience..."
+                            value={reviewData.comment}
+                            onChange={(e) => setReviewData({ ...reviewData, comment: e.target.value })}
+                            className="bg-white border-stone-200 rounded-lg min-h-[100px]"
+                            data-testid="review-comment-input"
+                          />
+                        </div>
+                        <Button type="submit" className="w-full bg-blue-900 text-white hover:bg-blue-800 rounded-full" data-testid="submit-review-btn">
+                          Soumettre l'avis
+                        </Button>
+                      </form>
+                    </DialogContent>
+                  </Dialog>
+                )}
+              </div>
+              {reviews.length === 0 ? (
+                <p className="text-stone-600 text-center py-8">Aucun avis pour le moment</p>
+              ) : (
+                <div className="space-y-4" data-testid="reviews-list">
+                  {reviews.map((review) => (
+                    <div key={review.id} className="border-b border-stone-100 pb-4 last:border-0" data-testid={`review-${review.id}`}>
+                      <div className="flex items-center justify-between mb-2">
+                        <div>
+                          <p className="font-medium text-stone-900">{review.patient_name}</p>
+                          <div className="flex items-center mt-1">
+                            {[...Array(5)].map((_, starIdx) => (
+                              <Star
+                                key={`star-${starIdx}`}
+                                className={`w-4 h-4 ${
+                                  starIdx < review.rating
+                                    ? 'text-yellow-500 fill-yellow-500'
+                                    : 'text-stone-300'
+                                }`}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                        <span className="text-sm text-stone-500">
+                          {new Date(review.created_at).toLocaleDateString('fr-FR')}
+                        </span>
+                      </div>
+                      {review.comment && <p className="text-stone-600">{review.comment}</p>}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

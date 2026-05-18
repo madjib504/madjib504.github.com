@@ -181,9 +181,31 @@ const AdminDashboard = () => {
     }
   };
 
+  const formatWhatsApp = (raw) => {
+    if (!raw) return null;
+    // Garde uniquement les chiffres
+    const digits = raw.replace(/\D/g, '');
+    if (!digits) return null;
+    // Si le numéro commence déjà par un indicatif (>10 chiffres), on garde tel quel.
+    // Sinon (cas "0777154048" - 10 chiffres), on suppose Côte d'Ivoire (225).
+    if (digits.length <= 10) {
+      // Retire le 0 de tête s'il existe (CI mobile : "07 XX XX XX XX" → "7 XX XX XX XX")
+      const trimmed = digits.startsWith('0') ? digits.slice(1) : digits;
+      return `225${trimmed}`;
+    }
+    return digits;
+  };
+
   const openWhatsAppNotif = (notif) => {
-    const msg = `Nouvelle inscription sur keneyakafisa:\n- Nom: ${notif.user_name}\n- Type: ${notif.user_type === 'doctor' ? 'Médecin' : 'Patient'}\n- Email: ${notif.user_email}${notif.whatsapp_number ? '\n- WhatsApp: ' + notif.whatsapp_number : ''}`;
-    window.open(`https://wa.me/2250777154048?text=${encodeURIComponent(msg)}`, '_blank');
+    const userPhone = formatWhatsApp(notif.whatsapp_number);
+    const typeLabel = notif.user_type === 'doctor' ? 'Médecin' : notif.user_type === 'partner' ? 'Partenaire' : 'Patient';
+    if (!userPhone) {
+      // Pas de numéro renseigné → on alerte l'admin et on n'ouvre pas WhatsApp
+      toast.error(`${typeLabel} ${notif.user_name} n'a pas renseigné de numéro WhatsApp.`);
+      return;
+    }
+    const msg = `Bonjour ${notif.user_name}, bienvenue sur keneyakafisa ! Je suis l'équipe support et je vous contacte suite à votre inscription comme ${typeLabel.toLowerCase()}. Comment puis-je vous aider ?`;
+    window.open(`https://wa.me/${userPhone}?text=${encodeURIComponent(msg)}`, '_blank');
   };
 
   const viewUserDetail = async (userId) => {
