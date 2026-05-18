@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { MapPin, Star, DollarSign, Calendar, MessageSquare, Stethoscope, Leaf, Clock, Languages, Video, Facebook, Instagram, ExternalLink } from 'lucide-react';
+import { MapPin, Star, DollarSign, Calendar, MessageSquare, Stethoscope, Leaf, Clock, Languages, Video, Facebook, Instagram, ExternalLink, Globe } from 'lucide-react';
 
 const DoctorProfilePage = () => {
   const { doctorId } = useParams();
@@ -265,7 +265,71 @@ const DoctorProfilePage = () => {
               </CardContent>
             </Card>
 
-            {/* Reviews Section */}
+            {/* Coordonnées du cabinet */}
+            {(doctor.country || doctor.city || doctor.neighborhood || doctor.landmark || doctor.website || (doctor.coordinates && doctor.coordinates.latitude)) && (
+              <Card className="shadow-md border-stone-100" data-testid="doctor-location-card">
+                <CardContent className="p-8">
+                  <h2 className="text-2xl font-serif font-bold text-stone-900 mb-6 flex items-center gap-2">
+                    <MapPin className="w-6 h-6 text-blue-900" />
+                    Coordonnées du cabinet
+                  </h2>
+                  <div className="grid md:grid-cols-2 gap-x-8 gap-y-4">
+                    {doctor.country && (
+                      <div>
+                        <p className="text-xs uppercase tracking-wider text-stone-500 mb-1">Pays</p>
+                        <p className="text-stone-900 font-medium" data-testid="doctor-country">{doctor.country}</p>
+                      </div>
+                    )}
+                    {doctor.city && (
+                      <div>
+                        <p className="text-xs uppercase tracking-wider text-stone-500 mb-1">Ville</p>
+                        <p className="text-stone-900 font-medium" data-testid="doctor-city">{doctor.city}</p>
+                      </div>
+                    )}
+                    {doctor.neighborhood && (
+                      <div>
+                        <p className="text-xs uppercase tracking-wider text-stone-500 mb-1">Quartier</p>
+                        <p className="text-stone-900 font-medium" data-testid="doctor-neighborhood">{doctor.neighborhood}</p>
+                      </div>
+                    )}
+                    {doctor.landmark && (
+                      <div>
+                        <p className="text-xs uppercase tracking-wider text-stone-500 mb-1">Repère</p>
+                        <p className="text-stone-900 font-medium" data-testid="doctor-landmark">{doctor.landmark}</p>
+                      </div>
+                    )}
+                    {doctor.website && (
+                      <div className="md:col-span-2">
+                        <p className="text-xs uppercase tracking-wider text-stone-500 mb-1 flex items-center gap-1">
+                          <Globe className="w-3 h-3" /> Site web
+                        </p>
+                        <a href={doctor.website.startsWith('http') ? doctor.website : `https://${doctor.website}`}
+                          target="_blank" rel="noopener noreferrer"
+                          className="text-blue-700 hover:text-blue-900 hover:underline font-medium break-all"
+                          data-testid="doctor-website-link">
+                          {doctor.website}
+                        </a>
+                      </div>
+                    )}
+                    {doctor.coordinates && doctor.coordinates.latitude && doctor.coordinates.longitude && (
+                      <div className="md:col-span-2">
+                        <p className="text-xs uppercase tracking-wider text-stone-500 mb-1">Position GPS</p>
+                        <a
+                          href={`https://www.google.com/maps?q=${doctor.coordinates.latitude},${doctor.coordinates.longitude}`}
+                          target="_blank" rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 px-4 py-2 rounded-full bg-blue-50 text-blue-900 hover:bg-blue-100 font-medium"
+                          data-testid="doctor-gps-link">
+                          <MapPin className="w-4 h-4" />
+                          {Number(doctor.coordinates.latitude).toFixed(5)}, {Number(doctor.coordinates.longitude).toFixed(5)}
+                          <ExternalLink className="w-3 h-3 ml-1" />
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             <Card className="shadow-md border-stone-100">
               <CardContent className="p-8">
                 <div className="flex items-center justify-between mb-6">

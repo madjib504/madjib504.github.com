@@ -2644,6 +2644,37 @@ async def update_social_links(data: dict, current_user: User = Depends(get_curre
     return profile
 
 
+@api_router.put("/profile/location-details")
+async def update_location_details(data: dict, current_user: User = Depends(get_current_user)):
+    """Save extended location info (country, city, neighborhood, landmark, GPS, website)
+    for doctor or partner profile."""
+    if current_user.user_type not in ("doctor", "partner"):
+        raise HTTPException(status_code=403, detail="Réservé aux professionnels et partenaires")
+
+    allowed_fields = {"country", "city", "neighborhood", "landmark", "website", "latitude", "longitude"}
+    update_data: dict = {}
+    for k, v in data.items():
+        if k in allowed_fields and v not in (None, ""):
+            update_data[k] = v
+    # Normalize GPS into a nested coordinates object for back-compat with NearbyDoctors
+    if "latitude" in update_data or "longitude" in update_data:
+        try:
+            update_data["coordinates"] = {
+                "latitude": float(update_data.pop("latitude", 0) or 0),
+                "longitude": float(update_data.pop("longitude", 0) or 0),
+            }
+        except (TypeError, ValueError):
+            raise HTTPException(status_code=400, detail="Coordonnées GPS invalides")
+
+    if not update_data:
+        raise HTTPException(status_code=400, detail="Aucun champ valide à mettre à jour")
+
+    collection = db.doctor_profiles if current_user.user_type == "doctor" else db.partner_profiles
+    await collection.update_one({"user_id": current_user.id}, {"$set": update_data})
+    profile = await collection.find_one({"user_id": current_user.id}, {"_id": 0})
+    return profile
+
+
 @app.on_event("startup")
 async def startup_storage():
     """Initialize Emergent Object Storage on startup"""

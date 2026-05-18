@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar, Star, Clock, User, CheckCircle, XCircle, AlertCircle, Edit, Video, Upload } from 'lucide-react';
+import { Calendar, Star, Clock, User, CheckCircle, XCircle, AlertCircle, Edit, Video, Upload, MapPin, Globe, Save } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 const DoctorDashboard = () => {
@@ -30,6 +30,15 @@ const DoctorDashboard = () => {
     facebook_url: '',
     instagram_url: '',
     video_url: ''
+  });
+  const [locationDetails, setLocationDetails] = useState({
+    country: '',
+    city: '',
+    neighborhood: '',
+    landmark: '',
+    website: '',
+    latitude: '',
+    longitude: ''
   });
   const [uploading, setUploading] = useState(false);
 
@@ -69,6 +78,15 @@ const DoctorDashboard = () => {
           facebook_url: myProfile.facebook_url || '',
           instagram_url: myProfile.instagram_url || '',
           video_url: myProfile.video_url || ''
+        });
+        setLocationDetails({
+          country: myProfile.country || '',
+          city: myProfile.city || '',
+          neighborhood: myProfile.neighborhood || '',
+          landmark: myProfile.landmark || '',
+          website: myProfile.website || '',
+          latitude: myProfile.coordinates?.latitude ?? '',
+          longitude: myProfile.coordinates?.longitude ?? ''
         });
       }
     } catch {
@@ -143,6 +161,37 @@ const DoctorDashboard = () => {
     } catch {
       toast.error('Erreur lors de la mise à jour');
     }
+  };
+
+  const handleSaveLocation = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(`${API}/profile/location-details`, locationDetails, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success('Localisation mise à jour');
+      fetchProfile();
+    } catch {
+      toast.error('Erreur lors de la mise à jour');
+    }
+  };
+
+  const handleUseMyGPS = () => {
+    if (!navigator.geolocation) {
+      toast.error('Géolocalisation non disponible sur cet appareil');
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setLocationDetails({
+          ...locationDetails,
+          latitude: pos.coords.latitude.toFixed(6),
+          longitude: pos.coords.longitude.toFixed(6)
+        });
+        toast.success('Position GPS récupérée');
+      },
+      () => toast.error('Impossible de récupérer la position GPS')
+    );
   };
 
   const handleVideoUpload = async (e) => {
@@ -374,6 +423,82 @@ const DoctorDashboard = () => {
             ) : (
               <p className="text-stone-600">Chargement du profil...</p>
             )}
+          </CardContent>
+        </Card>
+
+        {/* Localisation détaillée */}
+        <Card className="shadow-md border-stone-100">
+          <CardHeader>
+            <CardTitle className="text-2xl font-serif text-blue-900 flex items-center gap-2">
+              <MapPin className="w-5 h-5" /> Localisation de votre cabinet
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <Label htmlFor="loc-country">Pays</Label>
+                <Input id="loc-country" placeholder="Ex: Côte d'Ivoire"
+                  value={locationDetails.country}
+                  onChange={(e) => setLocationDetails({ ...locationDetails, country: e.target.value })}
+                  data-testid="loc-country-input" />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="loc-city">Ville</Label>
+                <Input id="loc-city" placeholder="Ex: Abidjan"
+                  value={locationDetails.city}
+                  onChange={(e) => setLocationDetails({ ...locationDetails, city: e.target.value })}
+                  data-testid="loc-city-input" />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="loc-neighborhood">Quartier</Label>
+                <Input id="loc-neighborhood" placeholder="Ex: Cocody Riviera 3"
+                  value={locationDetails.neighborhood}
+                  onChange={(e) => setLocationDetails({ ...locationDetails, neighborhood: e.target.value })}
+                  data-testid="loc-neighborhood-input" />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="loc-landmark">Repère</Label>
+                <Input id="loc-landmark" placeholder="Ex: En face de la pharmacie du Plateau"
+                  value={locationDetails.landmark}
+                  onChange={(e) => setLocationDetails({ ...locationDetails, landmark: e.target.value })}
+                  data-testid="loc-landmark-input" />
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <Label htmlFor="loc-website" className="flex items-center gap-1">
+                <Globe className="w-4 h-4" /> Site web
+              </Label>
+              <Input id="loc-website" placeholder="https://votre-site.com" type="url"
+                value={locationDetails.website}
+                onChange={(e) => setLocationDetails({ ...locationDetails, website: e.target.value })}
+                data-testid="loc-website-input" />
+            </div>
+
+            <div className="space-y-2 p-4 bg-blue-50 rounded-lg border border-blue-100">
+              <Label className="font-medium">Position GPS</Label>
+              <div className="grid grid-cols-2 gap-3">
+                <Input placeholder="Latitude (ex: 5.3364)" type="number" step="0.000001"
+                  value={locationDetails.latitude}
+                  onChange={(e) => setLocationDetails({ ...locationDetails, latitude: e.target.value })}
+                  data-testid="loc-latitude-input" />
+                <Input placeholder="Longitude (ex: -4.0267)" type="number" step="0.000001"
+                  value={locationDetails.longitude}
+                  onChange={(e) => setLocationDetails({ ...locationDetails, longitude: e.target.value })}
+                  data-testid="loc-longitude-input" />
+              </div>
+              <Button type="button" variant="outline" onClick={handleUseMyGPS}
+                className="w-full text-blue-900 border-blue-300 hover:bg-blue-100"
+                data-testid="use-my-gps-btn">
+                <MapPin className="w-4 h-4 mr-2" /> Utiliser ma position actuelle
+              </Button>
+            </div>
+
+            <Button onClick={handleSaveLocation}
+              className="bg-blue-900 hover:bg-blue-800 text-white"
+              data-testid="save-location-btn">
+              <Save className="w-4 h-4 mr-2" /> Enregistrer la localisation
+            </Button>
           </CardContent>
         </Card>
 
