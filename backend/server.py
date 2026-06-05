@@ -20,6 +20,7 @@ import aiofiles
 import asyncio
 from services.storage import init_storage, put_object, get_object
 from services.email_service import send_verification_email
+from services.seed_loader import seed_initial_data
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -2784,6 +2785,13 @@ async def startup_storage():
         logging.info("Object storage initialized")
     except Exception as e:
         logging.error(f"Storage init failed at startup (will retry on first upload): {e}")
+
+    # Idempotent seed loader for the initial keneya dataset.
+    # Runs on every startup but only inserts missing records.
+    try:
+        await seed_initial_data(db)
+    except Exception as e:
+        logging.error(f"Seed loader failed: {e}")
 
 
 # Register all api routes (must be AFTER all @api_router.* decorators)
