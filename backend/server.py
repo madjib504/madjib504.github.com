@@ -2198,6 +2198,25 @@ async def toggle_maintenance(payload: dict, admin: dict = Depends(verify_admin_t
     return {"success": True, "enabled": enabled}
 
 
+@api_router.post("/admin/run-seed")
+async def trigger_seed(admin: dict = Depends(verify_admin_token)):
+    """Manual trigger for the initial data seed. Idempotent."""
+    from services.seed_loader import seed_initial_data, SEED_FILE
+    file_exists = SEED_FILE.exists()
+    file_size = SEED_FILE.stat().st_size if file_exists else 0
+    stats = await seed_initial_data(db)
+    return {
+        "success": True,
+        "seed_file_path": str(SEED_FILE),
+        "seed_file_exists": file_exists,
+        "seed_file_size_bytes": file_size,
+        "stats": stats,
+        "users_total_in_db": await db.users.count_documents({}),
+        "doctor_profiles_in_db": await db.doctor_profiles.count_documents({}),
+        "partner_profiles_in_db": await db.partner_profiles.count_documents({}),
+    }
+
+
 @api_router.get("/partner/profile")
 async def get_partner_profile(current_user: User = Depends(get_current_user)):
     """Get partner profile"""

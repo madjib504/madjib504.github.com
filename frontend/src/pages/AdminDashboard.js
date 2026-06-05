@@ -207,6 +207,35 @@ const AdminDashboard = () => {
     }
   };
 
+  const [seedRunning, setSeedRunning] = useState(false);
+  const runSeed = async () => {
+    setSeedRunning(true);
+    try {
+      const r = await axios.post(`${API}/admin/run-seed`, {}, getAuthHeaders());
+      const s = r.data.stats || {};
+      const totalImported = (s.imported_doctor || 0) + (s.imported_partner || 0);
+      toast.success(`Seed exécuté : ${totalImported} nouveaux profils importés. Total médecins en base : ${r.data.doctor_profiles_in_db}`);
+      console.info('[Seed] details:', r.data);
+      alert(
+        `Seed exécuté ✅\n\n` +
+        `Fichier seed présent : ${r.data.seed_file_exists ? 'OUI' : 'NON'}\n` +
+        `Taille fichier : ${r.data.seed_file_size_bytes} octets\n\n` +
+        `Nouveaux médecins importés : ${s.imported_doctor || 0}\n` +
+        `Nouveaux partenaires importés : ${s.imported_partner || 0}\n` +
+        `Déjà existants (skippés) : ${s.skipped_exists || 0}\n` +
+        `Erreurs : ${s.errors || 0}\n\n` +
+        `Total utilisateurs en base : ${r.data.users_total_in_db}\n` +
+        `Total profils médecins : ${r.data.doctor_profiles_in_db}\n` +
+        `Total profils partenaires : ${r.data.partner_profiles_in_db}`
+      );
+      fetchData();
+    } catch (err) {
+      toast.error("Échec du seed : " + (err.response?.data?.detail || err.message));
+    } finally {
+      setSeedRunning(false);
+    }
+  };
+
   const formatWhatsApp = (raw) => {
     if (!raw) return null;
     // Garde uniquement les chiffres
@@ -600,6 +629,29 @@ const AdminDashboard = () => {
                       data-testid="toggle-maintenance-btn"
                     >
                       {maintenanceToggling ? '…' : maintenanceEnabled ? 'Désactiver la maintenance' : 'Activer la maintenance'}
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                {/* Manual seed trigger (diagnostic) */}
+                <Card className="bg-slate-800 border-slate-700">
+                  <CardContent className="p-6 flex items-center justify-between flex-wrap gap-4">
+                    <div className="flex items-center gap-3">
+                      <Download className="w-8 h-8 text-blue-400" />
+                      <div>
+                        <p className="text-white font-semibold">Import des cabinets initiaux (103)</p>
+                        <p className="text-sm text-slate-400">
+                          Charge manuellement la base de cabinets/cliniques/spas. Sans effet si déjà chargés.
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      onClick={runSeed}
+                      disabled={seedRunning}
+                      className="bg-blue-700 hover:bg-blue-800 text-white"
+                      data-testid="run-seed-btn"
+                    >
+                      {seedRunning ? 'En cours…' : 'Lancer l\'import'}
                     </Button>
                   </CardContent>
                 </Card>
