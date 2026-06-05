@@ -23,6 +23,9 @@ import AdminDashboard from '@/pages/AdminDashboard';
 import Advertise from '@/pages/Advertise';
 import WelcomeDoctor from '@/pages/WelcomeDoctor';
 import PartnerDashboard from '@/pages/PartnerDashboard';
+import VerifyEmailPage from '@/pages/VerifyEmailPage';
+import EmailVerificationBanner from '@/components/EmailVerificationBanner';
+import MaintenancePage from '@/pages/MaintenancePage';
 import { SOSButton } from '@/components/HealthTools';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -38,6 +41,7 @@ const Layout = ({ children, user, setUser }) => {
   return (
     <>
       {!isHomePage && <Navbar user={user} setUser={setUser} />}
+      {!isHomePage && <EmailVerificationBanner />}
       {children}
       {!isHomePage && <SOSButton />}
     </>
@@ -109,9 +113,31 @@ function AppContent({ user, setUser, loading }) {
         <Route path="/advertise" element={<Advertise />} />
         <Route path="/welcome-doctor" element={<WelcomeDoctor />} />
         <Route path="/partner/dashboard" element={<PartnerDashboard />} />
+        <Route path="/verify-email" element={<VerifyEmailPage />} />
       </Routes>
     </Layout>
   );
+}
+
+function MaintenanceGate({ children }) {
+  const location = useLocation();
+  const [maintenance, setMaintenance] = useState(false);
+  const [checked, setChecked] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    axios.get(`${API}/maintenance/status`)
+      .then(r => { if (active) { setMaintenance(!!r.data.enabled); setChecked(true); } })
+      .catch(() => { if (active) { setChecked(true); } });
+    return () => { active = false; };
+  }, [location.pathname]);
+
+  if (!checked) return null;
+  // Always let /admin and /verify-email through
+  const allowedPaths = ['/admin'];
+  const isAllowed = allowedPaths.some(p => location.pathname.startsWith(p)) || location.pathname.startsWith('/verify-email');
+  if (maintenance && !isAllowed) return <MaintenancePage />;
+  return children;
 }
 
 function App() {
@@ -152,7 +178,9 @@ function App() {
     <AuthContext.Provider value={{ user, setUser }}>
       <div className="App">
         <BrowserRouter>
-          <AppContent user={user} setUser={setUser} loading={loading} />
+          <MaintenanceGate>
+            <AppContent user={user} setUser={setUser} loading={loading} />
+          </MaintenanceGate>
           <Toaster />
         </BrowserRouter>
       </div>

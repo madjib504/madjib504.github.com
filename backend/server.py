@@ -10,13 +10,16 @@ from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict, EmailStr
 from typing import List, Optional, Dict, Any
 import uuid
+import secrets
 from datetime import datetime, timezone, timedelta
 from passlib.context import CryptContext
 import jwt
 import socketio
 import base64
 import aiofiles
+import asyncio
 from services.storage import init_storage, put_object, get_object
+from services.email_service import send_verification_email
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -279,6 +282,11 @@ async def register(user_data: UserRegister):
     user_dict = user.model_dump()
     user_dict['password'] = hash_password(user_data.password)
     user_dict['created_at'] = user_dict['created_at'].isoformat()
+    # Email verification (magic link)
+    verification_token = secrets.token_urlsafe(32)
+    user_dict['email_verified'] = False
+    user_dict['verification_token'] = verification_token
+    user_dict['verification_token_expires_at'] = (datetime.now(timezone.utc) + timedelta(days=7)).isoformat()
     
     await db.users.insert_one(user_dict)
     
@@ -333,7 +341,15 @@ async def register(user_data: UserRegister):
     }
     await db.admin_notifications.insert_one(notification)
     
-    return {"token": token, "user": user.model_dump()}
+    # Send verification email (non-blocking; failure does NOT block registration)
+    try:
+        asyncio.create_task(send_verification_email(user.email, user.name, verification_token))
+    except Exception as e:
+        logging.error(f"Could not enqueue verification email: {e}")
+    
+    user_response = user.model_dump()
+    user_response['email_verified'] = False
+    return {"token": token, "user": user_response}
 
 @api_router.post("/auth/login")
 async def login(credentials: UserLogin):
@@ -359,6 +375,10 @@ async def login(credentials: UserLogin):
             )
     
     del user['password']
+    # Strip out verification fields before returning
+    user.pop('verification_token', None)
+    user.pop('verification_token_expires_at', None)
+    user['email_verified'] = bool(user.get('email_verified', False))
     if isinstance(user.get('created_at'), str):
         user['created_at'] = datetime.fromisoformat(user['created_at'])
     
@@ -367,7 +387,13 @@ async def login(credentials: UserLogin):
 
 @api_router.get("/auth/me")
 async def get_me(current_user: User = Depends(get_current_user)):
-    return current_user
+    # Fetch email_verified from DB and include in response
+    db_user = await db.users.find_one(
+        {"id": current_user.id}, {"_id": 0, "email_verified": 1}
+    )
+    response = current_user.model_dump()
+    response["email_verified"] = bool(db_user and db_user.get("email_verified"))
+    return response
 
 @api_router.get("/packs/wellness")
 async def get_wellness_packs():
@@ -2150,6 +2176,27 @@ async def mark_all_notifications_read(admin: dict = Depends(verify_admin_token))
     return {"success": True}
 
 
+# ============ MAINTENANCE MODE ============
+
+@api_router.get("/maintenance/status")
+async def get_maintenance_status():
+    """Public endpoint: returns whether the app is in maintenance mode."""
+    setting = await db.settings.find_one({"key": "maintenance"}, {"_id": 0})
+    return {"enabled": bool(setting and setting.get("enabled", False))}
+
+
+@api_router.put("/admin/maintenance")
+async def toggle_maintenance(payload: dict, admin: dict = Depends(verify_admin_token)):
+    """Admin toggle for maintenance mode."""
+    enabled = bool(payload.get("enabled", False))
+    await db.settings.update_one(
+        {"key": "maintenance"},
+        {"$set": {"key": "maintenance", "enabled": enabled, "updated_at": datetime.now(timezone.utc).isoformat()}},
+        upsert=True
+    )
+    return {"success": True, "enabled": enabled}
+
+
 @api_router.get("/partner/profile")
 async def get_partner_profile(current_user: User = Depends(get_current_user)):
     """Get partner profile"""
@@ -2673,6 +2720,60 @@ async def update_location_details(data: dict, current_user: User = Depends(get_c
     await collection.update_one({"user_id": current_user.id}, {"$set": update_data})
     profile = await collection.find_one({"user_id": current_user.id}, {"_id": 0})
     return profile
+
+
+# ============ EMAIL VERIFICATION ============
+
+@api_router.get("/auth/verify-email")
+async def verify_email(token: str):
+    """Verify the user's email by clicking the magic link in the verification email."""
+    user = await db.users.find_one({"verification_token": token}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=400, detail="Lien invalide ou déjà utilisé")
+
+    # Check expiry (7 days)
+    expires_at_str = user.get("verification_token_expires_at")
+    if expires_at_str:
+        try:
+            expires_at = datetime.fromisoformat(expires_at_str)
+            if datetime.now(timezone.utc) > expires_at:
+                raise HTTPException(status_code=400, detail="Le lien a expiré. Demandez un nouveau lien.")
+        except ValueError:
+            pass  # Bad stored date, allow verify
+
+    if user.get("email_verified"):
+        return {"success": True, "already_verified": True, "message": "Email déjà vérifié"}
+
+    await db.users.update_one(
+        {"id": user["id"]},
+        {"$set": {"email_verified": True}, "$unset": {"verification_token": "", "verification_token_expires_at": ""}}
+    )
+    return {"success": True, "already_verified": False, "message": "Email vérifié avec succès"}
+
+
+@api_router.post("/auth/resend-verification")
+async def resend_verification(current_user: User = Depends(get_current_user)):
+    """Resend the verification email to the logged-in user."""
+    user = await db.users.find_one({"id": current_user.id}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="Utilisateur introuvable")
+    if user.get("email_verified"):
+        return {"success": True, "already_verified": True, "message": "Votre email est déjà vérifié"}
+
+    # Generate fresh token
+    new_token = secrets.token_urlsafe(32)
+    await db.users.update_one(
+        {"id": user["id"]},
+        {"$set": {
+            "verification_token": new_token,
+            "verification_token_expires_at": (datetime.now(timezone.utc) + timedelta(days=7)).isoformat()
+        }}
+    )
+    try:
+        asyncio.create_task(send_verification_email(user["email"], user["name"], new_token))
+    except Exception as e:
+        logging.error(f"Could not enqueue verification email: {e}")
+    return {"success": True, "message": "Email de vérification renvoyé"}
 
 
 @app.on_event("startup")
