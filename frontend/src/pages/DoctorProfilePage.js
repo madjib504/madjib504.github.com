@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { MapPin, Star, DollarSign, Calendar, MessageSquare, Stethoscope, Leaf, Clock, Languages, Video, Facebook, Instagram, ExternalLink, Globe } from 'lucide-react';
+import { MapPin, Star, DollarSign, Calendar, MessageSquare, Stethoscope, Leaf, Clock, Languages, Video, Facebook, Instagram, ExternalLink, Globe, Phone } from 'lucide-react';
 
 const DoctorProfilePage = () => {
   const { doctorId } = useParams();
@@ -266,7 +266,7 @@ const DoctorProfilePage = () => {
             </Card>
 
             {/* Coordonnées du cabinet */}
-            {(doctor.country || doctor.city || doctor.neighborhood || doctor.landmark || doctor.website || (doctor.coordinates && doctor.coordinates.latitude)) && (
+            {(doctor.country || doctor.city || doctor.neighborhood || doctor.landmark || doctor.website || doctor.whatsapp_number || (doctor.coordinates && doctor.coordinates.latitude)) && (
               <Card className="shadow-md border-stone-100" data-testid="doctor-location-card">
                 <CardContent className="p-8">
                   <h2 className="text-2xl font-serif font-bold text-stone-900 mb-6 flex items-center gap-2">
@@ -274,6 +274,32 @@ const DoctorProfilePage = () => {
                     Coordonnées du cabinet
                   </h2>
                   <div className="grid md:grid-cols-2 gap-x-8 gap-y-4">
+                    {doctor.whatsapp_number && (
+                      <div className="md:col-span-2">
+                        <p className="text-xs uppercase tracking-wider text-stone-500 mb-1 flex items-center gap-1">
+                          <Phone className="w-3 h-3" /> Téléphone / WhatsApp
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          <a
+                            href={`tel:+${doctor.whatsapp_number.replace(/\D/g, '')}`}
+                            data-testid="doctor-phone-link"
+                            className="inline-flex items-center gap-1 px-4 py-2 rounded-full bg-stone-100 text-stone-900 hover:bg-stone-200 font-medium"
+                          >
+                            <Phone className="w-4 h-4" />
+                            +{doctor.whatsapp_number}
+                          </a>
+                          <a
+                            href={`https://wa.me/${doctor.whatsapp_number.replace(/\D/g, '')}`}
+                            target="_blank" rel="noopener noreferrer"
+                            data-testid="doctor-whatsapp-link"
+                            className="inline-flex items-center gap-1 px-4 py-2 rounded-full bg-green-600 text-white hover:bg-green-700 font-medium"
+                          >
+                            <MessageSquare className="w-4 h-4" />
+                            WhatsApp
+                          </a>
+                        </div>
+                      </div>
+                    )}
                     {doctor.country && (
                       <div>
                         <p className="text-xs uppercase tracking-wider text-stone-500 mb-1">Pays</p>
