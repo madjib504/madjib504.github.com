@@ -72,7 +72,7 @@ const NearbyDoctors = ({ medicalType, specialty, onSelectDoctor }) => {
 
   const fetchNearbyDoctors = async (lat, lon) => {
     try {
-      let url = `${API}/doctors/nearby?latitude=${lat}&longitude=${lon}&radius_km=${radius}`;
+      let url = `${API}/doctors-nearby?latitude=${lat}&longitude=${lon}&radius_km=${radius}`;
       if (medicalType) url += `&medical_type=${medicalType}`;
       if (specialty) url += `&specialty=${encodeURIComponent(specialty)}`;
 

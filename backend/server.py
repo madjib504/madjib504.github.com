@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Depends, status, UploadFile, File, WebSocket, WebSocketDisconnect, Query
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, UploadFile, File, WebSocket, WebSocketDisconnect, Query
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.responses import Response
 from dotenv import load_dotenv
@@ -932,8 +932,8 @@ async def join_room(sid, data):
     await sio.enter_room(sid, room)
     logging.info(f"Client {sid} joined room {room}")
 
-@sio.event
-async def send_message(sid, data):
+@sio.on('send_message')
+async def handle_send_message(sid, data):
     room = data.get('room')
     await sio.emit('receive_message', data, room=room, skip_sid=sid)
 
@@ -1832,7 +1832,7 @@ async def update_doctor_location(
     return {"success": True, "message": "Position mise à jour"}
 
 
-@api_router.get("/doctors/nearby")
+@api_router.get("/doctors-nearby")
 async def get_nearby_doctors(
     latitude: float,
     longitude: float,
@@ -1928,12 +1928,12 @@ async def get_notifications(
 
 
 @api_router.patch("/notifications/{notification_id}/read")
-async def mark_notification_read(
+async def mark_user_notification_read(
     notification_id: str,
     current_user: User = Depends(get_current_user)
 ):
     """
-    Marquer une notification comme lue.
+    Marquer une notification utilisateur comme lue.
     """
     await db.notifications.update_one(
         {"id": notification_id, "user_id": current_user.id},
@@ -1943,9 +1943,9 @@ async def mark_notification_read(
 
 
 @api_router.patch("/notifications/read-all")
-async def mark_all_notifications_read(current_user: User = Depends(get_current_user)):
+async def mark_all_user_notifications_read(current_user: User = Depends(get_current_user)):
     """
-    Marquer toutes les notifications comme lues.
+    Marquer toutes les notifications utilisateur comme lues.
     """
     await db.notifications.update_many(
         {"user_id": current_user.id, "read": False},

@@ -9,7 +9,7 @@ import {
   Users, UserCheck, Stethoscope, Calendar, CreditCard, 
   TrendingUp, Search, Eye, Trash2, CheckCircle, XCircle,
   Lock, LogOut, Download, RefreshCw, ChevronLeft, ChevronRight,
-  Shield, AlertTriangle, Bell, MessageCircle, X, UserPlus
+  Shield, AlertTriangle, AlertCircle, Bell, MessageCircle, X, UserPlus
 } from 'lucide-react';
 
 const API = process.env.REACT_APP_BACKEND_URL + '/api';
@@ -30,6 +30,8 @@ const AdminDashboard = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [maintenanceEnabled, setMaintenanceEnabled] = useState(false);
+  const [maintenanceToggling, setMaintenanceToggling] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
 
   useEffect(() => {
@@ -39,6 +41,7 @@ const AdminDashboard = () => {
   useEffect(() => {
     if (isAuthenticated) {
       fetchData();
+      fetchMaintenanceStatus();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, activeTab, currentPage, userTypeFilter]);
@@ -178,6 +181,29 @@ const AdminDashboard = () => {
       setUnreadCount(0);
     } catch {
       // Silent fail
+    }
+  };
+
+  const fetchMaintenanceStatus = async () => {
+    try {
+      const r = await axios.get(`${API}/maintenance/status`);
+      setMaintenanceEnabled(!!r.data.enabled);
+    } catch {
+      // Silent fail
+    }
+  };
+
+  const toggleMaintenance = async () => {
+    setMaintenanceToggling(true);
+    const newValue = !maintenanceEnabled;
+    try {
+      await axios.put(`${API}/admin/maintenance`, { enabled: newValue }, getAuthHeaders());
+      setMaintenanceEnabled(newValue);
+      toast.success(newValue ? "Mode maintenance activé : l'app est inaccessible aux utilisateurs" : "Mode maintenance désactivé : l'app est de nouveau accessible");
+    } catch {
+      toast.error("Impossible de modifier le mode maintenance");
+    } finally {
+      setMaintenanceToggling(false);
     }
   };
 
@@ -551,6 +577,33 @@ const AdminDashboard = () => {
             {/* Overview Tab */}
             {activeTab === 'overview' && stats && (
               <div className="space-y-6">
+                {/* Maintenance Mode Toggle */}
+                <Card className={`border-2 ${maintenanceEnabled ? 'bg-amber-900/30 border-amber-500' : 'bg-slate-800 border-slate-700'}`}>
+                  <CardContent className="p-6 flex items-center justify-between flex-wrap gap-4">
+                    <div className="flex items-center gap-3">
+                      <AlertCircle className={`w-8 h-8 ${maintenanceEnabled ? 'text-amber-400' : 'text-slate-400'}`} />
+                      <div>
+                        <p className="text-white font-semibold">Mode Maintenance</p>
+                        <p className="text-sm text-slate-400">
+                          {maintenanceEnabled
+                            ? "⚠️ Activé : tous les utilisateurs voient la page de maintenance"
+                            : "Désactivé : l'application est accessible à tous"}
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      onClick={toggleMaintenance}
+                      disabled={maintenanceToggling}
+                      className={maintenanceEnabled
+                        ? "bg-amber-600 hover:bg-amber-700 text-white"
+                        : "bg-slate-700 hover:bg-slate-600 text-white border border-slate-500"}
+                      data-testid="toggle-maintenance-btn"
+                    >
+                      {maintenanceToggling ? '…' : maintenanceEnabled ? 'Désactiver la maintenance' : 'Activer la maintenance'}
+                    </Button>
+                  </CardContent>
+                </Card>
+
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <Card className="bg-slate-800 border-slate-700">
                     <CardContent className="p-6">
