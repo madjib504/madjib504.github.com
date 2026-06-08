@@ -24,6 +24,9 @@ import Advertise from '@/pages/Advertise';
 import WelcomeDoctor from '@/pages/WelcomeDoctor';
 import PartnerDashboard from '@/pages/PartnerDashboard';
 import VerifyEmailPage from '@/pages/VerifyEmailPage';
+import RegisterPatient from '@/pages/RegisterPatient';
+import ClaimFiche from '@/pages/ClaimFiche';
+import RegisterAddStructure from '@/pages/RegisterAddStructure';
 import EmailVerificationBanner from '@/components/EmailVerificationBanner';
 import MaintenancePage from '@/pages/MaintenancePage';
 import { SOSButton } from '@/components/HealthTools';
@@ -48,16 +51,16 @@ const Layout = ({ children, user, setUser }) => {
   );
 };
 
-function AppContent({ user, setUser, loading }) {
-  const ProtectedRoute = ({ children, allowedTypes }) => {
-    if (loading) return <div className="min-h-screen flex items-center justify-center">Chargement...</div>;
-    if (!user) return <Navigate to="/login" />;
-    if (allowedTypes && !allowedTypes.includes(user.user_type)) {
-      return <Navigate to="/" />;
-    }
-    return children;
-  };
+function ProtectedRoute({ user, loading, allowedTypes, children }) {
+  if (loading) return <div className="min-h-screen flex items-center justify-center">Chargement...</div>;
+  if (!user) return <Navigate to="/login" />;
+  if (allowedTypes && !allowedTypes.includes(user.user_type)) {
+    return <Navigate to="/" />;
+  }
+  return children;
+}
 
+function AppContent({ user, setUser, loading }) {
   return (
     <Layout user={user} setUser={setUser}>
       <Routes>
@@ -69,43 +72,43 @@ function AppContent({ user, setUser, loading }) {
         <Route path="/blog" element={<Blog />} />
         <Route path="/payment" element={<MobileMoneyPayment />} />
         <Route path="/booking/:doctorId" element={
-          <ProtectedRoute allowedTypes={['patient']}>
+          <ProtectedRoute user={user} loading={loading} allowedTypes={['patient']}>
             <BookingPage />
           </ProtectedRoute>
         } />
         <Route path="/medical-record" element={
-          <ProtectedRoute allowedTypes={['patient']}>
+          <ProtectedRoute user={user} loading={loading} allowedTypes={['patient']}>
             <MedicalRecord />
           </ProtectedRoute>
         } />
         <Route path="/loyalty" element={
-          <ProtectedRoute>
+          <ProtectedRoute user={user} loading={loading}>
             <Loyalty />
           </ProtectedRoute>
         } />
         <Route path="/doctor/:doctorId" element={<DoctorProfilePage />} />
         <Route path="/patient/dashboard" element={
-          <ProtectedRoute allowedTypes={['patient']}>
+          <ProtectedRoute user={user} loading={loading} allowedTypes={['patient']}>
             <PatientDashboard />
           </ProtectedRoute>
         } />
         <Route path="/doctor/dashboard" element={
-          <ProtectedRoute allowedTypes={['doctor']}>
+          <ProtectedRoute user={user} loading={loading} allowedTypes={['doctor']}>
             <DoctorDashboard />
           </ProtectedRoute>
         } />
         <Route path="/chat" element={
-          <ProtectedRoute>
+          <ProtectedRoute user={user} loading={loading}>
             <Chat />
           </ProtectedRoute>
         } />
         <Route path="/chat/:userId" element={
-          <ProtectedRoute>
+          <ProtectedRoute user={user} loading={loading}>
             <Chat />
           </ProtectedRoute>
         } />
         <Route path="/video-call/:roomId" element={
-          <ProtectedRoute>
+          <ProtectedRoute user={user} loading={loading}>
             <VideoCall />
           </ProtectedRoute>
         } />
@@ -114,6 +117,9 @@ function AppContent({ user, setUser, loading }) {
         <Route path="/welcome-doctor" element={<WelcomeDoctor />} />
         <Route path="/partner/dashboard" element={<PartnerDashboard />} />
         <Route path="/verify-email" element={<VerifyEmailPage />} />
+        <Route path="/register/patient" element={<RegisterPatient />} />
+        <Route path="/register/claim" element={<ClaimFiche />} />
+        <Route path="/register/add-structure" element={<RegisterAddStructure />} />
       </Routes>
     </Layout>
   );

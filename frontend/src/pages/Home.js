@@ -8,7 +8,7 @@ import {
   CreditCard, BookOpen, Award, FileText, Phone, LogOut, User,
   Leaf, Sparkles, Activity, Truck, Store, Clock,
   Megaphone, ChevronLeft, ExternalLink, Building2,
-  Share2, Headphones, Gift, MessageCircle, Zap, FolderOpen, Link2
+  Share2, Headphones, Gift, MessageCircle, Zap, FolderOpen, Link2, Plus
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -167,26 +167,17 @@ const AdvertisingCarousel = () => {
     }
   };
 
-  // Auto-scroll every 5 seconds
-  useEffect(() => {
-    if (ads.length === 0) return;
-    const timer = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % ads.length);
-    }, 5000);
-    return () => clearInterval(timer);
-  }, [ads.length]);
-
-  const goToSlide = (index) => {
+  function goToSlide(index) {
     setCurrentIndex(index);
-  };
-
-  const goToPrevious = () => {
-    setCurrentIndex((prev) => (prev - 1 + ads.length) % ads.length);
-  };
-
-  const goToNext = () => {
-    setCurrentIndex((prev) => (prev + 1) % ads.length);
-  };
+  }
+  function goToPrevious() {
+    const len = ads.length;
+    setCurrentIndex((prev) => (prev - 1 < 0 ? len - 1 : prev - 1));
+  }
+  function goToNext() {
+    const len = ads.length;
+    setCurrentIndex((prev) => (prev + 1 >= len ? 0 : prev + 1));
+  }
 
   if (loading || ads.length === 0) return null;
 
@@ -462,20 +453,55 @@ const HomePage = () => {
                 </Link>
               </>
             ) : (
-              <>
-                <Link to="/register" data-testid="cta-register-btn">
-                  <Button className="bg-white text-blue-900 hover:bg-blue-50 rounded-full px-10 py-7 text-lg font-semibold shadow-2xl hover:shadow-white/20 transition-all w-full sm:w-auto">
-                    <Users className="w-5 h-5 mr-2" />
-                    Créer un Compte
-                  </Button>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5 max-w-5xl mx-auto w-full">
+                {/* 1. Patient */}
+                <Link to="/register/patient" data-testid="cta-patient-btn" className="block">
+                  <div className="h-full p-7 rounded-2xl bg-white text-stone-900 shadow-2xl hover:shadow-white/30 hover:-translate-y-1 transition-all border-2 border-transparent hover:border-blue-300 text-left">
+                    <div className="w-12 h-12 mb-4 rounded-full bg-blue-100 flex items-center justify-center">
+                      <Users className="w-6 h-6 text-blue-900" />
+                    </div>
+                    <h3 className="text-xl font-serif font-bold mb-2">Je cherche un professionnel</h3>
+                    <p className="text-stone-600 text-sm mb-4 leading-relaxed">
+                      Créez votre compte patient pour rechercher un professionnel, prendre rendez-vous et gérer votre santé.
+                    </p>
+                    <span className="inline-flex items-center gap-2 text-blue-900 font-semibold text-sm">
+                      Créer un compte Patient →
+                    </span>
+                  </div>
                 </Link>
-                <Link to="/search?assistant=true" data-testid="cta-assistant-btn">
-                  <Button className="bg-blue-700/50 backdrop-blur-sm text-white border-2 border-white/30 hover:bg-blue-600/50 hover:border-white/50 rounded-full px-10 py-7 text-lg font-semibold transition-all w-full sm:w-auto">
-                    <Heart className="w-5 h-5 mr-2" />
-                    Assistance Santé
-                  </Button>
+
+                {/* 2. Claim */}
+                <Link to="/register/claim" data-testid="cta-claim-btn" className="block">
+                  <div className="h-full p-7 rounded-2xl bg-gradient-to-br from-blue-700 to-blue-900 text-white shadow-2xl hover:shadow-blue-500/40 hover:-translate-y-1 transition-all border-2 border-blue-400/30 text-left">
+                    <div className="w-12 h-12 mb-4 rounded-full bg-white/15 flex items-center justify-center backdrop-blur-sm">
+                      <Stethoscope className="w-6 h-6 text-white" />
+                    </div>
+                    <h3 className="text-xl font-serif font-bold mb-2">Je suis un professionnel</h3>
+                    <p className="text-blue-100/90 text-sm mb-4 leading-relaxed">
+                      Revendiquez votre fiche existante sur keneyakafisa pour gérer votre cabinet, recevoir des rendez-vous et bâtir votre réputation.
+                    </p>
+                    <span className="inline-flex items-center gap-2 text-white font-semibold text-sm">
+                      Revendiquer ma fiche →
+                    </span>
+                  </div>
                 </Link>
-              </>
+
+                {/* 3. Add new structure */}
+                <Link to="/register/add-structure" data-testid="cta-add-structure-btn" className="block">
+                  <div className="h-full p-7 rounded-2xl bg-blue-700/50 backdrop-blur-sm text-white shadow-2xl hover:shadow-white/20 hover:-translate-y-1 transition-all border-2 border-white/30 hover:border-white/50 text-left">
+                    <div className="w-12 h-12 mb-4 rounded-full bg-white/15 flex items-center justify-center">
+                      <Plus className="w-6 h-6 text-white" />
+                    </div>
+                    <h3 className="text-xl font-serif font-bold mb-2">Ma structure n&apos;est pas référencée</h3>
+                    <p className="text-blue-100/90 text-sm mb-4 leading-relaxed">
+                      Votre cabinet, clinique, spa ou centre n&apos;apparaît pas dans nos résultats ? Ajoutez-le et rejoignez la communauté.
+                    </p>
+                    <span className="inline-flex items-center gap-2 text-white font-semibold text-sm">
+                      Ajouter ma structure →
+                    </span>
+                  </div>
+                </Link>
+              </div>
             )}
           </div>
 

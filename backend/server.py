@@ -10,6 +10,7 @@ from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict, EmailStr
 from typing import List, Optional, Dict, Any
 import uuid
+import re
 import secrets
 from datetime import datetime, timezone, timedelta
 from passlib.context import CryptContext
@@ -87,6 +88,7 @@ class User(UserBase):
     medical_type: Optional[str] = None
     specialties: Optional[List[str]] = None
     address: Optional[str] = None
+    partner_role: Optional[str] = None  # owner | manager | doctor | secretary | assistant | coach | therapist
     verified: bool = False
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
@@ -2215,6 +2217,295 @@ async def trigger_seed(admin: dict = Depends(verify_admin_token)):
         "doctor_profiles_in_db": await db.doctor_profiles.count_documents({}),
         "partner_profiles_in_db": await db.partner_profiles.count_documents({}),
     }
+
+
+# ============ PROVIDERS SEARCH (for CLAIM flow) ============
+
+@api_router.get("/providers/search")
+async def search_providers(q: str, limit: int = 20):
+    """Unified search across doctor_profiles + partner_profiles by name.
+    Used by the claim flow on the registration page."""
+    q = q.strip()
+    if len(q) < 2:
+        return []
+    escaped = re.escape(q)
+    pattern = {"$regex": escaped, "$options": "i"}
+
+    doctors = await db.doctor_profiles.find(
+        {"name": pattern},
+        {"_id": 0, "id": 1, "name": 1, "specialties": 1, "city": 1,
+         "neighborhood": 1, "claim_status": 1, "claimed_by_user_id": 1,
+         "medical_type": 1, "imported": 1}
+    ).limit(limit).to_list(limit)
+
+    partners = await db.partner_profiles.find(
+        {"$or": [{"name": pattern}, {"company_name": pattern}]},
+        {"_id": 0, "id": 1, "name": 1, "company_name": 1, "activity_type": 1,
+         "city": 1, "neighborhood": 1, "claim_status": 1, "claimed_by_user_id": 1,
+         "imported": 1}
+    ).limit(limit).to_list(limit)
+
+    results = []
+    for d in doctors:
+        results.append({
+            "id": d.get("id"),
+            "kind": "doctor",
+            "name": d.get("name"),
+            "specialties": d.get("specialties", []),
+            "activity_type": (d.get("medical_type") or "").replace("_", " ").title(),
+            "city": d.get("city"),
+            "neighborhood": d.get("neighborhood"),
+            "claim_status": d.get("claim_status") or ("seeded" if d.get("imported") else None),
+            "imported": bool(d.get("imported")),
+        })
+    for p in partners:
+        results.append({
+            "id": p.get("id"),
+            "kind": "partner",
+            "name": p.get("name") or p.get("company_name"),
+            "activity_type": p.get("activity_type"),
+            "city": p.get("city"),
+            "neighborhood": p.get("neighborhood"),
+            "claim_status": p.get("claim_status") or ("seeded" if p.get("imported") else None),
+            "imported": bool(p.get("imported")),
+        })
+    return results
+
+
+# ============ CLAIMS (revendication d'une fiche existante) ============
+
+@api_router.post("/claims")
+async def create_claim(payload: dict):
+    """Submit a claim request for an existing provider fiche (no auth required).
+    Creates a pending claim that admin must validate.
+    Also creates a user account (locked) so the user can log in once approved."""
+    provider_id = payload.get("provider_id")
+    provider_kind = payload.get("provider_kind")  # 'doctor' | 'partner'
+    full_name = (payload.get("full_name") or "").strip()
+    phone = (payload.get("phone") or "").strip()
+    email = (payload.get("email") or "").strip().lower()
+    function_role = payload.get("function_role") or "Autre"
+    justification = payload.get("justification") or ""
+    password = payload.get("password")
+
+    if not provider_id or provider_kind not in ("doctor", "partner") or not full_name or not phone or not password:
+        raise HTTPException(status_code=400, detail="Champs requis manquants.")
+
+    collection = db.doctor_profiles if provider_kind == "doctor" else db.partner_profiles
+    provider = await collection.find_one({"id": provider_id}, {"_id": 0})
+    if not provider:
+        raise HTTPException(status_code=404, detail="Fiche introuvable.")
+    if (provider.get("claim_status") or "") == "verified":
+        raise HTTPException(status_code=400, detail="Cette fiche est déjà revendiquée.")
+
+    # Generate a unique email if not provided
+    if not email:
+        slug = re.sub(r"[^a-z0-9]+", "-", full_name.lower()).strip("-") or "claim"
+        email = f"claim-{slug}-{secrets.token_hex(3)}@import.keneyakafisa.local"
+
+    # Ensure no user exists with that email
+    if await db.users.find_one({"email": email}, {"_id": 0, "id": 1}):
+        raise HTTPException(status_code=400, detail="Un compte avec cet email existe déjà. Connectez-vous.")
+
+    # Create the (locked-until-approved) user account
+    user_id = str(uuid.uuid4())
+    new_user_doc = {
+        "id": user_id,
+        "email": email,
+        "name": full_name,
+        "user_type": "partner",
+        "partner_role": (function_role or "owner").lower(),
+        "password": hash_password(password),
+        "whatsapp_number": phone,
+        "verified": False,
+        "email_verified": False,
+        "claim_pending": True,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.users.insert_one(new_user_doc)
+
+    claim_doc = {
+        "id": str(uuid.uuid4()),
+        "provider_id": provider_id,
+        "provider_kind": provider_kind,
+        "provider_name": provider.get("name") or provider.get("company_name"),
+        "user_id": user_id,
+        "full_name": full_name,
+        "phone": phone,
+        "email": email,
+        "function_role": function_role,
+        "justification": justification,
+        "status": "pending",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.claims.insert_one(claim_doc)
+
+    # Mark the provider fiche as claim_pending
+    await collection.update_one(
+        {"id": provider_id},
+        {"$set": {"claim_status": "claim_pending"}}
+    )
+
+    # Admin notification
+    await db.admin_notifications.insert_one({
+        "id": str(uuid.uuid4()),
+        "type": "claim_request",
+        "user_type": "partner",
+        "user_id": user_id,
+        "user_name": full_name,
+        "user_email": email,
+        "user_phone": phone,
+        "provider_name": claim_doc["provider_name"],
+        "message": f"{full_name} demande à revendiquer la fiche : {claim_doc['provider_name']}",
+        "read": False,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    })
+
+    return {"success": True, "claim_id": claim_doc["id"], "status": "pending"}
+
+
+@api_router.get("/admin/claims")
+async def list_claims(status: Optional[str] = "pending", admin: dict = Depends(verify_admin_token)):
+    """List all claims with optional status filter."""
+    query = {}
+    if status and status != "all":
+        query["status"] = status
+    claims = await db.claims.find(query, {"_id": 0}).sort("created_at", -1).to_list(200)
+    return claims
+
+
+@api_router.put("/admin/claims/{claim_id}/decide")
+async def decide_claim(claim_id: str, payload: dict, admin: dict = Depends(verify_admin_token)):
+    """Approve or reject a claim. payload = {action: 'approve'|'reject', reason?: str}"""
+    action = payload.get("action")
+    reason = payload.get("reason", "")
+    if action not in ("approve", "reject"):
+        raise HTTPException(status_code=400, detail="action must be 'approve' or 'reject'")
+
+    claim = await db.claims.find_one({"id": claim_id}, {"_id": 0})
+    if not claim:
+        raise HTTPException(status_code=404, detail="Claim introuvable")
+    if claim["status"] != "pending":
+        raise HTTPException(status_code=400, detail=f"Claim already {claim['status']}")
+
+    collection = db.doctor_profiles if claim["provider_kind"] == "doctor" else db.partner_profiles
+
+    if action == "approve":
+        new_claim_status = "verified"
+        await db.users.update_one(
+            {"id": claim["user_id"]},
+            {"$set": {"verified": True, "claim_pending": False, "email_verified": True}}
+        )
+        await collection.update_one(
+            {"id": claim["provider_id"]},
+            {"$set": {"claim_status": "verified", "claimed_by_user_id": claim["user_id"], "is_verified": True}}
+        )
+        await db.claims.update_one(
+            {"id": claim_id},
+            {"$set": {"status": "approved", "decided_at": datetime.now(timezone.utc).isoformat(), "decision_reason": reason}}
+        )
+    else:
+        new_claim_status = "rejected"
+        await db.users.update_one(
+            {"id": claim["user_id"]},
+            {"$set": {"claim_pending": False, "claim_rejected": True}}
+        )
+        await collection.update_one(
+            {"id": claim["provider_id"]},
+            {"$set": {"claim_status": "seeded"}}
+        )
+        await db.claims.update_one(
+            {"id": claim_id},
+            {"$set": {"status": "rejected", "decided_at": datetime.now(timezone.utc).isoformat(), "decision_reason": reason}}
+        )
+
+    return {"success": True, "status": new_claim_status}
+
+
+# ============ ADD A NEW STRUCTURE (self-add) ============
+
+@api_router.post("/structures/add")
+async def add_structure(payload: dict):
+    """Self-add a new structure (no existing fiche). Creates user + partner_profile."""
+    structure_name = (payload.get("structure_name") or "").strip()
+    phone = (payload.get("phone") or "").strip()
+    full_name = (payload.get("full_name") or "").strip()
+    password = payload.get("password")
+
+    if not structure_name or not phone or not full_name or not password:
+        raise HTTPException(status_code=400, detail="Champs requis manquants.")
+
+    raw_email = (payload.get("email") or "").strip().lower()
+    if raw_email:
+        email = raw_email
+    else:
+        slug = re.sub(r"[^a-z0-9]+", "-", structure_name.lower()).strip("-") or "structure"
+        email = f"{slug}-{secrets.token_hex(3)}@self.keneyakafisa.local"
+
+    if await db.users.find_one({"email": email}, {"_id": 0, "id": 1}):
+        raise HTTPException(status_code=400, detail="Un compte avec cet email existe déjà.")
+
+    user_id = str(uuid.uuid4())
+    user_doc = {
+        "id": user_id,
+        "email": email,
+        "name": full_name,
+        "user_type": "partner",
+        "partner_role": (payload.get("function_role") or "owner").lower(),
+        "password": hash_password(password),
+        "whatsapp_number": payload.get("whatsapp_number") or phone,
+        "verified": True,  # self-added structures get auto-verified user
+        "email_verified": bool(raw_email),
+        "company_name": structure_name,
+        "activity_type": payload.get("categorie") or "autre",
+        "address": payload.get("address") or "",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.users.insert_one(user_doc)
+
+    profile_doc = {
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "name": structure_name,
+        "company_name": structure_name,
+        "email": email,
+        "whatsapp_number": payload.get("whatsapp_number") or phone,
+        "activity_type": payload.get("categorie") or "autre",
+        "categorie": payload.get("categorie") or "",
+        "sous_categorie": payload.get("sous_categorie") or "",
+        "address": payload.get("address") or "",
+        "neighborhood": payload.get("commune") or "",
+        "city": payload.get("ville") or "",
+        "country": "Côte d'Ivoire",
+        "description": payload.get("description") or "",
+        "claim_status": "verified",
+        "claimed_by_user_id": user_id,
+        "is_verified": True,
+        "source": "self_added",
+        "status": "active",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.partner_profiles.insert_one(profile_doc)
+
+    # Admin notification
+    await db.admin_notifications.insert_one({
+        "id": str(uuid.uuid4()),
+        "type": "new_structure",
+        "user_type": "partner",
+        "user_id": user_id,
+        "user_name": full_name,
+        "user_email": email,
+        "user_phone": phone,
+        "provider_name": structure_name,
+        "message": f"Nouvelle structure ajoutée : {structure_name} par {full_name}",
+        "read": False,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    })
+
+    # Log the user in immediately
+    token = create_access_token({"sub": user_id})
+    user_response = {k: v for k, v in user_doc.items() if k not in ("password", "_id")}
+    return {"success": True, "token": token, "user": user_response}
 
 
 @api_router.get("/partner/profile")
