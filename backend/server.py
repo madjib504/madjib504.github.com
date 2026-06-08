@@ -1248,36 +1248,149 @@ async def get_emergency_contacts():
 # Medical Assistant (symptom checker)
 @api_router.post("/assistant/suggest")
 async def suggest_specialty(data: Dict[str, Any]):
-    symptoms = data.get('symptoms', '').lower()
-    
-    suggestions = []
-    
+    """Orient symptômes/besoins → spécialités + niveau urgence + médecins suggérés."""
+    symptoms_raw = (data.get('symptoms') or '').strip()
+    symptoms = symptoms_raw.lower()
+
+    # ===== 1) Detect URGENCY first (priority over specialty) =====
+    urgent_keywords = [
+        "urgent", "urgence",
+        "saigne", "sang", "hémorragie", "hemorragie",
+        "inconscient", "évanoui", "evanoui", "ne respire", "respire plus",
+        "convulsion", "crise cardiaque", "infarctus", "avc",
+        "douleur poitrine", "essoufflement sévère", "essoufflement severe",
+        "brûlure", "brulure grave", "empoisonn", "intoxication",
+        "accident", "trauma",
+    ]
+    moderate_keywords = [
+        "douleur intense", "fièvre élevée", "fievre elevee",
+        "vomissement", "déshydrat", "deshydrat",
+    ]
+    if any(k in symptoms for k in urgent_keywords):
+        urgency_level = "urgent"
+        urgency_label = "⚠️ Potentiellement urgent — consultation rapide ou urgences recommandées"
+    elif any(k in symptoms for k in moderate_keywords):
+        urgency_level = "moderate"
+        urgency_label = "Consultation rapide recommandée"
+    else:
+        urgency_level = "low"
+        urgency_label = "Consultation à planifier"
+
+    # ===== 2) Map symptoms to specialties (multi-match allowed) =====
+    # Maps keyword patterns → list of (specialty, medical_type, weight)
     symptom_mapping = {
-        "coeur|palpitation|douleur poitrine|essoufflement": {"specialty": "Cardiologie", "medical_type": "moderne"},
-        "peau|bouton|acné|eczéma|psoriasis|démangeaison": {"specialty": "Dermatologie", "medical_type": "moderne"},
-        "yeux|vision|vue|lunettes|cataracte": {"specialty": "Ophtalmologie", "medical_type": "moderne"},
-        "femme|grossesse|règles|contraception|ménopause": {"specialty": "Gynécologie", "medical_type": "moderne"},
-        "enfant|bébé|vaccination|croissance": {"specialty": "Pédiatrie", "medical_type": "moderne"},
-        "dos|articulation|fracture|entorse|genou": {"specialty": "Orthopédie", "medical_type": "moderne"},
-        "tête|migraine|cerveau|épilepsie|parkinson": {"specialty": "Neurologie", "medical_type": "moderne"},
-        "stress|anxiété|dépression|insomnie|panique": {"specialty": "Psychiatrie", "medical_type": "moderne"},
-        "estomac|ventre|diarrhée|constipation|digestion": {"specialty": "Gastro-entérologie", "medical_type": "moderne"},
-        "poumon|toux|asthme|bronchite|respiration": {"specialty": "Pneumologie", "medical_type": "moderne"},
-        "diabète|thyroïde|hormone|poids": {"specialty": "Endocrinologie", "medical_type": "moderne"},
-        "plantes|naturel|traditionnel": {"specialty": "Phytothérapeute Africain", "medical_type": "traditionnel_africain"},
-        "massage|détente|relaxation": {"specialty": "Masseur Bien-être", "medical_type": "bien_etre"},
-        "nutrition|régime|alimentation": {"specialty": "Nutritionniste", "medical_type": "bien_etre"},
-        "yoga|meditation|stress": {"specialty": "Sophrologue", "medical_type": "bien_etre"},
+        # — MÉDICAL —
+        "coeur|cœur|palpitation|douleur poitrine|essoufflement|infarctus|hypertension|tension|crise cardiaque":
+            [("Cardiologie", "moderne", 3)],
+        "peau|bouton|acné|eczéma|psoriasis|démangeaison|urticaire|allergie cutanée":
+            [("Dermatologie", "moderne", 3)],
+        "yeux|vision|vue|lunettes|cataracte|conjonctivite|glaucome":
+            [("Ophtalmologie", "moderne", 3)],
+        "femme|grossesse|règles|règle|contraception|ménopause|gynéco|sein|seins":
+            [("Gynécologie", "moderne", 3)],
+        "enfant|bébé|bebe|nourrisson|vaccination|croissance|pédiatre|pediatre":
+            [("Pédiatrie", "moderne", 3)],
+        "dos|articulation|fracture|entorse|genou|cheville|cervical|lombaire|épaule":
+            [("Orthopédie", "moderne", 2), ("Kinésithérapie", "bien_etre", 2)],
+        "tête|migraine|maux de tête|cerveau|épilepsie|parkinson|alzheimer|vertige":
+            [("Neurologie", "moderne", 3)],
+        "stress|anxiété|anxiete|dépression|depression|insomnie|panique|burn-out|burnout|trouble du sommeil":
+            [("Psychiatrie", "moderne", 2), ("Psychologie", "moderne", 2)],
+        "estomac|ventre|diarrhée|diarrhee|constipation|digestion|nausée|nausee|gastro|ulcère":
+            [("Gastro-entérologie", "moderne", 3)],
+        "poumon|toux|asthme|bronchite|respiration|essoufflement|pneumonie":
+            [("Pneumologie", "moderne", 3)],
+        "diabète|diabete|thyroïde|thyroide|hormone|poids|obésité|obesite":
+            [("Endocrinologie", "moderne", 2), ("Nutrition", "bien_etre", 2)],
+        "dent|dents|dentaire|carie|gencive|orthodonti|implant dentaire":
+            [("Dentisterie", "moderne", 3)],
+        "oreille|nez|gorge|sinusite|otite|angine|amygdale":
+            [("ORL", "moderne", 3)],
+        "urine|rein|prostate|vessie|incontinence":
+            [("Urologie", "moderne", 3)],
+        "fièvre|fievre|grippe|rhume|fatigue|maladie générale|symptôme général":
+            [("Médecine Générale", "moderne", 2)],
+        # — BIEN-ÊTRE —
+        "plante|plantes|naturel|traditionnel|tradi|herbe":
+            [("Phytothérapie", "traditionnel_africain", 2), ("Naturopathie", "bien_etre", 2)],
+        "massage|détente|relaxation|tension musculaire":
+            [("Massage thérapeutique", "bien_etre", 2)],
+        "nutrition|régime|alimentation|perte de poids|prise de poids":
+            [("Nutrition", "bien_etre", 3)],
+        "yoga|méditation|meditation|pleine conscience|mindfulness":
+            [("Yoga", "bien_etre", 2)],
+        "kiné|kine|kinésithérapie|kinesitherapie|rééducation|reeducation|paralysie":
+            [("Kinésithérapie", "bien_etre", 3)],
+        "coach|sport|musculation|condition physique|remise en forme":
+            [("Coaching sportif", "bien_etre", 3)],
+        # — SOCIAL / COMMUNAUTAIRE —
+        "écouter|ecouter|solitude|détresse|detresse|harcèlement|harcelement|violence":
+            [("Centre d'écoute", "social_humanitaire", 3), ("Psychologie", "moderne", 2)],
+        "humanitaire|aide alimentaire|secours|catastrophe":
+            [("Humanitaire / ONG", "social_humanitaire", 3)],
     }
-    
-    for pattern, spec in symptom_mapping.items():
-        if any(keyword in symptoms for keyword in pattern.split('|')):
-            suggestions.append(spec)
-    
+
+    seen = {}
+    for pattern, specs in symptom_mapping.items():
+        for keyword in pattern.split('|'):
+            if keyword and keyword in symptoms:
+                for spec_name, med_type, weight in specs:
+                    key = spec_name.lower()
+                    if key not in seen or seen[key]["weight"] < weight:
+                        seen[key] = {
+                            "specialty": spec_name,
+                            "medical_type": med_type,
+                            "weight": weight,
+                        }
+                break
+
+    suggestions = list(seen.values())
+    # If urgent + nothing matched → propose général + cardio as safety net
+    if urgency_level == "urgent" and not suggestions:
+        suggestions = [
+            {"specialty": "Médecine Générale", "medical_type": "moderne", "weight": 3},
+            {"specialty": "Cardiologie", "medical_type": "moderne", "weight": 2},
+        ]
     if not suggestions:
-        suggestions.append({"specialty": "Médecine Générale", "medical_type": "moderne"})
-    
-    return {"suggestions": suggestions, "message": "Voici les spécialités recommandées"}
+        suggestions = [{"specialty": "Médecine Générale", "medical_type": "moderne", "weight": 1}]
+    # Sort by weight desc, limit to 5
+    suggestions.sort(key=lambda s: -s["weight"])
+    suggestions = [{"specialty": s["specialty"], "medical_type": s["medical_type"]} for s in suggestions[:5]]
+
+    # ===== 3) Find matching providers in DB =====
+    spec_names = [s["specialty"] for s in suggestions]
+    provider_query_or = [{"specialties": {"$regex": name, "$options": "i"}} for name in spec_names]
+    provider_query_or += [{"bio": {"$regex": name, "$options": "i"}} for name in spec_names]
+    # Cabinet/Polyclinique etc. souvent indexés via specialties[]
+    providers_cursor = db.doctor_profiles.find(
+        {"$or": provider_query_or},
+        {"_id": 0, "id": 1, "name": 1, "specialties": 1, "medical_type": 1,
+         "city": 1, "neighborhood": 1, "country": 1, "whatsapp_number": 1,
+         "profile_image": 1, "rating": 1, "total_reviews": 1, "claim_status": 1,
+         "coordinates": 1, "imported": 1}
+    ).limit(12)
+    providers = await providers_cursor.to_list(12)
+
+    # Sort: verified first, then rating desc
+    def _rank(p):
+        verified_bonus = 0 if (p.get("claim_status") == "verified") else 1
+        rating = -(p.get("rating") or 0)
+        return (verified_bonus, rating)
+    providers.sort(key=_rank)
+
+    return {
+        "suggestions": suggestions,
+        "urgency_level": urgency_level,  # "urgent" | "moderate" | "low"
+        "urgency_label": urgency_label,
+        "providers": providers[:6],
+        "legal_notice": (
+            "Cet outil est un assistant d'orientation et ne remplace pas une "
+            "consultation médicale. En cas de symptômes graves, contactez les "
+            "urgences (185 en Côte d'Ivoire) ou consultez un professionnel de santé."
+        ),
+        "emergency_number": "185",
+        "message": "Voici les spécialités recommandées",
+    }
 
 # Review Reply
 @api_router.post("/reviews/{review_id}/reply")

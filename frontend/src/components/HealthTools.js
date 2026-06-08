@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { API } from '@/App';
 import { Button } from '@/components/ui/button';
@@ -162,7 +163,7 @@ export const MedicalAssistant = ({ open: controlledOpen, onOpenChange: controlle
   const open = isControlled ? controlledOpen : internalOpen;
   const setOpen = isControlled ? controlledOnOpenChange : setInternalOpen;
   const [symptoms, setSymptoms] = useState('');
-  const [suggestions, setSuggestions] = useState([]);
+  const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const handleSuggest = async () => {
@@ -170,7 +171,7 @@ export const MedicalAssistant = ({ open: controlledOpen, onOpenChange: controlle
     setLoading(true);
     try {
       const response = await axios.post(`${API}/assistant/suggest`, { symptoms });
-      setSuggestions(response.data.suggestions);
+      setResult(response.data);
     } catch {
       // Suggestion failed
     } finally {
@@ -178,31 +179,37 @@ export const MedicalAssistant = ({ open: controlledOpen, onOpenChange: controlle
     }
   };
 
+  const urgencyStyle = result?.urgency_level === 'urgent'
+    ? 'bg-red-50 border-red-300 text-red-900'
+    : result?.urgency_level === 'moderate'
+      ? 'bg-amber-50 border-amber-300 text-amber-900'
+      : 'bg-blue-50 border-blue-200 text-blue-900';
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       {trigger ? (
         <DialogTrigger asChild>{trigger}</DialogTrigger>
       ) : null}
-      <DialogContent className="bg-white max-w-2xl">
+      <DialogContent className="bg-white max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl font-serif text-blue-900">
-            Assistant d'Orientation Médicale
+            Assistant d&apos;Orientation Médicale
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div>
             <label className="text-sm font-medium text-stone-700 mb-2 block">
-              Décrivez vos symptômes :
+              Décrivez vos symptômes ou besoins :
             </label>
             <Input
-              placeholder="Ex: J'ai mal à la tête et de la fièvre..."
+              placeholder="Ex: J'ai mal à la tête et de la fièvre, mal aux dents, douleur poitrine…"
               value={symptoms}
               onChange={(e) => setSymptoms(e.target.value)}
               className="h-24"
               data-testid="symptoms-input"
             />
           </div>
-          <Button 
+          <Button
             onClick={handleSuggest}
             disabled={loading || !symptoms.trim()}
             className="w-full bg-blue-900 hover:bg-blue-800 rounded-full"
@@ -211,20 +218,95 @@ export const MedicalAssistant = ({ open: controlledOpen, onOpenChange: controlle
             {loading ? 'Analyse...' : 'Obtenir des suggestions'}
           </Button>
 
-          {suggestions.length > 0 && (
-            <div className="mt-6">
-              <h3 className="font-bold text-lg mb-4">Spécialités recommandées :</h3>
-              <div className="space-y-3">
-                {suggestions.map((sug) => (
-                  <div key={sug.specialty} className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                    <p className="font-bold text-blue-900">{sug.specialty}</p>
-                    <p className="text-sm text-stone-600 capitalize">{sug.medical_type.replace('_', ' ')}</p>
-                  </div>
-                ))}
+          {result && (
+            <div className="mt-6 space-y-5" data-testid="assistant-result">
+
+              {/* Urgency banner */}
+              <div className={`p-4 rounded-xl border ${urgencyStyle}`} data-testid="assistant-urgency">
+                <p className="font-semibold text-sm">{result.urgency_label}</p>
+                {result.urgency_level === 'urgent' && (
+                  <a
+                    href={`tel:${result.emergency_number || '185'}`}
+                    className="inline-block mt-2 px-4 py-2 bg-red-600 text-white rounded-full font-semibold text-sm hover:bg-red-700"
+                    data-testid="assistant-call-emergency"
+                  >
+                    📞 Appeler les urgences ({result.emergency_number || '185'})
+                  </a>
+                )}
               </div>
-              <p className="text-xs text-stone-500 mt-4">
-                ⚠️ Cet outil est une aide à l'orientation. Consultez toujours un professionnel pour un diagnostic précis.
-              </p>
+
+              {/* Specialties */}
+              {result.suggestions && result.suggestions.length > 0 && (
+                <div>
+                  <h3 className="font-bold text-lg mb-3 text-stone-900">Spécialités recommandées</h3>
+                  <div className="flex flex-wrap gap-2" data-testid="assistant-specialties">
+                    {result.suggestions.map((sug) => (
+                      <span key={sug.specialty}
+                        className="inline-block px-3 py-1.5 rounded-full bg-blue-100 text-blue-900 text-sm font-medium">
+                        {sug.specialty}
+                        <span className="text-xs text-blue-700/70 ml-1">
+                          ({(sug.medical_type || '').replace(/_/g, ' ')})
+                        </span>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Providers */}
+              {result.providers && result.providers.length > 0 && (
+                <div>
+                  <h3 className="font-bold text-lg mb-3 text-stone-900">
+                    Professionnels suggérés ({result.providers.length})
+                  </h3>
+                  <div className="space-y-2" data-testid="assistant-providers">
+                    {result.providers.map((p) => (
+                      <Link
+                        key={p.id}
+                        to={`/doctor/${p.id}`}
+                        onClick={() => setOpen(false)}
+                        className="block p-3 bg-white border border-stone-200 hover:border-blue-400 hover:shadow-md rounded-xl transition-all"
+                        data-testid={`assistant-provider-${p.id}`}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-stone-900 truncate">{p.name}</p>
+                            {p.specialties && p.specialties.length > 0 && (
+                              <p className="text-xs text-stone-500 mt-0.5 truncate">
+                                {p.specialties.slice(0, 3).join(' • ')}
+                              </p>
+                            )}
+                            {(p.city || p.neighborhood) && (
+                              <p className="text-xs text-stone-500 mt-0.5">
+                                📍 {[p.neighborhood, p.city].filter(Boolean).join(', ')}
+                              </p>
+                            )}
+                          </div>
+                          {p.claim_status === 'verified' && (
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-800 flex-shrink-0">
+                              ✓ Vérifié
+                            </span>
+                          )}
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {result.providers && result.providers.length === 0 && (
+                <div className="p-4 bg-stone-50 border border-stone-200 rounded-xl text-sm text-stone-600">
+                  Aucun professionnel ne correspond exactement à ces symptômes dans notre base pour le moment.
+                  Essayez la recherche par catégorie ou contactez nos urgences si c'est grave.
+                </div>
+              )}
+
+              {/* Legal notice */}
+              <div className="p-3 bg-amber-50/50 border border-amber-200 rounded-xl">
+                <p className="text-xs text-amber-900 leading-relaxed">
+                  ⚠️ {result.legal_notice}
+                </p>
+              </div>
             </div>
           )}
         </div>
