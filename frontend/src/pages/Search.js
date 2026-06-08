@@ -43,13 +43,35 @@ const Search = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchSpecialties]);
 
+  const [orientation, setOrientation] = useState(null);
+  const [searchMode, setSearchMode] = useState('directory');
+
   const searchDoctors = async () => {
     setLoading(true);
     try {
+      const kw = (filters.keyword || '').trim();
+      const hasOtherFilter =
+        (filters.specialty && filters.specialty !== 'all') ||
+        (filters.medical_type && filters.medical_type !== 'all' && filters.medical_type !== 'autre') ||
+        filters.location ||
+        (filters.min_rating && filters.min_rating !== 'all') ||
+        (filters.home_service && filters.home_service !== 'all') ||
+        (filters.structure_type && filters.structure_type !== 'all') ||
+        filters.custom_search;
+
+      // Use smart-search only when the user has typed a keyword and no other filter
+      if (kw && !hasOtherFilter) {
+        const r = await axios.get(`${API}/search/smart`, { params: { q: kw, limit: 60 } });
+        setDoctors(r.data.results || []);
+        setOrientation(r.data.orientation || null);
+        setSearchMode(r.data.mode || 'directory');
+        return;
+      }
+
+      // Otherwise use the classical /doctors/search with filters
       const params = new URLSearchParams();
       if (filters.specialty && filters.specialty !== 'all') params.append('specialty', filters.specialty);
-      
-      // Si "Autre" est sélectionné, utiliser custom_search comme mot-clé de recherche
+
       if (filters.medical_type === 'autre') {
         if (filters.custom_search) {
           params.append('custom_search', filters.custom_search);
@@ -57,7 +79,7 @@ const Search = () => {
       } else if (filters.medical_type && filters.medical_type !== 'all') {
         params.append('medical_type', filters.medical_type);
       }
-      
+
       if (filters.location) params.append('location', filters.location);
       if (filters.min_rating && filters.min_rating !== 'all') params.append('min_rating', filters.min_rating);
       if (filters.home_service && filters.home_service !== 'all') params.append('home_service', filters.home_service);
@@ -66,8 +88,11 @@ const Search = () => {
 
       const response = await axios.get(`${API}/doctors/search?${params.toString()}`);
       setDoctors(response.data);
+      setOrientation(null);
+      setSearchMode('directory');
     } catch {
-      // Search results empty on error
+      setOrientation(null);
+      setSearchMode('directory');
     } finally {
       setLoading(false);
     }
@@ -160,7 +185,7 @@ const Search = () => {
                   <div className="flex gap-2">
                     <Input
                       type="text"
-                      placeholder="Rechercher par symptôme, spécialité, nom..."
+                      placeholder="Symptôme, spécialité, nom du cabinet…"
                       value={filters.keyword}
                       onChange={(e) => handleFilterChange('keyword', e.target.value)}
                       onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
@@ -176,6 +201,9 @@ const Search = () => {
                       <span className="hidden md:inline">Rechercher</span>
                     </Button>
                   </div>
+                  <p className="text-xs text-stone-500 mt-2">
+                    💡 Tapez un nom (« PISAM »), une spécialité (« cardiologue ») ou un symptôme (« mal de dents ») — l&apos;IA vous oriente automatiquement.
+                  </p>
                 </div>
 
                 {/* Filters Grid */}
@@ -246,6 +274,58 @@ const Search = () => {
               </CardContent>
             </Card>
 
+            {/* Orientation banner (when symptom detected) */}
+            {orientation && (
+              <Card className={`mb-6 border ${
+                orientation.urgency_level === 'urgent' ? 'bg-red-50 border-red-300' :
+                orientation.urgency_level === 'moderate' ? 'bg-amber-50 border-amber-300' :
+                'bg-blue-50 border-blue-200'
+              }`} data-testid="orientation-banner">
+                <CardContent className="p-5 space-y-3">
+                  <div className="flex items-start gap-3">
+                    <span className="text-2xl">
+                      {orientation.urgency_level === 'urgent' ? '⚠️' : '🩺'}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p className={`font-semibold text-sm ${
+                        orientation.urgency_level === 'urgent' ? 'text-red-900' :
+                        orientation.urgency_level === 'moderate' ? 'text-amber-900' :
+                        'text-blue-900'
+                      }`}>
+                        {searchMode === 'orientation' ? "Assistant d'orientation" : "Suggestion d'orientation"}
+                      </p>
+                      <p className="text-sm text-stone-700 mt-1">{orientation.urgency_label}</p>
+                    </div>
+                    {orientation.urgency_level === 'urgent' && orientation.emergency_number && (
+                      <a
+                        href={`tel:${orientation.emergency_number}`}
+                        className="px-3 py-1.5 bg-red-600 text-white rounded-full text-xs font-semibold hover:bg-red-700 whitespace-nowrap"
+                        data-testid="orientation-call-emergency"
+                      >
+                        📞 {orientation.emergency_number}
+                      </a>
+                    )}
+                  </div>
+                  {orientation.suggestions && orientation.suggestions.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      <span className="text-xs text-stone-600 font-medium self-center">Spécialités recommandées :</span>
+                      {orientation.suggestions.map((s) => (
+                        <span key={s.specialty}
+                          className="inline-block px-3 py-1 rounded-full bg-white border border-stone-200 text-stone-800 text-xs font-medium">
+                          {s.specialty}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  {orientation.legal_notice && (
+                    <p className="text-xs text-stone-500 italic leading-relaxed pt-2 border-t border-stone-200/50">
+                      ⚠️ {orientation.legal_notice}
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
             {/* Results */}
             {loading ? (
               <div className="text-center py-12">
@@ -256,7 +336,11 @@ const Search = () => {
               <div className="text-center py-12" data-testid="no-results">
                 <SearchIcon className="w-12 h-12 text-stone-300 mx-auto mb-3" />
                 <h3 className="text-lg font-semibold text-stone-900 mb-1">Aucun résultat</h3>
-                <p className="text-stone-500 text-sm">Essayez de modifier vos critères</p>
+                <p className="text-stone-500 text-sm">
+                  {orientation
+                    ? "Aucun professionnel correspondant à cette spécialité n'est encore référencé. Essayez un autre terme."
+                    : "Essayez de modifier vos critères ou de décrire vos symptômes."}
+                </p>
               </div>
             ) : (
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4" data-testid="doctors-grid">

@@ -1246,142 +1246,169 @@ async def get_emergency_contacts():
     return contacts
 
 # Medical Assistant (symptom checker)
-@api_router.post("/assistant/suggest")
-async def suggest_specialty(data: Dict[str, Any]):
-    """Orient symptômes/besoins → spécialités + niveau urgence + médecins suggérés."""
-    symptoms_raw = (data.get('symptoms') or '').strip()
-    symptoms = symptoms_raw.lower()
+# ============ SYMPTOM ORIENTATION (shared helper) ============
 
-    # ===== 1) Detect URGENCY first (priority over specialty) =====
-    urgent_keywords = [
-        "urgent", "urgence",
-        "saigne", "sang", "hémorragie", "hemorragie",
-        "inconscient", "évanoui", "evanoui", "ne respire", "respire plus",
-        "convulsion", "crise cardiaque", "infarctus", "avc",
-        "douleur poitrine", "essoufflement sévère", "essoufflement severe",
-        "brûlure", "brulure grave", "empoisonn", "intoxication",
-        "accident", "trauma",
-    ]
-    moderate_keywords = [
-        "douleur intense", "fièvre élevée", "fievre elevee",
-        "vomissement", "déshydrat", "deshydrat",
-    ]
-    if any(k in symptoms for k in urgent_keywords):
+URGENT_KEYWORDS = [
+    "urgent", "urgence",
+    "saigne", "sang", "hémorragie", "hemorragie",
+    "inconscient", "évanoui", "evanoui", "ne respire", "respire plus",
+    "convulsion", "crise cardiaque", "infarctus", "avc",
+    "douleur poitrine", "essoufflement sévère", "essoufflement severe",
+    "brûlure", "brulure grave", "empoisonn", "intoxication",
+    "accident", "trauma",
+]
+MODERATE_KEYWORDS = [
+    "douleur intense", "fièvre élevée", "fievre elevee",
+    "vomissement", "déshydrat", "deshydrat",
+]
+SYMPTOM_MAPPING = {
+    "coeur|cœur|palpitation|douleur poitrine|essoufflement|infarctus|hypertension|tension|crise cardiaque":
+        [("Cardiologie", "moderne", 3)],
+    "peau|bouton|acné|eczéma|psoriasis|démangeaison|urticaire|allergie cutanée":
+        [("Dermatologie", "moderne", 3)],
+    "yeux|vision|vue|lunettes|cataracte|conjonctivite|glaucome":
+        [("Ophtalmologie", "moderne", 3)],
+    "femme|grossesse|règles|règle|contraception|ménopause|gynéco|sein|seins":
+        [("Gynécologie", "moderne", 3)],
+    "enfant|bébé|bebe|nourrisson|vaccination|croissance|pédiatre|pediatre":
+        [("Pédiatrie", "moderne", 3)],
+    "dos|articulation|fracture|entorse|genou|cheville|cervical|lombaire|épaule":
+        [("Orthopédie", "moderne", 2), ("Kinésithérapie", "bien_etre", 2)],
+    "tête|migraine|maux de tête|cerveau|épilepsie|parkinson|alzheimer|vertige|mal de tête":
+        [("Neurologie", "moderne", 3)],
+    "stress|anxiété|anxiete|dépression|depression|insomnie|panique|burn-out|burnout|trouble du sommeil":
+        [("Psychiatrie", "moderne", 2), ("Psychologie", "moderne", 2)],
+    "estomac|ventre|mal au ventre|diarrhée|diarrhee|constipation|digestion|nausée|nausee|gastro|ulcère":
+        [("Gastro-entérologie", "moderne", 3)],
+    "poumon|toux|asthme|bronchite|respiration|essoufflement|pneumonie":
+        [("Pneumologie", "moderne", 3)],
+    "diabète|diabete|thyroïde|thyroide|hormone|poids|obésité|obesite":
+        [("Endocrinologie", "moderne", 2), ("Nutrition", "bien_etre", 2)],
+    "dent|dents|dentaire|carie|gencive|orthodonti|implant dentaire|mal de dent|mal aux dents":
+        [("Dentisterie", "moderne", 3)],
+    "oreille|nez|gorge|sinusite|otite|angine|amygdale":
+        [("ORL", "moderne", 3)],
+    "urine|rein|prostate|vessie|incontinence":
+        [("Urologie", "moderne", 3)],
+    "fièvre|fievre|grippe|rhume|fatigue|maladie générale|symptôme général":
+        [("Médecine Générale", "moderne", 2)],
+    "plante|plantes|naturel|traditionnel|tradi|herbe":
+        [("Phytothérapie", "traditionnel_africain", 2), ("Naturopathie", "bien_etre", 2)],
+    "massage|détente|relaxation|tension musculaire":
+        [("Massage thérapeutique", "bien_etre", 2)],
+    "nutrition|régime|alimentation|perte de poids|prise de poids":
+        [("Nutrition", "bien_etre", 3)],
+    "yoga|méditation|meditation|pleine conscience|mindfulness":
+        [("Yoga", "bien_etre", 2)],
+    "kiné|kine|kinésithérapie|kinesitherapie|rééducation|reeducation|paralysie":
+        [("Kinésithérapie", "bien_etre", 3)],
+    "coach|sport|musculation|condition physique|remise en forme":
+        [("Coaching sportif", "bien_etre", 3)],
+    "écouter|ecouter|solitude|détresse|detresse|harcèlement|harcelement|violence":
+        [("Centre d'écoute", "social_humanitaire", 3), ("Psychologie", "moderne", 2)],
+    "humanitaire|aide alimentaire|secours|catastrophe":
+        [("Humanitaire / ONG", "social_humanitaire", 3)],
+}
+
+SYMPTOM_TRIGGER_WORDS = [
+    "mal", "douleur", "souffre", "j'ai", "jai", "ai mal",
+    "symptome", "symptôme", "symptomes", "symptômes",
+    "fièvre", "fievre", "fatigue", "toux", "nausée", "nausee",
+    "vomi", "diarrhée", "diarrhee", "saigne", "brûle", "brule",
+    "stress", "anxiété", "anxiete", "dépression", "depression",
+    "insomnie", "essoufflement", "vertige", "démangeai",
+]
+
+
+def detect_symptom_orientation(symptoms_raw: str) -> dict:
+    """Détecte si le texte ressemble à un symptôme et renvoie l'orientation complète.
+    Renvoie dict avec: is_symptom, urgency_level, urgency_label, suggestions[]."""
+    symptoms = (symptoms_raw or "").lower().strip()
+    if not symptoms:
+        return {"is_symptom": False, "urgency_level": "low", "urgency_label": "", "suggestions": []}
+
+    # Heuristic: is it a symptom?
+    looks_like_symptom = any(trigger in symptoms for trigger in SYMPTOM_TRIGGER_WORDS)
+
+    # Urgency
+    if any(k in symptoms for k in URGENT_KEYWORDS):
         urgency_level = "urgent"
         urgency_label = "⚠️ Potentiellement urgent — consultation rapide ou urgences recommandées"
-    elif any(k in symptoms for k in moderate_keywords):
+    elif any(k in symptoms for k in MODERATE_KEYWORDS):
         urgency_level = "moderate"
         urgency_label = "Consultation rapide recommandée"
     else:
         urgency_level = "low"
         urgency_label = "Consultation à planifier"
 
-    # ===== 2) Map symptoms to specialties (multi-match allowed) =====
-    # Maps keyword patterns → list of (specialty, medical_type, weight)
-    symptom_mapping = {
-        # — MÉDICAL —
-        "coeur|cœur|palpitation|douleur poitrine|essoufflement|infarctus|hypertension|tension|crise cardiaque":
-            [("Cardiologie", "moderne", 3)],
-        "peau|bouton|acné|eczéma|psoriasis|démangeaison|urticaire|allergie cutanée":
-            [("Dermatologie", "moderne", 3)],
-        "yeux|vision|vue|lunettes|cataracte|conjonctivite|glaucome":
-            [("Ophtalmologie", "moderne", 3)],
-        "femme|grossesse|règles|règle|contraception|ménopause|gynéco|sein|seins":
-            [("Gynécologie", "moderne", 3)],
-        "enfant|bébé|bebe|nourrisson|vaccination|croissance|pédiatre|pediatre":
-            [("Pédiatrie", "moderne", 3)],
-        "dos|articulation|fracture|entorse|genou|cheville|cervical|lombaire|épaule":
-            [("Orthopédie", "moderne", 2), ("Kinésithérapie", "bien_etre", 2)],
-        "tête|migraine|maux de tête|cerveau|épilepsie|parkinson|alzheimer|vertige":
-            [("Neurologie", "moderne", 3)],
-        "stress|anxiété|anxiete|dépression|depression|insomnie|panique|burn-out|burnout|trouble du sommeil":
-            [("Psychiatrie", "moderne", 2), ("Psychologie", "moderne", 2)],
-        "estomac|ventre|diarrhée|diarrhee|constipation|digestion|nausée|nausee|gastro|ulcère":
-            [("Gastro-entérologie", "moderne", 3)],
-        "poumon|toux|asthme|bronchite|respiration|essoufflement|pneumonie":
-            [("Pneumologie", "moderne", 3)],
-        "diabète|diabete|thyroïde|thyroide|hormone|poids|obésité|obesite":
-            [("Endocrinologie", "moderne", 2), ("Nutrition", "bien_etre", 2)],
-        "dent|dents|dentaire|carie|gencive|orthodonti|implant dentaire":
-            [("Dentisterie", "moderne", 3)],
-        "oreille|nez|gorge|sinusite|otite|angine|amygdale":
-            [("ORL", "moderne", 3)],
-        "urine|rein|prostate|vessie|incontinence":
-            [("Urologie", "moderne", 3)],
-        "fièvre|fievre|grippe|rhume|fatigue|maladie générale|symptôme général":
-            [("Médecine Générale", "moderne", 2)],
-        # — BIEN-ÊTRE —
-        "plante|plantes|naturel|traditionnel|tradi|herbe":
-            [("Phytothérapie", "traditionnel_africain", 2), ("Naturopathie", "bien_etre", 2)],
-        "massage|détente|relaxation|tension musculaire":
-            [("Massage thérapeutique", "bien_etre", 2)],
-        "nutrition|régime|alimentation|perte de poids|prise de poids":
-            [("Nutrition", "bien_etre", 3)],
-        "yoga|méditation|meditation|pleine conscience|mindfulness":
-            [("Yoga", "bien_etre", 2)],
-        "kiné|kine|kinésithérapie|kinesitherapie|rééducation|reeducation|paralysie":
-            [("Kinésithérapie", "bien_etre", 3)],
-        "coach|sport|musculation|condition physique|remise en forme":
-            [("Coaching sportif", "bien_etre", 3)],
-        # — SOCIAL / COMMUNAUTAIRE —
-        "écouter|ecouter|solitude|détresse|detresse|harcèlement|harcelement|violence":
-            [("Centre d'écoute", "social_humanitaire", 3), ("Psychologie", "moderne", 2)],
-        "humanitaire|aide alimentaire|secours|catastrophe":
-            [("Humanitaire / ONG", "social_humanitaire", 3)],
-    }
-
+    # Specialty mapping
     seen = {}
-    for pattern, specs in symptom_mapping.items():
+    for pattern, specs in SYMPTOM_MAPPING.items():
         for keyword in pattern.split('|'):
             if keyword and keyword in symptoms:
                 for spec_name, med_type, weight in specs:
                     key = spec_name.lower()
                     if key not in seen or seen[key]["weight"] < weight:
-                        seen[key] = {
-                            "specialty": spec_name,
-                            "medical_type": med_type,
-                            "weight": weight,
-                        }
+                        seen[key] = {"specialty": spec_name, "medical_type": med_type, "weight": weight}
                 break
-
     suggestions = list(seen.values())
-    # If urgent + nothing matched → propose général + cardio as safety net
-    if urgency_level == "urgent" and not suggestions:
-        suggestions = [
-            {"specialty": "Médecine Générale", "medical_type": "moderne", "weight": 3},
-            {"specialty": "Cardiologie", "medical_type": "moderne", "weight": 2},
-        ]
-    if not suggestions:
-        suggestions = [{"specialty": "Médecine Générale", "medical_type": "moderne", "weight": 1}]
-    # Sort by weight desc, limit to 5
     suggestions.sort(key=lambda s: -s["weight"])
     suggestions = [{"specialty": s["specialty"], "medical_type": s["medical_type"]} for s in suggestions[:5]]
 
-    # ===== 3) Find matching providers in DB =====
-    spec_names = [s["specialty"] for s in suggestions]
-    provider_query_or = [{"specialties": {"$regex": name, "$options": "i"}} for name in spec_names]
-    provider_query_or += [{"bio": {"$regex": name, "$options": "i"}} for name in spec_names]
-    # Cabinet/Polyclinique etc. souvent indexés via specialties[]
-    providers_cursor = db.doctor_profiles.find(
+    # Final symptom decision: trigger words OR direct symptom match
+    is_symptom = bool(looks_like_symptom or suggestions)
+
+    return {
+        "is_symptom": is_symptom,
+        "urgency_level": urgency_level,
+        "urgency_label": urgency_label,
+        "suggestions": suggestions,
+    }
+
+
+async def find_providers_for_specialties(spec_names: List[str], limit: int = 12) -> List[dict]:
+    """Search providers (doctors) matching any of the given specialty names."""
+    if not spec_names:
+        return []
+    provider_query_or = [{"specialties": {"$regex": re.escape(name), "$options": "i"}} for name in spec_names]
+    provider_query_or += [{"bio": {"$regex": re.escape(name), "$options": "i"}} for name in spec_names]
+    providers = await db.doctor_profiles.find(
         {"$or": provider_query_or},
         {"_id": 0, "id": 1, "name": 1, "specialties": 1, "medical_type": 1,
          "city": 1, "neighborhood": 1, "country": 1, "whatsapp_number": 1,
          "profile_image": 1, "rating": 1, "total_reviews": 1, "claim_status": 1,
          "coordinates": 1, "imported": 1}
-    ).limit(12)
-    providers = await providers_cursor.to_list(12)
+    ).limit(limit).to_list(limit)
 
-    # Sort: verified first, then rating desc
     def _rank(p):
         verified_bonus = 0 if (p.get("claim_status") == "verified") else 1
         rating = -(p.get("rating") or 0)
         return (verified_bonus, rating)
     providers.sort(key=_rank)
+    return providers
+
+
+@api_router.post("/assistant/suggest")
+async def suggest_specialty(data: Dict[str, Any]):
+    symptoms_raw = (data.get('symptoms') or '').strip()
+    orient = detect_symptom_orientation(symptoms_raw)
+    suggestions = orient["suggestions"]
+
+    # Safety net
+    if orient["urgency_level"] == "urgent" and not suggestions:
+        suggestions = [
+            {"specialty": "Médecine Générale", "medical_type": "moderne"},
+            {"specialty": "Cardiologie", "medical_type": "moderne"},
+        ]
+    if not suggestions:
+        suggestions = [{"specialty": "Médecine Générale", "medical_type": "moderne"}]
+
+    providers = await find_providers_for_specialties([s["specialty"] for s in suggestions], limit=12)
 
     return {
         "suggestions": suggestions,
-        "urgency_level": urgency_level,  # "urgent" | "moderate" | "low"
-        "urgency_label": urgency_label,
+        "urgency_level": orient["urgency_level"],
+        "urgency_label": orient["urgency_label"],
         "providers": providers[:6],
         "legal_notice": (
             "Cet outil est un assistant d'orientation et ne remplace pas une "
@@ -1390,6 +1417,123 @@ async def suggest_specialty(data: Dict[str, Any]):
         ),
         "emergency_number": "185",
         "message": "Voici les spécialités recommandées",
+    }
+
+
+@api_router.get("/search/smart")
+async def smart_search(q: str = "", limit: int = 30):
+    """Recherche intelligente unifiée :
+    - Si la requête ressemble à un symptôme → mode 'orientation' (urgence + spécialités + médecins)
+    - Sinon → mode 'directory' (recherche classique par nom/spécialité/bio)
+    - Si peu de résultats en mode directory → tente aussi le mode orientation en complément.
+    """
+    q = (q or "").strip()
+    if len(q) < 2:
+        return {"mode": "empty", "results": [], "orientation": None}
+
+    orient = detect_symptom_orientation(q)
+
+    # Always run a classical keyword search using existing alias dictionary
+    # (re-use the same logic as /doctors/search?keyword=…)
+    from urllib.parse import quote
+    # Direct DB lookup mirroring the keyword logic
+    keyword_aliases = {
+        "cardiologue": "cardiolog", "cardio": "cardiolog",
+        "dermatologue": "dermatolog", "dermato": "dermatolog",
+        "gynecologue": "gynéc", "gynécologue": "gynéc", "gyneco": "gynéc", "gynéco": "gynéc",
+        "ophtalmologue": "ophtalmolog", "ophtalmologiste": "ophtalmolog", "ophtalmo": "ophtalmolog", "oculiste": "ophtalmolog",
+        "pediatre": "pédiatr", "pédiatre": "pédiatr",
+        "chirurgien": "chirurgie",
+        "psychiatre": "psychiatr", "psy": "psych",
+        "psychologue": "psycholog",
+        "neurologue": "neurolog", "neuro": "neurolog",
+        "orthopediste": "orthopéd", "orthopédiste": "orthopéd", "ortho": "orthopéd",
+        "pneumologue": "pneumolog",
+        "gastroenterologue": "gastro", "gastroentérologue": "gastro", "gastro": "gastro",
+        "endocrinologue": "endocrinolog", "endocrino": "endocrinolog",
+        "pharmacien": "pharma", "pharmacienne": "pharma", "pharmacie": "pharma",
+        "generaliste": "génér", "généraliste": "génér",
+        "kinesitherapeute": "kiné", "kinésithérapeute": "kiné", "kine": "kiné", "kiné": "kiné",
+        "naturopathe": "naturopath",
+        "tradipraticien": "tradipratic", "tradi": "tradipratic",
+        "dentiste": "dent", "dentaire": "dent",
+        "orl": "ORL",
+        "sage femme": "sage-femme", "sage-femme": "sage-femme",
+    }
+    search_term = keyword_aliases.get(q.lower(), q)
+    directory_query = {
+        "$or": [
+            {"name": {"$regex": search_term, "$options": "i"}},
+            {"bio": {"$regex": search_term, "$options": "i"}},
+            {"specialties": {"$regex": search_term, "$options": "i"}},
+            {"city": {"$regex": search_term, "$options": "i"}},
+            {"neighborhood": {"$regex": search_term, "$options": "i"}},
+        ]
+    }
+    direct = await db.doctor_profiles.find(
+        directory_query,
+        {"_id": 0, "id": 1, "name": 1, "specialties": 1, "medical_type": 1,
+         "city": 1, "neighborhood": 1, "whatsapp_number": 1, "rating": 1,
+         "total_reviews": 1, "claim_status": 1, "coordinates": 1}
+    ).limit(limit).to_list(limit)
+
+    # Decide mode
+    if orient["is_symptom"]:
+        # Symptom detected → orientation mode (with provider suggestions)
+        orient_suggestions = orient["suggestions"] or [
+            {"specialty": "Médecine Générale", "medical_type": "moderne"}
+        ]
+        orient_providers = await find_providers_for_specialties(
+            [s["specialty"] for s in orient_suggestions], limit=12
+        )
+        return {
+            "mode": "orientation",
+            "query": q,
+            "results": orient_providers[:limit],
+            "orientation": {
+                "urgency_level": orient["urgency_level"],
+                "urgency_label": orient["urgency_label"],
+                "suggestions": orient_suggestions,
+                "legal_notice": (
+                    "Cet outil est un assistant d'orientation et ne remplace pas une "
+                    "consultation médicale. En cas de symptômes graves, contactez les "
+                    "urgences (185 en Côte d'Ivoire) ou consultez un professionnel de santé."
+                ),
+                "emergency_number": "185",
+            }
+        }
+
+    # Directory mode
+    if len(direct) < 3:
+        # Few results → also propose orientation if we can guess one
+        orient_suggestions = orient["suggestions"]
+        if orient_suggestions:
+            orient_providers = await find_providers_for_specialties(
+                [s["specialty"] for s in orient_suggestions], limit=8
+            )
+            return {
+                "mode": "hybrid",
+                "query": q,
+                "results": direct,
+                "orientation": {
+                    "urgency_level": orient["urgency_level"],
+                    "urgency_label": orient["urgency_label"],
+                    "suggestions": orient_suggestions,
+                    "extra_providers": orient_providers[:8],
+                    "legal_notice": (
+                        "Cet outil est un assistant d'orientation et ne remplace pas une "
+                        "consultation médicale. En cas de symptômes graves, contactez les "
+                        "urgences (185 en Côte d'Ivoire) ou consultez un professionnel de santé."
+                    ),
+                    "emergency_number": "185",
+                }
+            }
+
+    return {
+        "mode": "directory",
+        "query": q,
+        "results": direct,
+        "orientation": None,
     }
 
 # Review Reply
