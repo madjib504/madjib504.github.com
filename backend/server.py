@@ -2301,7 +2301,7 @@ async def create_claim(payload: dict):
     # Generate a unique email if not provided
     if not email:
         slug = re.sub(r"[^a-z0-9]+", "-", full_name.lower()).strip("-") or "claim"
-        email = f"claim-{slug}-{secrets.token_hex(3)}@import.keneyakafisa.local"
+        email = f"claim-{slug}-{secrets.token_hex(3)}@keneyakafisa.app"
 
     # Ensure no user exists with that email
     if await db.users.find_one({"email": email}, {"_id": 0, "id": 1}):
@@ -2440,7 +2440,7 @@ async def add_structure(payload: dict):
         email = raw_email
     else:
         slug = re.sub(r"[^a-z0-9]+", "-", structure_name.lower()).strip("-") or "structure"
-        email = f"{slug}-{secrets.token_hex(3)}@self.keneyakafisa.local"
+        email = f"{slug}-{secrets.token_hex(3)}@keneyakafisa.app"
 
     if await db.users.find_one({"email": email}, {"_id": 0, "id": 1}):
         raise HTTPException(status_code=400, detail="Un compte avec cet email existe déjà.")

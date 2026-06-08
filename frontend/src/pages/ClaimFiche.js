@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { API } from '@/App';
+import { extractErrorMessage } from '@/lib/errors';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -75,7 +76,7 @@ const ClaimFiche = () => {
       });
       setStep(3);
     } catch (err) {
-      toast.error(err.response?.data?.detail || 'Impossible d\'envoyer la demande.');
+      toast.error(extractErrorMessage(err, "Impossible d'envoyer la demande."));
     } finally {
       setSubmitting(false);
     }

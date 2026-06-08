@@ -108,7 +108,7 @@ def _build_email(record: dict) -> tuple[str, bool]:
     if email and "@" in email:
         return email.lower(), True
     base = _slugify(record.get("name") or "")
-    return f"{base}@import.keneyakafisa.local", False
+    return f"{base}@keneyakafisa.app", False
 
 
 async def seed_initial_data(db) -> dict:

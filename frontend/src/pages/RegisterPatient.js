@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { API, AuthContext } from '@/App';
+import { extractErrorMessage } from '@/lib/errors';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,9 +33,10 @@ const RegisterPatient = () => {
     setSubmitting(true);
     try {
       // Patient minimal: name = "Prénom Nom", whatsapp_number defaults to phone
+      const phoneDigits = form.phone.replace(/\D/g, '');
       const payload = {
         user_type: 'patient',
-        email: (form.email || `${form.phone.replace(/\D/g, '')}@phone.keneyakafisa.local`).toLowerCase(),
+        email: (form.email || `phone-${phoneDigits}@keneyakafisa.app`).toLowerCase(),
         password: form.password,
         name: `${form.first_name.trim()} ${form.last_name.trim()}`.trim(),
         whatsapp_number: form.whatsapp_number || form.phone,
@@ -46,7 +48,7 @@ const RegisterPatient = () => {
       toast.success('Bienvenue sur keneyakafisa !');
       navigate('/patient/dashboard');
     } catch (err) {
-      toast.error(err.response?.data?.detail || "Erreur lors de l'inscription. Cet email/téléphone est peut-être déjà utilisé.");
+      toast.error(extractErrorMessage(err, "Erreur lors de l'inscription. Cet email/téléphone est peut-être déjà utilisé."));
     } finally {
       setSubmitting(false);
     }

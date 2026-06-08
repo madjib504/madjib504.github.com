@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { API, AuthContext } from '@/App';
+import { extractErrorMessage } from '@/lib/errors';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -57,7 +58,7 @@ const RegisterAddStructure = () => {
         navigate('/login');
       }
     } catch (err) {
-      toast.error(err.response?.data?.detail || 'Erreur lors de l\'ajout.');
+      toast.error(extractErrorMessage(err, 'Erreur lors de l\'ajout.'));
     } finally {
       setSubmitting(false);
     }
