@@ -4,9 +4,9 @@ import axios from 'axios';
 import { API } from '@/App';
 import { 
   Menu, X, Search, Stethoscope, Calendar, MessageSquare, Video, 
-  Heart, Shield, Users, ChevronRight, Home, ShoppingBag, 
+  Heart, Shield, Users, ChevronRight, Home, 
   CreditCard, BookOpen, Award, FileText, Phone, LogOut, User,
-  Leaf, Sparkles, Activity, Truck, Store, Clock,
+  Clock,
   Megaphone, ChevronLeft, ExternalLink, Building2,
   Share2, Headphones, Gift, MessageCircle, Zap, FolderOpen, Link2, Plus
 } from 'lucide-react';
@@ -320,24 +320,6 @@ const HomePage = () => {
   };
 
   const menuSections = [
-    {
-      title: 'Services Médicaux',
-      items: [
-        { icon: Activity, label: 'Médecine Moderne', link: '/search?medical_type=moderne', color: 'text-sky-500' },
-        { icon: Leaf, label: 'Médecine Traditionnelle', link: '/search?medical_type=traditionnel_africain', color: 'text-blue-600' },
-        { icon: Sparkles, label: 'Bien-être & Beauté', link: '/search?medical_type=bien_etre', color: 'text-purple-500' },
-        { icon: Truck, label: 'Service à Domicile', link: '/search?medical_type=service_domicile', color: 'text-orange-500' },
-        { icon: Users, label: 'Autre', link: '/search?medical_type=autre', color: 'text-gray-500' },
-      ]
-    },
-    {
-      title: 'Boutique',
-      items: [
-        { icon: Store, label: 'Matériel Médical', link: '/search?medical_type=materiel_medical', color: 'text-blue-500' },
-        { icon: ShoppingBag, label: 'Boutique Bien-être', link: '/search?medical_type=boutique_bien_etre', color: 'text-pink-500' },
-        { icon: Award, label: 'Packs Bien-être', link: '/wellness-packs', color: 'text-amber-500' },
-      ]
-    },
     {
       title: 'Ressources',
       items: [

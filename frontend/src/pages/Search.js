@@ -124,6 +124,50 @@ const Search = () => {
     s => !filters.medical_type || filters.medical_type === 'all' || s.medical_type === filters.medical_type
   );
 
+  // Decide whether to prefix the name with "Dr." (only for individual practitioners).
+  // Structures (clinics, hospitals, pharmacies, spas, cabinets) keep their full name.
+  const STRUCTURE_KEYWORDS = [
+    'clinique', 'polyclinique', 'cabinet', 'centre', 'hôpital', 'hopital',
+    'pharmacie', 'spa', 'salon', 'institut', 'boutique', 'maison', 'école', 'ecole',
+    'hcms', 'sos', 'service', 'serv.', 'service à', 'services', 'cliniques',
+    'laboratoire', 'labo', 'imagerie', 'radiologie',
+    'fondation', 'association', 'ong', 'croix-rouge',
+  ];
+  const PRACTITIONER_PREFIXES = ['dr ', 'dr.', 'pr ', 'pr.', 'mme ', 'mlle ', 'm. ', 'docteur ', 'professeur '];
+
+  const isStructure = (provider) => {
+    if (!provider) return false;
+    if (provider.provider_kind === 'partner') return true;
+    const name = (provider.name || '').trim().toLowerCase();
+    if (!name) return true;
+    // Already starts with a practitioner prefix → individual
+    if (PRACTITIONER_PREFIXES.some(p => name.startsWith(p))) return false;
+    // Contains a structure keyword → structure
+    if (STRUCTURE_KEYWORDS.some(kw => name.includes(kw))) return true;
+    return false;
+  };
+
+  const displayName = (provider) => {
+    const raw = (provider.name || '').trim();
+    if (!raw) return 'Sans nom';
+    if (isStructure(provider)) return raw;
+    // Avoid double "Dr."
+    const lower = raw.toLowerCase();
+    if (PRACTITIONER_PREFIXES.some(p => lower.startsWith(p))) return raw;
+    return `Dr. ${raw}`;
+  };
+
+  // Client-side dedup by name (case-insensitive) — safety net in case API returns dups
+  const uniqueDoctors = (() => {
+    const seen = new Set();
+    return (doctors || []).filter(d => {
+      const key = ((d.name || '') + '').trim().toLowerCase();
+      if (!key || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  })();
+
   const getMedicalTypeBadge = (type) => {
     const badges = {
       'moderne': { label: 'Moderne', color: 'bg-sky-100 text-sky-700' },
@@ -342,7 +386,7 @@ const Search = () => {
                 <div className="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-blue-900"></div>
                 <p className="mt-3 text-stone-600">Recherche en cours...</p>
               </div>
-            ) : doctors.length === 0 ? (
+            ) : uniqueDoctors.length === 0 ? (
               <div className="text-center py-12" data-testid="no-results">
                 <SearchIcon className="w-12 h-12 text-stone-300 mx-auto mb-3" />
                 <h3 className="text-lg font-semibold text-stone-900 mb-1">Aucun résultat</h3>
@@ -354,7 +398,7 @@ const Search = () => {
               </div>
             ) : (
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4" data-testid="doctors-grid">
-                {doctors.map((doctor) => {
+                {uniqueDoctors.map((doctor) => {
                   const badge = getMedicalTypeBadge(doctor.medical_type);
                   return (
                     <Card
@@ -385,7 +429,7 @@ const Search = () => {
                         </div>
                         <div className="p-4">
                           <h3 className="text-lg font-semibold text-stone-900 mb-1">
-                            Dr. {doctor.name}
+                            {displayName(doctor)}
                           </h3>
                           <div className="flex flex-wrap gap-1 mb-2">
                             {doctor.specialties?.slice(0, 2).map((spec) => (

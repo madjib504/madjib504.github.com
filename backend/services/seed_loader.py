@@ -161,6 +161,19 @@ async def seed_initial_data(db) -> dict:
                 stats["skipped_exists"] += 1
                 continue
 
+            # Also skip if a provider profile with the same name already exists
+            # (prevents duplicates after a manual dedupe + restart)
+            name_query = {"$or": [
+                {"name": {"$regex": f"^{re.escape(name)}$", "$options": "i"}},
+                {"company_name": {"$regex": f"^{re.escape(name)}$", "$options": "i"}},
+            ]}
+            if await db.doctor_profiles.find_one(name_query, {"_id": 0, "id": 1}):
+                stats["skipped_exists"] += 1
+                continue
+            if await db.partner_profiles.find_one(name_query, {"_id": 0, "id": 1}):
+                stats["skipped_exists"] += 1
+                continue
+
             user_id = r.get("id") or str(uuid.uuid4())
             if not user_id or len(user_id) < 8:
                 user_id = str(uuid.uuid4())

@@ -698,11 +698,19 @@ async def search_doctors(
         else:
             query["$or"] = custom_or_conditions
     
-    doctors = await db.doctor_profiles.find(query, {"_id": 0}).to_list(100)
-    for doctor in doctors:
-        if isinstance(doctor.get('created_at'), str):
-            doctor['created_at'] = datetime.fromisoformat(doctor['created_at'])
-    return doctors
+    doctors = await db.doctor_profiles.find(query, {"_id": 0}).to_list(200)
+    # Deduplicate by name (case-insensitive) — defensive: duplicates may exist from seed reruns
+    seen_names = set()
+    unique = []
+    for doc in doctors:
+        key = (doc.get("name") or "").strip().lower()
+        if not key or key in seen_names:
+            continue
+        seen_names.add(key)
+        if isinstance(doc.get('created_at'), str):
+            doc['created_at'] = datetime.fromisoformat(doc['created_at'])
+        unique.append(doc)
+    return unique[:100]
 
 @api_router.get("/doctors/{doctor_id}")
 async def get_doctor_profile(doctor_id: str):
