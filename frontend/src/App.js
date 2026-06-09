@@ -6,7 +6,6 @@ import { Toaster } from '@/components/ui/sonner';
 import Navbar from '@/components/Navbar';
 import Home from '@/pages/Home';
 import Login from '@/pages/Login';
-import Register from '@/pages/Register';
 import Search from '@/pages/Search';
 import DoctorProfilePage from '@/pages/DoctorProfilePage';
 import PatientDashboard from '@/pages/PatientDashboard';
@@ -66,7 +65,7 @@ function AppContent({ user, setUser, loading }) {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/login" element={user ? <Navigate to="/" /> : <Login setUser={setUser} />} />
-        <Route path="/register" element={user ? <Navigate to="/" /> : <Register setUser={setUser} />} />
+        <Route path="/register" element={<Navigate to="/" replace />} />
         <Route path="/search" element={<Search />} />
         <Route path="/wellness-packs" element={<WellnessPacks />} />
         <Route path="/blog" element={<Blog />} />

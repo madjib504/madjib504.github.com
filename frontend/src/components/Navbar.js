@@ -68,9 +68,9 @@ const Navbar = ({ user, setUser }) => {
                     <span className="hidden md:inline">Connexion</span>
                   </Button>
                 </Link>
-                <Link to="/register" data-testid="nav-register-link">
+                <Link to="/" data-testid="nav-register-link">
                   <Button size="sm" className="bg-blue-900 text-white hover:bg-blue-800 rounded-full px-4 md:px-6">
-                    S'inscrire
+                    S&apos;inscrire
                   </Button>
                 </Link>
               </>

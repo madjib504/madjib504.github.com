@@ -98,7 +98,7 @@ const Login = ({ setUser }) => {
           </form>
           <div className="mt-6 text-center text-sm text-stone-600">
             Pas encore de compte ?{' '}
-            <Link to="/register" className="text-blue-900 font-medium hover:underline" data-testid="login-register-link">
+            <Link to="/" className="text-blue-900 font-medium hover:underline" data-testid="login-register-link">
               S&apos;inscrire
             </Link>
           </div>

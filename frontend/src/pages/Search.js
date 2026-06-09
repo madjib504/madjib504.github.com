@@ -46,10 +46,10 @@ const Search = () => {
   const [orientation, setOrientation] = useState(null);
   const [searchMode, setSearchMode] = useState('directory');
 
-  const searchDoctors = async () => {
+  const searchDoctors = async (overrideKw) => {
     setLoading(true);
     try {
-      const kw = (filters.keyword || '').trim();
+      const kw = (typeof overrideKw === 'string' ? overrideKw : filters.keyword || '').trim();
 
       // Use smart-search as soon as the user types a keyword.
       // It detects symptoms and falls back to directory search otherwise.
@@ -112,8 +112,15 @@ const Search = () => {
     setFilters(prev => ({ ...prev, [key]: value }));
   };
 
-  const handleSearch = () => {
-    searchDoctors();
+  const handleSearch = (overrideKeyword) => {
+    if (typeof overrideKeyword === 'string') {
+      // When triggered from a suggestion chip, override the keyword first
+      setFilters(prev => ({ ...prev, keyword: overrideKeyword }));
+      // Call searchDoctors with an explicit keyword so it doesn't race with setState
+      searchDoctors(overrideKeyword);
+    } else {
+      searchDoctors();
+    }
   };
 
   const handleSelectDoctor = (doctor) => {
@@ -258,6 +265,40 @@ const Search = () => {
                   <p className="text-xs text-stone-500 mt-2">
                     💡 Tapez un nom (« PISAM »), une spécialité (« cardiologue ») ou un symptôme (« mal de dents ») — l&apos;IA vous oriente automatiquement.
                   </p>
+
+                  {/* Suggestions de symptômes / besoins cliquables */}
+                  <div className="mt-4">
+                    <p className="text-xs font-semibold text-stone-600 mb-2 uppercase tracking-wide">
+                      Suggestions populaires
+                    </p>
+                    <div className="flex flex-wrap gap-2" data-testid="symptom-suggestions">
+                      {[
+                        { label: 'Mal de tête', q: 'mal de tête', emoji: '🤕' },
+                        { label: 'Fièvre', q: 'fièvre', emoji: '🌡️' },
+                        { label: 'Toux', q: 'toux', emoji: '😷' },
+                        { label: 'Mal au ventre', q: 'mal au ventre', emoji: '🤢' },
+                        { label: 'Diabète', q: 'diabète', emoji: '💉' },
+                        { label: 'Tension', q: 'tension', emoji: '❤️' },
+                        { label: 'Bilan sanguin', q: 'bilan sanguin', emoji: '🩸' },
+                        { label: 'Mal de dents', q: 'mal de dents', emoji: '🦷' },
+                        { label: 'Ordonnance', q: 'ordonnance', emoji: '💊' },
+                        { label: 'Grossesse', q: 'grossesse', emoji: '🤰' },
+                        { label: 'Stress / Anxiété', q: 'stress anxiété', emoji: '🧠' },
+                        { label: 'Massage', q: 'massage', emoji: '💆' },
+                      ].map((s) => (
+                        <button
+                          key={s.q}
+                          type="button"
+                          onClick={() => handleSearch(s.q)}
+                          data-testid={`suggest-${s.q.replace(/\s+/g, '-')}`}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-50 hover:bg-blue-100 border border-blue-200 hover:border-blue-300 text-sm text-blue-900 font-medium transition-colors"
+                        >
+                          <span aria-hidden>{s.emoji}</span>
+                          {s.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>

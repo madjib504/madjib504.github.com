@@ -435,7 +435,7 @@ const HomePage = () => {
                 </Link>
               </>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-5 max-w-5xl mx-auto w-full">
+              <div id="inscription-section" className="grid grid-cols-1 md:grid-cols-3 gap-5 max-w-5xl mx-auto w-full scroll-mt-24">
                 {/* 1. Patient */}
                 <Link to="/register/patient" data-testid="cta-patient-btn" className="block">
                   <div className="h-full p-7 rounded-2xl bg-white text-stone-900 shadow-2xl hover:shadow-white/30 hover:-translate-y-1 transition-all border-2 border-transparent hover:border-blue-300 text-left">
@@ -772,11 +772,23 @@ const HomePage = () => {
                     Connexion
                   </Button>
                 </Link>
-                <Link to="/register" onClick={() => setMenuOpen(false)}>
+                <button
+                  onClick={() => {
+                    setMenuOpen(false);
+                    // If we're already on home, scroll to the 3-flows section
+                    if (window.location.pathname === '/') {
+                      const el = document.getElementById('inscription-section');
+                      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    } else {
+                      window.location.href = '/#inscription-section';
+                    }
+                  }}
+                  className="w-full"
+                >
                   <Button className="w-full bg-blue-900 hover:bg-blue-800 rounded-lg">
                     Créer un Compte
                   </Button>
-                </Link>
+                </button>
               </div>
             )}
           </div>
