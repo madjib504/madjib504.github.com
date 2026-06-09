@@ -4,7 +4,7 @@
 Build a comprehensive health application in French named "keneyakafisa". The platform connects patients with modern medicine, African traditional medicine, and wellness specialists.
 
 ## User Personas
-- **Patients**: Search doctors, book appointments, manage medical records, earn loyalty points; have address/localisation
+- **Patients**: Search doctors, book appointments, manage medical records, earn loyalty points
 - **Health Professionals (Doctors)**: Manage schedules, receive bookings, present themselves via video + social links
 - **Partners**: Companies, pharmacies, labs, sponsors with dedicated dashboard + video + social links
 - **Admin**: Manage users, appointments, payments, advertisements via `/admin` dashboard
@@ -14,53 +14,58 @@ Build a comprehensive health application in French named "keneyakafisa". The pla
 - Backend: FastAPI (Python)
 - Database: MongoDB Atlas
 - Storage: Emergent Object Storage (uses EMERGENT_LLM_KEY) for presentation videos
+- Emails: Resend
 - PWA: Service workers, manifest
 
 ## What's Been Implemented
-- [2025-12] Full authentication system (JWT) - 3 user types
-- [2025-12] Doctor search with multi-category filtering
-- [2025-12] Appointment booking, Admin dashboard with notifications, Advertising system
-- [2025-12] WhatsApp integration (registration / welcome)
-- [2025-12] PWA capabilities + SEO tools
-- [2025-12] Welcome page for doctors, Documents Importants in side menu
-- [2025-12] Partner registration + Partner Dashboard
-- [2025-12] Code quality fixes (useCallback, array keys, console removal)
-- [2025-12] Service Worker v2 with cache versioning
-- [2026-02] Social media links (TikTok/Facebook/Instagram) + presentation video upload for doctors & partners
-- [2026-02] Doctor public profile shows social badges + video right under specialty/medical type
-- [2026-02] Bug fixes: EMERGENT_LLM_KEY env, lazy storage init, include_router order, `idx` undefined in reviews
-- [2026-02] Patient registration now has 'Adresse / Localisation' field (persisted on user document)
-- [2026-02] Search keyword alias dictionary FR: "cardiologue"→Cardiologie, dermato, gynéco, pédiatre, kiné, ophtalmo, psychiatre, neurologue, orthopédiste, pneumologue, gastro, endocrinologue, pharmacien, généraliste, kinésithérapeute, ostéopathe, nutritionniste, naturopathe, sophrologue, tradipraticien, herboriste, phytothérapeute, rebouteux, etc.
-- [2026-02] Login & Navbar routing fixed for Partner user_type (was wrongly going to /doctor/dashboard)
+- [2025-12] Full auth (JWT) - 3 user types, doctor search, booking, admin dashboard, ads, WhatsApp redirect, PWA, partner registration.
+- [2026-02] Social links + video for doctors/partners, location fields, Resend email verification, Maintenance mode, Smart-Search AI orientation, Restructured Home with 3 flows (Patient/Claim/Add Structure), seed_loader for 103 providers.
+- [2026-02] **Master Model V2 nested schema deployed** : `{ identity, classification, ai_matching, contact, booking, trust }` on every doctor & partner fiche.
+  - `services/master_model.py`: build_master_profile() avec mapping enrichi pour pharmacies/labos/cliniques/spas/etc.
+  - Auto-génération des `symptomes_pris_en_charge`, `besoins_pris_en_charge`, `ai_specialty_tags`, `triage_priority`, `emergency_level` selon catégorie/spécialité.
+  - Migration idempotente au boot (`migrate_all_providers`) + lazy persistence sur GET /providers/{id}/master.
+  - `seed_loader.py` populate master_profile à l'insertion.
+  - `/api/structures/add` génère master_profile à la création.
+- [2026-02] **Smart-search V2** : interroge `master_profile.ai_matching.symptomes_pris_en_charge` + `ai_specialty_tags`, inclut partner_profiles (pharmacies/labos), tri par `master_profile.trust.triage_priority`, déduplication par nom.
+- [2026-02] **DB dedupe**: passage de 147/67 doctors/partners à 78/37 (99 doublons supprimés via /api/admin/dedupe-providers).
+- [2026-02] **Urgent symptom routing fixed**: q='urgence' déclenche maintenant mode=orientation + emergency_number=185.
+
+## New API Endpoints (V2)
+- GET  /api/providers/{id}/master — fetch the V2 nested profile (lazy persist)
+- POST /api/admin/migrate-master-model — admin idempotent re-migrate
+- POST /api/admin/dedupe-providers — admin idempotent dedupe by name
+- GET  /api/admin/master-model/stats — coverage + top categories
+- GET  /api/search/smart?q=... — V2 search uses master_profile.ai_matching
 
 ## Pending / In Progress
-- Google Maps Geolocation (BLOCKED - waiting for user API key TEXT)
+- Google Maps Geolocation (BLOCKED - waiting for user API key)
+- WhatsApp CallMeBot automation (BLOCKED - waiting for user key)
 - Public Partner profile page
-- React duplicate-key warning on dashboards (cosmetic; likely duplicate notification IDs from server.py duplicate endpoint registrations)
-- Backend refactor (server.py >2600 lines)
 
 ## Phase 2 (Upcoming)
 - P1: Teleconsultation Video (Twilio Video)
-- P1: Notifications SMS/Email (Twilio/SendGrid)
-- P1: Paiement par carte bancaire (Stripe)
+- P1: SMS/Email Notifications (Twilio/SendGrid)
+- P1: Card Payment (Stripe)
 
 ## Future / Backlog
-- Système de Livraison, Marketplace Multi-vendeurs, Abonnements, USSD
-- Refactor server.py into routers
-- Tighten /api/profile/social-links with Pydantic model
+- Refactor server.py (>3700 lines) into FastAPI routers
+- Refactor AdminDashboard.js + DoctorDashboard.js (>500 lines each)
+- AI embeddings (currently null in ai_matching.embedding) for semantic search
+- Marketplace multi-vendeurs, Abonnements, USSD
 
 ## Key DB Collections
-- users: {email, password, user_type, name, whatsapp_number, address}
-- doctor_profiles: {user_id, specialties, location, medical_type, tiktok_url, facebook_url, instagram_url, video_url, presentation_video}
-- partner_profiles: {user_id, company_name, activity_type, address, whatsapp_number, status, social fields, presentation_video}
-- admin_notifications, ads, appointments, payments
+- users: {email, password, user_type, name, whatsapp_number, address, partner_role}
+- doctor_profiles: { ..flat fields, master_profile: { identity, classification, ai_matching, contact, booking, trust } }
+- partner_profiles: { ..flat fields, master_profile: {...} }
+- claims (NEW), admin_notifications, ads, appointments, payments
 
 ## Key API Endpoints
-- POST /api/auth/register (now accepts address for all user types)
-- GET  /api/doctors/search?keyword=... (alias dictionary for FR practitioner→specialty mapping)
-- PUT  /api/profile/social-links (doctor or partner)
-- POST /api/upload/video (doctor or partner)
-- GET  /api/media/{path:path}
+- POST /api/auth/register
+- POST /api/structures/add (auto-builds master_profile)
+- POST /api/claims (claim an existing fiche)
+- GET  /api/search/smart?q=... (V2 nested matching)
+- GET  /api/providers/{id}/master (V2 profile)
+- POST /api/admin/migrate-master-model | dedupe-providers | master-model/stats
 
 ## Admin Credentials
 - URL: /admin | Username: MADJIB | Password: 48851132kl

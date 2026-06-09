@@ -1309,6 +1309,9 @@ SYMPTOM_MAPPING = {
         [("Centre d'écoute", "social_humanitaire", 3), ("Psychologie", "moderne", 2)],
     "humanitaire|aide alimentaire|secours|catastrophe":
         [("Humanitaire / ONG", "social_humanitaire", 3)],
+    # Urgence + accidents → orientation directe vers SAMU/Médecine Générale en urgence
+    "urgence|urgent|accident|saigne|sang|hémorragie|hemorragie|inconscient|évanoui|evanoui|crise cardiaque|infarctus|avc|brûlure grave|brulure grave|intoxication|empoisonn":
+        [("Médecine Générale", "moderne", 5), ("Cardiologie", "moderne", 2)],
 }
 
 SYMPTOM_TRIGGER_WORDS = [
@@ -1356,8 +1359,8 @@ def detect_symptom_orientation(symptoms_raw: str) -> dict:
     suggestions.sort(key=lambda s: -s["weight"])
     suggestions = [{"specialty": s["specialty"], "medical_type": s["medical_type"]} for s in suggestions[:5]]
 
-    # Final symptom decision: trigger words OR direct symptom match
-    is_symptom = bool(looks_like_symptom or suggestions)
+    # Final symptom decision: trigger words OR direct symptom match OR urgent keyword hit
+    is_symptom = bool(looks_like_symptom or suggestions or urgency_level == "urgent")
 
     return {
         "is_symptom": is_symptom,
@@ -3577,11 +3580,11 @@ async def dedupe_providers(admin: dict = Depends(verify_admin_token)):
                 continue
             # Determine which one to keep (oldest = first imported)
             existing = seen[name]
-            keep, drop = (existing, d)
+            drop = d
             ec = existing.get("created_at") or ""
             dc = d.get("created_at") or ""
             if dc and ec and dc < ec:
-                keep, drop = d, existing
+                drop = existing
                 seen[name] = d
             # Delete the dropped fiche + its orphan user
             await col.delete_one({"id": drop["id"]})
@@ -3641,16 +3644,19 @@ async def master_model_stats(admin: dict = Depends(verify_admin_token)):
 
 @api_router.get("/providers/{provider_id}/master")
 async def get_master_profile(provider_id: str):
-    """Return the structured master_profile (V2 model) for any provider."""
+    """Return the structured master_profile (V2 model) for any provider.
+    If missing, builds it on the fly AND persists it (lazy migration).
+    """
     for kind, col in (("doctor", db.doctor_profiles), ("partner", db.partner_profiles)):
         doc = await col.find_one({"id": provider_id}, {"_id": 0, "master_profile": 1, "id": 1})
         if doc:
             mp = doc.get("master_profile")
             if not mp:
-                # Build on the fly if missing (so callers always get the V2 shape)
                 full = await col.find_one({"id": provider_id}, {"_id": 0})
                 from services.master_model import build_master_profile
                 mp = build_master_profile(full, kind)
+                # Persist so subsequent calls are cached
+                await col.update_one({"id": provider_id}, {"$set": {"master_profile": mp}})
             return {"id": provider_id, "kind": kind, "master_profile": mp}
     raise HTTPException(status_code=404, detail="Fiche introuvable")
 

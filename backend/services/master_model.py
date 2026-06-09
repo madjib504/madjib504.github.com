@@ -492,8 +492,8 @@ def build_master_profile(record: dict, provider_kind: str) -> dict:
         "classification": {
             "secteur": sector,
             "categorie": categorie,
-            "sous_categories": sous_categories,
-            "specialites": specialties,
+            "sous_categories": list(dict.fromkeys(sous_categories)),
+            "specialites": list(dict.fromkeys(specialties)),
             "provider_kind": provider_kind,
         },
         "ai_matching": {
