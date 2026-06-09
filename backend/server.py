@@ -2318,7 +2318,7 @@ class AdminLogin(BaseModel):
 
 
 def verify_admin_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    """Vérifier le token admin."""
+    """Vérifier le token admin (compatible avec l'ancien format ET le nouveau)."""
     try:
         token = credentials.credentials
         payload = jwt.decode(token, ADMIN_SECRET, algorithms=[ALGORITHM])
@@ -2331,25 +2331,74 @@ def verify_admin_token(credentials: HTTPAuthorizationCredentials = Depends(secur
         raise HTTPException(status_code=401, detail="Token admin invalide")
 
 
+async def ensure_owner_admin_exists():
+    """Garantit qu'au moins 1 OWNER existe dans la collection `admins` (DB)."""
+    owner_display_name = "N'guessan Armandine"
+    existing = await db.admins.find_one(
+        {"admin_role": "super_admin_owner"}, {"_id": 0, "id": 1, "display_name": 1}
+    )
+    if existing:
+        # Update legacy display_name if it was the default placeholder
+        if existing.get("display_name") in (None, "OWNER (root)", ADMIN_USERNAME):
+            await db.admins.update_one(
+                {"id": existing["id"]},
+                {"$set": {"display_name": owner_display_name}}
+            )
+        return
+    # Seed initial OWNER from env vars (login = MADJIB / 48851132kl)
+    owner_doc = {
+        "id": str(uuid.uuid4()),
+        "username": ADMIN_USERNAME,
+        "password": hash_password(ADMIN_PASSWORD),
+        "admin_role": "super_admin_owner",
+        "display_name": owner_display_name,
+        "is_seed_owner": True,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.admins.insert_one(owner_doc)
+    logging.info(f"Seeded initial OWNER admin: {owner_display_name} (username={ADMIN_USERNAME})")
+
+
 @api_router.post("/admin/login")
 async def admin_login(data: AdminLogin):
     """
     Connexion administrateur.
+    - Cherche d'abord l'utilisateur dans la collection `admins` (nouveau système).
+    - Sinon, fallback sur ADMIN_USERNAME / ADMIN_PASSWORD de l'env (rétro-compat).
     """
-    if data.username != ADMIN_USERNAME or data.password != ADMIN_PASSWORD:
+    admin_username = (data.username or "").strip()
+    admin_doc = await db.admins.find_one({"username": admin_username}, {"_id": 0})
+
+    if admin_doc:
+        if not verify_password(data.password, admin_doc["password"]):
+            raise HTTPException(status_code=401, detail="Identifiants admin incorrects")
+        role = admin_doc.get("admin_role", "super_admin_owner")
+        display = admin_doc.get("display_name") or admin_username
+        admin_id = admin_doc.get("id")
+    elif admin_username == ADMIN_USERNAME and data.password == ADMIN_PASSWORD:
+        # Legacy fallback: create the OWNER on the fly so future logins are DB-based
+        await ensure_owner_admin_exists()
+        role = "super_admin_owner"
+        display = "OWNER (root)"
+        admin_id = admin_username
+    else:
         raise HTTPException(status_code=401, detail="Identifiants admin incorrects")
-    
-    # Créer un token admin
+
     token_data = {
         "role": "admin",
-        "username": data.username,
+        "admin_role": role,
+        "admin_id": admin_id,
+        "username": admin_username,
+        "display_name": display,
         "exp": datetime.now(timezone.utc) + timedelta(hours=24)
     }
     token = jwt.encode(token_data, ADMIN_SECRET, algorithm=ALGORITHM)
-    
+
     return {
         "success": True,
         "token": token,
+        "admin_role": role,
+        "display_name": display,
         "message": "Connexion admin réussie"
     }
 
@@ -2357,7 +2406,12 @@ async def admin_login(data: AdminLogin):
 @api_router.get("/admin/verify")
 async def verify_admin(admin: dict = Depends(verify_admin_token)):
     """Vérifier si le token admin est valide."""
-    return {"valid": True, "username": admin.get("username")}
+    return {
+        "valid": True,
+        "username": admin.get("username"),
+        "admin_role": admin.get("admin_role", "super_admin_owner"),
+        "display_name": admin.get("display_name", admin.get("username")),
+    }
 
 
 @api_router.get("/admin/stats")
@@ -3398,6 +3452,12 @@ async def startup_storage():
         await migrate_all_providers(db)
     except Exception as e:
         logging.error(f"Master-model migration failed: {e}")
+
+    # Ensure the initial OWNER admin exists in the `admins` collection.
+    try:
+        await ensure_owner_admin_exists()
+    except Exception as e:
+        logging.error(f"Failed to seed OWNER admin: {e}")
 
 
 # Register all api routes (must be AFTER all @api_router.* decorators)
