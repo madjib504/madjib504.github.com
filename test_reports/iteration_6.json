@@ -1,0 +1,52 @@
+{
+  "summary": "Backend regression for Master Model V2 (doctor + partner). 19/20 pytest cases pass. Coverage verified: doctor_profiles 78/78 + partner_profiles 38/38 have master_profile (100%). All 6 sections (identity, classification, ai_matching, contact, booking, trust) returned by /api/providers/{id}/master for both kinds. Admin endpoints work (stats, migrate idempotent, dedupe idempotent). Smart-search OK for diabète/ordonnance/mal de tête/massage/dedup/trust-ranking/robustness. structures/add auto-builds master_profile with categorie=Pharmacie + is_verified=true + symptomes_pris_en_charge. POST /claims creates user + claim, GET /admin/claims lists it. Backwards compat: /api/doctors/search (with and without keyword) works. ONE BUG found: GET /api/search/smart?q=urgence returns mode='directory' and orientation=null instead of mode='orientation' with urgency_level='urgent' + emergency_number='185'.",
+  "backend_issues": {
+    "critical": [
+      {
+        "endpoint": "GET /api/search/smart?q=urgence",
+        "issue": "Spec requires mode='orientation', urgency_level='urgent', emergency_number='185'. Actual response: mode='directory', orientation=null. detect_symptom_orientation() does NOT trigger the urgent path when 'urgence' is typed alone — it relies on suggestions being non-empty before returning the orientation block (server.py line ~1445). The keyword instead matches directory results (e.g. 'SOS ABIDJAN - AMBULANCES, URGENCES'), so the user never gets the 185 emergency banner.",
+        "priority": "HIGH"
+      }
+    ],
+    "minor": [
+      {
+        "endpoint": "GET /api/search/smart?q=mal de tête",
+        "issue": "Suggestion 'Neurologie' is returned (good) but results array is empty. Likely no doctor has 'mal de tête'/'céphalée' in master_profile.ai_matching.symptomes_pris_en_charge. Consider enriching SPECIALTY_TO_SYMPTOMS for Neurologie and Médecine Générale."
+      },
+      {
+        "endpoint": "GET /api/doctors (no /search)",
+        "issue": "Review spec mentions GET /api/doctors should still work for retro-compat, but no such route exists (only /api/doctors/search). Returns 404. Not strictly a regression (route was likely never present) but worth confirming with product."
+      },
+      {
+        "endpoint": "GET /api/search/smart",
+        "issue": "Partner directory results retain duplicates inside individual provider's classification.specialites list (e.g. 'Urgences & soins à domicile' appears twice). Cosmetic — dedupe the array on output or at master_profile build time."
+      }
+    ]
+  },
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_master_model_v2.py",
+    "/app/test_reports/pytest/master_model_v2_results.xml"
+  ],
+  "action_items": [
+    "Fix urgence orientation: in detect_symptom_orientation()/smart_search, when query contains an URGENT_KEYWORD (urgent/urgence/secours/...), force mode='orientation', set urgency_level='urgent', emergency_number='185' and orientation block even if suggestions list is empty. Optionally still include directory hits as 'results' alongside.",
+    "Optional: enrich SPECIALTY_TO_SYMPTOMS so 'mal de tête'/'céphalée' actually matches Neurologie/Médecine Générale doctors (currently 0 results)."
+  ],
+  "critical_code_review_comments": [
+    "server.py is 3694 lines (>700) — should be split into routers (auth, doctors, partners, claims, admin, search, master_model). Maintenance debt growing.",
+    "smart_search() lives in server.py and re-defines keyword_aliases dict which is also in search_doctors(). DRY violation — extract to a shared util in services/.",
+    "In /api/structures/add, master_profile is built inside a try/except that only logs (line 2935-2939). If the build fails silently, the partner record is inserted WITHOUT master_profile, breaking the 100%-coverage invariant. Make the build mandatory or roll back the insert on failure.",
+    "/api/admin/dedupe-providers compares created_at as strings — works because of ISO-8601 lexical ordering, but document that assumption or convert to datetime.",
+    "/api/providers/{id}/master rebuilds master_profile on the fly if missing but does NOT persist the result — repeated calls do redundant work."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_master_model_v2.py (new test file, 20 cases, 19 pass)"
+  ],
+  "success_rate": {"backend": "95% (19/20)", "frontend": "skipped per request"},
+  "test_credentials": "Admin MADJIB / 48851132kl — used via /api/admin/login bearer token.",
+  "seed_data_creation": "Test created 1 partner_profile 'TEST_Pharmacie_MM_<ts>' via /api/structures/add and 1 user via /api/claims (test_claim_<ts>@test.com). Both remain in DB. No cleanup endpoint; impact is minor (smart-search dedup test still passes).",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Backend Master Model V2 wiring is solid (100% coverage, all 6 sections present, dedup + migrate idempotent, smart-search works for diabète/ordonnance/massage/mal de tête, structures/add auto-builds master_profile, claims flow works). The only failing case is q='urgence' — main agent must fix detect_symptom_orientation/smart_search to force orientation mode + emergency_number 185 when URGENT_KEYWORDS hit. After fix, re-run pytest /app/backend/tests/test_master_model_v2.py — expect 20/20 green.",
+  "rca of the issue": "smart_search() returns mode='orientation' only when orient['urgency_level']!='low' OR len(suggestions)>0 (server.py ~1440). For q='urgence', detect_symptom_orientation finds 'urgence' in URGENT_KEYWORDS and sets urgency_level='urgent' BUT no SPECIALTY_TO_SYMPTOMS dict maps the bare word 'urgence' to a specialty → suggestions=[] → orient is then DROPPED in favor of directory-mode results because the code path that builds the orientation block (lines 1445-1466) only fires when there are suggestions. Fix: if urgency_level=='urgent' always emit the orientation block with emergency_number='185' regardless of suggestions count. The orientation block can still co-exist with a 'hybrid' mode that also returns directory hits."
+}

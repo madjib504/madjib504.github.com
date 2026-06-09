@@ -25,6 +25,8 @@ from pathlib import Path
 
 from passlib.context import CryptContext
 
+from services.master_model import build_master_profile
+
 logger = logging.getLogger(__name__)
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -242,7 +244,13 @@ async def seed_initial_data(db) -> dict:
                     "location": _norm(r.get("ville")),
                     "rating": 0,
                     "total_reviews": 0,
+                    "claim_status": "seeded",
                 }
+                # Build nested master_profile (V2 schema) at insertion time
+                try:
+                    profile["master_profile"] = build_master_profile(profile, "doctor")
+                except Exception as ex_mp:
+                    logger.error(f"master_profile build failed for {name!r}: {ex_mp}")
                 await db.doctor_profiles.insert_one(profile)
                 stats["imported_doctor"] += 1
             else:
@@ -251,9 +259,16 @@ async def seed_initial_data(db) -> dict:
                     **common,
                     "company_name": name,
                     "activity_type": user_doc.get("activity_type", "autre"),
+                    "categorie": _norm(r.get("categorie")),
+                    "sous_categorie": _norm(r.get("sous_categorie")),
                     "description": bio,
                     "status": "active",
+                    "claim_status": "seeded",
                 }
+                try:
+                    profile["master_profile"] = build_master_profile(profile, "partner")
+                except Exception as ex_mp:
+                    logger.error(f"master_profile build failed for {name!r}: {ex_mp}")
                 await db.partner_profiles.insert_one(profile)
                 stats["imported_partner"] += 1
         except Exception as ex:

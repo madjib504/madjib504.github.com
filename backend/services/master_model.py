@@ -122,7 +122,131 @@ SPECIALTY_TO_SYMPTOMS = {
     "humanitaire / ong": [
         "urgence", "secourisme", "aide alimentaire", "catastrophe",
     ],
+    # --- Partenaires / Structures ---
+    "pharmacie": [
+        "médicament", "ordonnance", "vente médicament", "garde",
+        "pharmacien", "conseil médicament",
+    ],
+    "laboratoire": [
+        "analyse sang", "prise de sang", "bilan sanguin", "test biologique",
+        "examen biologique", "prélèvement", "résultat laboratoire",
+    ],
+    "imagerie": [
+        "radio", "radiographie", "échographie", "scanner", "irm",
+        "imagerie médicale", "examen imagerie",
+    ],
+    "radiologie": [
+        "radio", "radiographie", "échographie", "scanner", "irm",
+    ],
+    "hôpital": [
+        "urgence", "hospitalisation", "soins continus", "consultation hospitalière",
+    ],
+    "clinique": [
+        "consultation", "hospitalisation", "soins", "chirurgie",
+    ],
+    "polyclinique": [
+        "consultation", "hospitalisation", "soins", "plusieurs spécialités",
+    ],
+    "centre médical": [
+        "consultation", "soins ambulatoires", "médecine générale",
+    ],
+    "centre de santé": [
+        "consultation", "vaccination", "soins primaires",
+    ],
+    "infirmier": [
+        "soin à domicile", "pansement", "injection", "perfusion",
+    ],
+    "soins à domicile": [
+        "soin à domicile", "infirmier", "pansement", "personne âgée",
+    ],
+    "spa": [
+        "détente", "massage", "relaxation", "soin du corps",
+    ],
+    "salon de beauté": [
+        "esthétique", "beauté", "soin visage", "épilation",
+    ],
+    "salon de coiffure": [
+        "coiffure", "coupe", "tressage", "soin cheveux",
+    ],
+    "esthétique": [
+        "soin visage", "épilation", "manucure", "beauté",
+    ],
+    "fitness": [
+        "musculation", "cardio", "remise en forme", "perte de poids",
+    ],
+    "sport": [
+        "activité physique", "musculation", "remise en forme",
+    ],
+    "barbier": [
+        "barbe", "coupe homme", "rasage",
+    ],
+    "formation santé": [
+        "formation", "secourisme", "premiers soins",
+    ],
+    "matériel médical": [
+        "équipement médical", "fauteuil roulant", "matériel infirmier",
+    ],
 }
+
+# Mots-clés activity_type → catégorie canonique (utilisée pour le matching partner).
+PARTNER_CATEGORY_NORMALIZATION = {
+    "pharma": "pharmacie",
+    "officine": "pharmacie",
+    "labo": "laboratoire",
+    "analyse": "laboratoire",
+    "imagerie": "imagerie",
+    "radio": "radiologie",
+    "hôpital": "hôpital",
+    "hopital": "hôpital",
+    "polyclinique": "polyclinique",
+    "clinique": "clinique",
+    "centre médical": "centre médical",
+    "centre medical": "centre médical",
+    "centre de santé": "centre de santé",
+    "centre de sante": "centre de santé",
+    "infirmier": "infirmier",
+    "domicile": "soins à domicile",
+    "spa": "spa",
+    "salon de beauté": "salon de beauté",
+    "salon de beaute": "salon de beauté",
+    "esthét": "esthétique",
+    "esthet": "esthétique",
+    "coiffure": "salon de coiffure",
+    "coiffeur": "salon de coiffure",
+    "fitness": "fitness",
+    "sport": "sport",
+    "gym": "fitness",
+    "barbier": "barbier",
+    "formation": "formation santé",
+    "matériel": "matériel médical",
+    "materiel": "matériel médical",
+    "humanitaire": "humanitaire / ong",
+    "ong": "humanitaire / ong",
+    "association": "humanitaire / ong",
+    "tradi": "phytothérapie",
+    "phytoth": "phytothérapie",
+    "naturo": "naturopathie",
+    "yoga": "yoga",
+    "massage": "massage thérapeutique",
+    "nutrition": "nutrition",
+    "diététic": "nutrition",
+    "kiné": "kinésithérapie",
+    "kine": "kinésithérapie",
+    "psy": "psychologie",
+    "écoute": "centre d'écoute",
+    "ecoute": "centre d'écoute",
+}
+
+
+def normalize_partner_category(raw: str) -> str:
+    """Convertit un activity_type/categorie brut vers une catégorie canonique."""
+    if not raw:
+        return ""
+    txt = raw.lower().strip()
+    for kw, canon in PARTNER_CATEGORY_NORMALIZATION.items():
+        if kw in txt:
+            return canon
+    return txt
 
 SECTOR_BY_MEDICAL_TYPE = {
     "moderne": "medical",
@@ -157,11 +281,22 @@ def detect_sector(record: dict) -> str:
     return "medical"
 
 
-def derive_symptoms_for_specialties(specialties: list) -> list:
-    """Réunit tous les symptômes connus pour les spécialités fournies."""
+def derive_symptoms_for_specialties(specialties: list, categorie: str = "") -> list:
+    """Réunit tous les symptômes connus pour les spécialités fournies.
+    Tient compte aussi de la catégorie principale (utile pour les partenaires)."""
     seen = []
-    for sp in specialties or []:
+    # Inclure la catégorie principale comme premier élément à matcher (ex: 'pharmacie')
+    candidates = list(specialties or [])
+    norm_cat = normalize_partner_category(categorie)
+    if norm_cat and norm_cat not in [c.lower() for c in candidates]:
+        candidates.insert(0, norm_cat)
+    elif categorie and categorie not in candidates:
+        candidates.insert(0, categorie)
+
+    for sp in candidates:
         key = (sp or "").lower().strip()
+        if not key:
+            continue
         # Match partial: "Cabinet Dentaire" → contient "dent" → dentisterie
         for spec_key, symptoms in SPECIALTY_TO_SYMPTOMS.items():
             if spec_key in key or any(part in key for part in spec_key.split()):
@@ -172,14 +307,45 @@ def derive_symptoms_for_specialties(specialties: list) -> list:
     return seen[:15]  # cap to 15
 
 
-def derive_needs(sector: str, specialties: list) -> list:
+def derive_needs(sector: str, specialties: list, categorie: str = "") -> list:
     """Mappe un secteur + spécialités sur des besoins en langage naturel."""
-    needs = {
+    base_needs = {
         "medical": ["consultation médicale", "diagnostic", "examen"],
         "bien_etre": ["détente", "bien-être", "soins du corps"],
         "social_humanitaire": ["soutien", "écoute", "aide"],
         "communautaire": ["accompagnement communautaire"],
     }.get(sector, ["consultation"])
+    needs = list(base_needs)
+
+    # Besoins liés à la catégorie principale (partenaire)
+    norm_cat = normalize_partner_category(categorie)
+    category_needs_map = {
+        "pharmacie": ["achat médicament", "conseil pharmacien", "ordonnance"],
+        "laboratoire": ["bilan sanguin", "analyse biologique", "prélèvement"],
+        "imagerie": ["échographie", "radio", "scanner"],
+        "radiologie": ["radiographie", "scanner", "irm"],
+        "hôpital": ["urgence", "hospitalisation", "soins continus"],
+        "clinique": ["consultation", "hospitalisation", "chirurgie"],
+        "polyclinique": ["consultation pluridisciplinaire", "hospitalisation"],
+        "centre médical": ["consultation", "médecine générale"],
+        "centre de santé": ["consultation", "vaccination"],
+        "infirmier": ["soin à domicile", "pansement", "injection"],
+        "soins à domicile": ["soin à domicile", "infirmier"],
+        "spa": ["détente", "massage", "soin du corps"],
+        "salon de beauté": ["soin esthétique", "beauté"],
+        "salon de coiffure": ["coiffure", "soin cheveux"],
+        "esthétique": ["soin esthétique", "beauté"],
+        "fitness": ["remise en forme", "musculation"],
+        "sport": ["activité physique", "remise en forme"],
+        "barbier": ["barbe", "coupe homme"],
+        "formation santé": ["formation", "premiers soins"],
+        "matériel médical": ["équipement médical", "achat matériel"],
+        "humanitaire / ong": ["aide", "soutien social"],
+    }
+    if norm_cat in category_needs_map:
+        for n in category_needs_map[norm_cat]:
+            if n not in needs:
+                needs.append(n)
 
     for sp in (specialties or [])[:3]:
         key = (sp or "").lower().strip()
@@ -198,6 +364,12 @@ def derive_ai_tags(record: dict, specialties: list) -> list:
         if sp_clean and sp_clean.lower() not in [t.lower() for t in tags]:
             tags.append(sp_clean)
 
+    # Catégorie principale normalisée
+    categorie = record.get("activity_type") or record.get("categorie") or ""
+    norm_cat = normalize_partner_category(categorie)
+    if norm_cat and norm_cat.lower() not in [t.lower() for t in tags]:
+        tags.append(norm_cat)
+
     # Mots-clés du nom et de la bio
     text_blob = " ".join([
         record.get("name") or "",
@@ -211,13 +383,16 @@ def derive_ai_tags(record: dict, specialties: list) -> list:
         "cardio", "dentaire", "dermato", "gynéco", "pédiatr", "ophtalmo",
         "kiné", "psy", "ortho", "pneum", "endocrin", "nutrition", "spa",
         "yoga", "ong", "humanitaire", "coach", "naturo", "phyto", "tradi",
+        "pharma", "labo", "radio", "imagerie", "hopital", "hôpital",
+        "clinique", "polyclinique", "infirmier", "esthét", "coiffure",
+        "fitness", "domicile",
     ]
     for kw in common_kw:
         if kw in text_blob and kw not in [t.lower() for t in tags]:
             tags.append(kw)
 
-    # Ajoute symptômes courants pour ces spécialités
-    syms = derive_symptoms_for_specialties(specialties)
+    # Ajoute symptômes courants pour ces spécialités + catégorie
+    syms = derive_symptoms_for_specialties(specialties, categorie)
     for s in syms[:5]:
         if s not in [t.lower() for t in tags]:
             tags.append(s)
@@ -286,6 +461,28 @@ def build_master_profile(record: dict, provider_kind: str) -> dict:
 
     coords = record.get("coordinates") or {}
 
+    # Booking defaults plus crédibles
+    booking_defaults = {
+        "doctor": {
+            "accepts_appointments": True,
+            "slot_duration_min": 30,
+            "consultation_domicile": False,
+            "teleconsultation": False,
+        },
+        "partner": {
+            "accepts_appointments": True,
+            "slot_duration_min": 20,
+            "consultation_domicile": False,
+            "teleconsultation": False,
+        },
+    }
+    booking = booking_defaults.get(provider_kind, booking_defaults["doctor"]).copy()
+    booking["accepts_whatsapp_booking"] = bool(record.get("whatsapp_number"))
+    if record.get("home_service"):
+        booking["consultation_domicile"] = True
+    if record.get("teleconsultation"):
+        booking["teleconsultation"] = True
+
     return {
         "identity": {
             "id": record.get("id") or "",
@@ -300,8 +497,8 @@ def build_master_profile(record: dict, provider_kind: str) -> dict:
             "provider_kind": provider_kind,
         },
         "ai_matching": {
-            "symptomes_pris_en_charge": derive_symptoms_for_specialties(specialties),
-            "besoins_pris_en_charge": derive_needs(sector, specialties),
+            "symptomes_pris_en_charge": derive_symptoms_for_specialties(specialties, categorie),
+            "besoins_pris_en_charge": derive_needs(sector, specialties, categorie),
             "ai_specialty_tags": derive_ai_tags(record, specialties),
             "embedding": None,  # rempli plus tard si on ajoute un vector store
         },
@@ -317,12 +514,7 @@ def build_master_profile(record: dict, provider_kind: str) -> dict:
             "latitude": coords.get("latitude"),
             "longitude": coords.get("longitude"),
         },
-        "booking": {
-            "accepts_appointments": True,
-            "accepts_whatsapp_booking": bool(record.get("whatsapp_number")),
-            "consultation_domicile": bool(record.get("home_service")),
-            "teleconsultation": bool(record.get("teleconsultation")),
-        },
+        "booking": booking,
         "trust": {
             "is_verified": bool(record.get("is_verified") or record.get("claim_status") == "verified"),
             "claim_status": record.get("claim_status") or ("seeded" if record.get("imported") else "verified"),

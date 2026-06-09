@@ -1368,25 +1368,71 @@ def detect_symptom_orientation(symptoms_raw: str) -> dict:
 
 
 async def find_providers_for_specialties(spec_names: List[str], limit: int = 12) -> List[dict]:
-    """Search providers (doctors) matching any of the given specialty names."""
+    """Search providers (doctors + relevant partners) matching any of the given specialty names.
+
+    Uses the V2 nested `master_profile.ai_matching.ai_specialty_tags` field first
+    (most accurate), then falls back to the flat `specialties`/`bio` fields for
+    backward compatibility with records that haven't been migrated yet.
+    """
     if not spec_names:
         return []
-    provider_query_or = [{"specialties": {"$regex": re.escape(name), "$options": "i"}} for name in spec_names]
-    provider_query_or += [{"bio": {"$regex": re.escape(name), "$options": "i"}} for name in spec_names]
-    providers = await db.doctor_profiles.find(
-        {"$or": provider_query_or},
-        {"_id": 0, "id": 1, "name": 1, "specialties": 1, "medical_type": 1,
-         "city": 1, "neighborhood": 1, "country": 1, "whatsapp_number": 1,
-         "profile_image": 1, "rating": 1, "total_reviews": 1, "claim_status": 1,
-         "coordinates": 1, "imported": 1}
-    ).limit(limit).to_list(limit)
+    # Build a regex OR query against both the V2 nested tags and the flat fields
+    escaped_names = [re.escape(name) for name in spec_names]
+    or_clauses = []
+    for name in escaped_names:
+        or_clauses.extend([
+            {"master_profile.ai_matching.ai_specialty_tags": {"$regex": name, "$options": "i"}},
+            {"master_profile.classification.specialites": {"$regex": name, "$options": "i"}},
+            {"master_profile.classification.categorie": {"$regex": name, "$options": "i"}},
+            {"specialties": {"$regex": name, "$options": "i"}},
+            {"bio": {"$regex": name, "$options": "i"}},
+        ])
+    query = {"$or": or_clauses}
+    projection = {
+        "_id": 0, "id": 1, "name": 1, "specialties": 1, "medical_type": 1,
+        "city": 1, "neighborhood": 1, "country": 1, "whatsapp_number": 1,
+        "profile_image": 1, "rating": 1, "total_reviews": 1, "claim_status": 1,
+        "coordinates": 1, "imported": 1, "master_profile": 1,
+    }
+
+    doctors = await db.doctor_profiles.find(query, projection).limit(limit).to_list(limit)
+
+    # Also include partners that are medical (pharmacies, labs, hospitals) when the
+    # mapped specialty matches their tags. This is essential for symptoms like
+    # "ordonnance" → pharmacie, or "bilan sanguin" → laboratoire.
+    partner_projection = {
+        "_id": 0, "id": 1, "name": 1, "company_name": 1, "activity_type": 1,
+        "city": 1, "neighborhood": 1, "country": 1, "whatsapp_number": 1,
+        "rating": 1, "total_reviews": 1, "claim_status": 1, "coordinates": 1,
+        "imported": 1, "master_profile": 1,
+    }
+    partners_raw = await db.partner_profiles.find(query, partner_projection).limit(limit).to_list(limit)
+    # Normalize partner shape so the frontend can render them like doctors
+    partners = []
+    for p in partners_raw:
+        p["specialties"] = (
+            (p.get("master_profile") or {}).get("classification", {}).get("specialites")
+            or [p.get("activity_type") or "Autre"]
+        )
+        p.setdefault("name", p.get("company_name") or "")
+        p["provider_kind"] = "partner"
+        partners.append(p)
+
+    for d in doctors:
+        d["provider_kind"] = "doctor"
+
+    providers = doctors + partners
 
     def _rank(p):
-        verified_bonus = 0 if (p.get("claim_status") == "verified") else 1
+        mp = p.get("master_profile") or {}
+        trust = mp.get("trust") or {}
+        # Higher triage_priority and verified records first
+        triage = -(trust.get("triage_priority") or 0)
+        verified_bonus = 0 if (p.get("claim_status") == "verified" or trust.get("is_verified")) else 1
         rating = -(p.get("rating") or 0)
-        return (verified_bonus, rating)
+        return (verified_bonus, triage, rating)
     providers.sort(key=_rank)
-    return providers
+    return providers[:limit]
 
 
 @api_router.post("/assistant/suggest")
@@ -1462,6 +1508,7 @@ async def smart_search(q: str = "", limit: int = 30):
         "sage femme": "sage-femme", "sage-femme": "sage-femme",
     }
     search_term = keyword_aliases.get(q.lower(), q)
+    # Query against both flat fields AND the new V2 master_profile nested fields
     directory_query = {
         "$or": [
             {"name": {"$regex": search_term, "$options": "i"}},
@@ -1469,14 +1516,66 @@ async def smart_search(q: str = "", limit: int = 30):
             {"specialties": {"$regex": search_term, "$options": "i"}},
             {"city": {"$regex": search_term, "$options": "i"}},
             {"neighborhood": {"$regex": search_term, "$options": "i"}},
+            {"master_profile.identity.name": {"$regex": search_term, "$options": "i"}},
+            {"master_profile.classification.specialites": {"$regex": search_term, "$options": "i"}},
+            {"master_profile.classification.categorie": {"$regex": search_term, "$options": "i"}},
+            {"master_profile.ai_matching.symptomes_pris_en_charge": {"$regex": search_term, "$options": "i"}},
+            {"master_profile.ai_matching.ai_specialty_tags": {"$regex": search_term, "$options": "i"}},
+            {"master_profile.contact.ville": {"$regex": search_term, "$options": "i"}},
+            {"master_profile.contact.commune": {"$regex": search_term, "$options": "i"}},
         ]
     }
-    direct = await db.doctor_profiles.find(
-        directory_query,
-        {"_id": 0, "id": 1, "name": 1, "specialties": 1, "medical_type": 1,
-         "city": 1, "neighborhood": 1, "whatsapp_number": 1, "rating": 1,
-         "total_reviews": 1, "claim_status": 1, "coordinates": 1}
-    ).limit(limit).to_list(limit)
+    projection = {
+        "_id": 0, "id": 1, "name": 1, "specialties": 1, "medical_type": 1,
+        "city": 1, "neighborhood": 1, "whatsapp_number": 1, "rating": 1,
+        "total_reviews": 1, "claim_status": 1, "coordinates": 1,
+        "master_profile": 1,
+    }
+    direct_doctors = await db.doctor_profiles.find(directory_query, projection).limit(limit).to_list(limit)
+    for d in direct_doctors:
+        d["provider_kind"] = "doctor"
+
+    # Include partners in directory mode too (pharmacies, labs, spas)
+    partner_proj = {
+        "_id": 0, "id": 1, "name": 1, "company_name": 1, "activity_type": 1,
+        "city": 1, "neighborhood": 1, "whatsapp_number": 1, "rating": 1,
+        "total_reviews": 1, "claim_status": 1, "coordinates": 1,
+        "master_profile": 1,
+    }
+    direct_partners_raw = await db.partner_profiles.find(directory_query, partner_proj).limit(limit).to_list(limit)
+    direct_partners = []
+    for p in direct_partners_raw:
+        p["specialties"] = (
+            (p.get("master_profile") or {}).get("classification", {}).get("specialites")
+            or [p.get("activity_type") or "Autre"]
+        )
+        p.setdefault("name", p.get("company_name") or "")
+        p["provider_kind"] = "partner"
+        direct_partners.append(p)
+
+    direct = direct_doctors + direct_partners
+
+    # Deduplicate by name (case-insensitive) - the seed loader created duplicates over multiple runs
+    seen_names = set()
+    direct_dedup = []
+    for p in direct:
+        n = (p.get("name") or "").strip().lower()
+        if n and n in seen_names:
+            continue
+        seen_names.add(n)
+        direct_dedup.append(p)
+    direct = direct_dedup
+
+    # Rank by triage_priority/verified status from master_profile
+    def _rank(p):
+        mp = p.get("master_profile") or {}
+        trust = mp.get("trust") or {}
+        triage = -(trust.get("triage_priority") or 0)
+        verified_bonus = 0 if (p.get("claim_status") == "verified" or trust.get("is_verified")) else 1
+        rating = -(p.get("rating") or 0)
+        return (verified_bonus, triage, rating)
+    direct.sort(key=_rank)
+    direct = direct[:limit]
 
     # Decide mode
     if orient["is_symptom"]:
@@ -1487,10 +1586,45 @@ async def smart_search(q: str = "", limit: int = 30):
         orient_providers = await find_providers_for_specialties(
             [s["specialty"] for s in orient_suggestions], limit=12
         )
+        # ALSO query providers that have this exact symptom in their
+        # master_profile.ai_matching.symptomes_pris_en_charge array.
+        # This catches symptoms not present in our static SYMPTOM_MAPPING.
+        direct_symptom_query = {
+            "$or": [
+                {"master_profile.ai_matching.symptomes_pris_en_charge": {"$regex": re.escape(q), "$options": "i"}},
+                {"master_profile.ai_matching.ai_specialty_tags": {"$regex": re.escape(q), "$options": "i"}},
+            ]
+        }
+        symptom_doctors = await db.doctor_profiles.find(
+            direct_symptom_query, projection
+        ).limit(12).to_list(12)
+        for d in symptom_doctors:
+            d["provider_kind"] = "doctor"
+        symptom_partners_raw = await db.partner_profiles.find(
+            direct_symptom_query, partner_proj
+        ).limit(8).to_list(8)
+        for p in symptom_partners_raw:
+            p["specialties"] = (
+                (p.get("master_profile") or {}).get("classification", {}).get("specialites")
+                or [p.get("activity_type") or "Autre"]
+            )
+            p.setdefault("name", p.get("company_name") or "")
+            p["provider_kind"] = "partner"
+
+        # Merge with orient_providers, deduplicate by id
+        seen_ids = set()
+        merged = []
+        for src in (symptom_doctors + symptom_partners_raw + orient_providers):
+            sid = src.get("id")
+            if not sid or sid in seen_ids:
+                continue
+            seen_ids.add(sid)
+            merged.append(src)
+        merged.sort(key=_rank)
         return {
             "mode": "orientation",
             "query": q,
-            "results": orient_providers[:limit],
+            "results": merged[:limit],
             "orientation": {
                 "urgency_level": orient["urgency_level"],
                 "urgency_label": orient["urgency_label"],
@@ -2797,6 +2931,12 @@ async def add_structure(payload: dict):
         "status": "active",
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
+    # Build nested master_profile (V2 schema) at creation
+    try:
+        from services.master_model import build_master_profile
+        profile_doc["master_profile"] = build_master_profile(profile_doc, "partner")
+    except Exception as ex_mp:
+        logging.error(f"master_profile build failed for new structure {structure_name!r}: {ex_mp}")
     await db.partner_profiles.insert_one(profile_doc)
 
     # Admin notification
@@ -3411,6 +3551,91 @@ async def trigger_master_model_migration(admin: dict = Depends(verify_admin_toke
         "partner_profiles_in_db": await db.partner_profiles.count_documents({}),
         "doctors_with_master": await db.doctor_profiles.count_documents({"master_profile": {"$exists": True}}),
         "partners_with_master": await db.partner_profiles.count_documents({"master_profile": {"$exists": True}}),
+    }
+
+
+@api_router.post("/admin/dedupe-providers")
+async def dedupe_providers(admin: dict = Depends(verify_admin_token)):
+    """Delete duplicate fiches (same name, case-insensitive) keeping the first one.
+
+    Also dedupes the corresponding `users` rows (orphans cleanup).
+    Idempotent: safe to re-run.
+    """
+    stats = {"doctors_removed": 0, "partners_removed": 0, "users_removed": 0}
+
+    for coll_name, col, kind_key in (
+        ("doctor_profiles", db.doctor_profiles, "doctors_removed"),
+        ("partner_profiles", db.partner_profiles, "partners_removed"),
+    ):
+        seen = {}
+        async for d in col.find({}, {"_id": 0, "id": 1, "name": 1, "user_id": 1, "company_name": 1, "created_at": 1}):
+            name = (d.get("name") or d.get("company_name") or "").strip().lower()
+            if not name:
+                continue
+            if name not in seen:
+                seen[name] = d
+                continue
+            # Determine which one to keep (oldest = first imported)
+            existing = seen[name]
+            keep, drop = (existing, d)
+            ec = existing.get("created_at") or ""
+            dc = d.get("created_at") or ""
+            if dc and ec and dc < ec:
+                keep, drop = d, existing
+                seen[name] = d
+            # Delete the dropped fiche + its orphan user
+            await col.delete_one({"id": drop["id"]})
+            stats[kind_key] += 1
+            drop_uid = drop.get("user_id")
+            if drop_uid:
+                deleted_user = await db.users.delete_one({"id": drop_uid, "imported": True})
+                stats["users_removed"] += deleted_user.deleted_count
+
+    return {
+        "success": True,
+        "stats": stats,
+        "doctor_profiles_in_db": await db.doctor_profiles.count_documents({}),
+        "partner_profiles_in_db": await db.partner_profiles.count_documents({}),
+    }
+
+
+@api_router.get("/admin/master-model/stats")
+async def master_model_stats(admin: dict = Depends(verify_admin_token)):
+    """Inspection endpoint: master_profile coverage + sample fields distribution."""
+    total_d = await db.doctor_profiles.count_documents({})
+    total_p = await db.partner_profiles.count_documents({})
+    with_d = await db.doctor_profiles.count_documents({"master_profile": {"$exists": True}})
+    with_p = await db.partner_profiles.count_documents({"master_profile": {"$exists": True}})
+    # Symptom coverage
+    d_with_symptoms = await db.doctor_profiles.count_documents({"master_profile.ai_matching.symptomes_pris_en_charge.0": {"$exists": True}})
+    p_with_symptoms = await db.partner_profiles.count_documents({"master_profile.ai_matching.symptomes_pris_en_charge.0": {"$exists": True}})
+    d_verified = await db.doctor_profiles.count_documents({"master_profile.trust.is_verified": True})
+    p_verified = await db.partner_profiles.count_documents({"master_profile.trust.is_verified": True})
+
+    # Top categories
+    pipeline = [
+        {"$group": {"_id": "$master_profile.classification.categorie", "count": {"$sum": 1}}},
+        {"$sort": {"count": -1}},
+        {"$limit": 15},
+    ]
+    top_doc_cats = await db.doctor_profiles.aggregate(pipeline).to_list(15)
+    top_part_cats = await db.partner_profiles.aggregate(pipeline).to_list(15)
+
+    return {
+        "doctor_profiles": {
+            "total": total_d,
+            "with_master_profile": with_d,
+            "with_symptoms": d_with_symptoms,
+            "verified": d_verified,
+        },
+        "partner_profiles": {
+            "total": total_p,
+            "with_master_profile": with_p,
+            "with_symptoms": p_with_symptoms,
+            "verified": p_verified,
+        },
+        "top_doctor_categories": top_doc_cats,
+        "top_partner_categories": top_part_cats,
     }
 
 
