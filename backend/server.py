@@ -20,7 +20,7 @@ import base64
 import aiofiles
 import asyncio
 from services.storage import init_storage, put_object, get_object
-from services.email_service import send_verification_email
+from services.email_service import send_verification_email, send_claim_decision_email
 from services.seed_loader import seed_initial_data
 from services.master_model import migrate_all_providers
 
@@ -3268,6 +3268,21 @@ async def decide_claim(claim_id: str, payload: dict, admin: dict = Depends(verif
         admin, f"claim_{action}d", "claim", claim_id,
         {"provider_id": claim["provider_id"], "provider_kind": claim["provider_kind"], "reason": reason}
     )
+
+    # Fire-and-forget decision email to the requester (skips auto-generated emails)
+    try:
+        asyncio.create_task(send_claim_decision_email(
+            recipient_email=claim.get("email", ""),
+            user_name=claim.get("full_name", ""),
+            provider_name=claim.get("provider_name", "votre fiche"),
+            trust_score=int(claim.get("trust_score") or 0),
+            claim_type=claim.get("claim_type") or claim.get("function_role") or "",
+            decision=action,
+            reason=(reason or "").strip(),
+        ))
+    except Exception as ex_mail:
+        logging.error(f"claim decision email scheduling failed: {ex_mail}")
+
     return {"success": True, "status": new_claim_status}
 
 
