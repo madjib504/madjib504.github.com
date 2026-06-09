@@ -12,7 +12,6 @@ import { Eye, EyeOff } from 'lucide-react';
 const Login = ({ setUser }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [whatsappNumber, setWhatsappNumber] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -22,25 +21,16 @@ const Login = ({ setUser }) => {
     setLoading(true);
 
     try {
-      const response = await axios.post(`${API}/auth/login`, { 
-        email, 
-        password,
-        whatsapp_number: whatsappNumber || null
-      });
+      const response = await axios.post(`${API}/auth/login`, { email, password });
       localStorage.setItem('token', response.data.token);
       setUser(response.data.user);
       toast.success('Connexion réussie !');
-      
-      // Small delay to ensure state is updated
+
       setTimeout(() => {
         const ut = response.data.user.user_type;
-        if (ut === 'patient') {
-          navigate('/patient/dashboard');
-        } else if (ut === 'partner') {
-          navigate('/partner/dashboard');
-        } else {
-          navigate('/doctor/dashboard');
-        }
+        if (ut === 'patient') navigate('/patient/dashboard');
+        else if (ut === 'partner') navigate('/partner/dashboard');
+        else navigate('/doctor/dashboard');
       }, 100);
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Erreur de connexion');
@@ -50,7 +40,7 @@ const Login = ({ setUser }) => {
   };
 
   return (
-    <div data-testid="login-page" className="min-h-screen flex items-center justify-center bg-gradient-to-br from-stone-50 via-blue-50 to-sky-50 px-6 pt-20">
+    <div data-testid="login-page" className="min-h-[80vh] flex items-center justify-center bg-gradient-to-br from-stone-50 via-blue-50 to-sky-50 px-6 py-10">
       <Card className="w-full max-w-md shadow-xl border-stone-100">
         <CardHeader className="space-y-1">
           <CardTitle className="text-3xl font-serif font-bold text-blue-900" data-testid="login-title">Connexion</CardTitle>
@@ -97,23 +87,6 @@ const Login = ({ setUser }) => {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="whatsapp">Numéro WhatsApp (optionnel)</Label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-green-600 text-lg">📱</span>
-                <Input
-                  id="whatsapp"
-                  type="tel"
-                  placeholder="+225 XX XX XX XX XX"
-                  value={whatsappNumber}
-                  onChange={(e) => setWhatsappNumber(e.target.value)}
-                  className="bg-white border-stone-200 focus:border-blue-800 focus:ring-1 focus:ring-blue-800 rounded-lg h-12 pl-10"
-                  data-testid="login-whatsapp-input"
-                />
-              </div>
-              <p className="text-xs text-stone-500">Ajoutez ou mettez à jour votre numéro WhatsApp</p>
-            </div>
-
             <Button
               type="submit"
               disabled={loading}
@@ -126,7 +99,7 @@ const Login = ({ setUser }) => {
           <div className="mt-6 text-center text-sm text-stone-600">
             Pas encore de compte ?{' '}
             <Link to="/register" className="text-blue-900 font-medium hover:underline" data-testid="login-register-link">
-              S'inscrire
+              S&apos;inscrire
             </Link>
           </div>
         </CardContent>
