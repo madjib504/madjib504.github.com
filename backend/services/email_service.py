@@ -384,6 +384,148 @@ async def send_structure_added_email(
         return False
 
 
+# ============ J+7 PROFILE INCOMPLETE REMINDER ============
+
+REMINDER_ITEM_LABELS = {
+    "profile_image": ("📷 Photo de profil", "Ajoutez votre photo ou logo pour humaniser votre fiche"),
+    "cover_image": ("🖼️ Photo de couverture", "Mettez en avant votre établissement avec une bannière"),
+    "bio": ("📝 Description", "Décrivez vos services en quelques lignes pour rassurer les patients"),
+    "video_url": ("🎬 Vidéo de présentation", "Une vidéo de 30s booste 3× les rendez-vous"),
+    "horaires": ("⏰ Horaires d'ouverture", "Indiquez vos disponibilités pour recevoir des RDV pertinents"),
+    "city": ("📍 Adresse complète", "Ville et quartier précis pour apparaître dans les recherches locales"),
+    "whatsapp_number": ("💬 Numéro WhatsApp", "Permettez aux patients de vous contacter instantanément"),
+    "specialties": ("🩺 Spécialités", "Listez vos domaines d'expertise pour matcher avec les symptômes IA"),
+}
+
+
+def _build_j7_reminder_html(
+    user_name: str, structure_name: str, missing_items: list, edit_url: str
+) -> str:
+    items_html = "".join([
+        f"""
+        <tr>
+          <td style="padding:10px 0;border-bottom:1px solid #f3f4f6;">
+            <table cellspacing="0" cellpadding="0" border="0" width="100%">
+              <tr>
+                <td style="vertical-align:top;width:30px;font-size:18px;">{label_emoji}</td>
+                <td>
+                  <p style="margin:0;color:#0f172a;font-size:14px;font-weight:bold;">{label_text}</p>
+                  <p style="margin:2px 0 0 0;color:#64748b;font-size:12px;line-height:1.5;">{desc}</p>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        """
+        for item_key in missing_items
+        for (label_full, desc) in [REMINDER_ITEM_LABELS.get(item_key, (f"⚙️ {item_key}", "À compléter"))]
+        for (label_emoji, label_text) in [(label_full.split(' ', 1)[0], label_full.split(' ', 1)[1] if ' ' in label_full else label_full)]
+    ])
+    completion_pct = max(0, min(100, 100 - len(missing_items) * 12))
+    return f"""
+    <!DOCTYPE html>
+    <html lang="fr">
+    <head><meta charset="UTF-8" /></head>
+    <body style="margin:0;padding:0;font-family:Arial,Helvetica,sans-serif;background-color:#f5f5f4;">
+      <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color:#f5f5f4;padding:32px 0;">
+        <tr><td align="center">
+          <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" style="max-width:600px;background-color:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.05);">
+            <tr>
+              <td style="background:linear-gradient(135deg,#7c2d12 0%,#c2410c 100%);padding:36px 32px;text-align:center;">
+                <h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:bold;">📸 Votre fiche reçoit 4× plus de RDV avec une photo</h1>
+                <p style="margin:8px 0 0 0;color:#fed7aa;font-size:14px;">Complétez en 1 min — c'est tout ce qui manque</p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:36px 32px;">
+                <h2 style="margin:0 0 12px 0;color:#1c1917;font-size:18px;">Bonjour {user_name} 👋</h2>
+                <p style="margin:0 0 18px 0;color:#44403c;font-size:15px;line-height:1.6;">
+                  Cela fait <strong>une semaine</strong> que <strong>{structure_name}</strong> est sur keneyakafisa. Bonne nouvelle : les patients commencent à vous découvrir via la recherche IA ! Mais votre fiche est encore <strong style="color:#c2410c;">incomplète à {100 - completion_pct}%</strong>.
+                </p>
+
+                <!-- Completion bar -->
+                <div style="margin:16px 0 8px 0;background-color:#f1f5f9;border-radius:9999px;height:12px;overflow:hidden;">
+                  <div style="width:{completion_pct}%;background:linear-gradient(90deg,#ea580c,#f59e0b);height:12px;"></div>
+                </div>
+                <p style="margin:0 0 24px 0;color:#64748b;font-size:12px;text-align:right;font-family:monospace;">
+                  Complétude : <strong style="color:#ea580c;">{completion_pct}%</strong>
+                </p>
+
+                <p style="margin:0 0 12px 0;color:#1c1917;font-size:15px;font-weight:bold;">
+                  ✏️ Ce qu'il vous manque encore ({len(missing_items)} éléments) :
+                </p>
+                <table cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-bottom:8px;">
+                  {items_html}
+                </table>
+
+                <div style="background-color:#fef3c7;border-left:4px solid #d97706;border-radius:6px;padding:14px 16px;margin:24px 0;">
+                  <p style="margin:0;color:#78350f;font-size:13px;line-height:1.6;">
+                    💡 <strong>Le saviez-vous ?</strong> Une fiche avec photo + description + horaires reçoit en moyenne <strong>4× plus de demandes de rendez-vous</strong> qu'une fiche incomplète. Et ça ne prend que 60 secondes à finaliser.
+                  </p>
+                </div>
+
+                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                  <tr><td align="center" style="padding:8px 0 16px 0;">
+                    <a href="{edit_url}" style="display:inline-block;background-color:#c2410c;color:#ffffff;text-decoration:none;padding:16px 40px;border-radius:9999px;font-size:16px;font-weight:bold;">
+                      Compléter ma fiche maintenant →
+                    </a>
+                  </td></tr>
+                </table>
+
+                <p style="margin:24px 0 0 0;color:#a8a29e;font-size:12px;line-height:1.6;text-align:center;">
+                  Vous ne recevrez ce rappel qu'une seule fois. Si vous ne souhaitez plus utiliser la plateforme, vous pouvez ignorer cet email.
+                </p>
+              </td>
+            </tr>
+            <tr>
+              <td style="background-color:#fafaf9;padding:20px 32px;text-align:center;border-top:1px solid #e7e5e4;">
+                <p style="margin:0;color:#78716c;font-size:12px;">
+                  © {os.environ.get('CURRENT_YEAR', '2026')} keneyakafisa — Votre santé, notre priorité.
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td></tr>
+      </table>
+    </body>
+    </html>
+    """
+
+
+async def send_j7_reminder_email(
+    recipient_email: str, user_name: str, structure_name: str, missing_items: list
+) -> bool:
+    """Send a J+7 incomplete-profile reminder email."""
+    api_key = os.environ.get("RESEND_API_KEY")
+    if not api_key:
+        logger.warning("RESEND_API_KEY not configured; skipping J+7 reminder")
+        return False
+    if not recipient_email or recipient_email.endswith("@keneyakafisa.app"):
+        logger.info(f"Skipping J+7 reminder to auto-generated address: {recipient_email}")
+        return False
+    if not missing_items:
+        return False  # nothing to nag about
+
+    resend.api_key = api_key
+    frontend_url = os.environ.get("FRONTEND_URL", "").rstrip("/")
+    sender = os.environ.get("SENDER_EMAIL", "onboarding@resend.dev")
+    edit_url = f"{frontend_url}/login"
+
+    params = {
+        "from": f"keneyakafisa <{sender}>",
+        "to": [recipient_email],
+        "subject": f"📸 {structure_name} — il manque encore {len(missing_items)} éléments pour booster vos RDV",
+        "html": _build_j7_reminder_html(user_name, structure_name, missing_items, edit_url),
+    }
+    try:
+        result = await asyncio.to_thread(resend.Emails.send, params)
+        logger.info(f"J+7 reminder sent to {recipient_email}: id={result.get('id')}")
+        return True
+    except Exception as e:
+        logger.error(f"Failed to send J+7 reminder to {recipient_email}: {e}")
+        return False
+
+
 async def send_claim_decision_email(
     recipient_email: str,
     user_name: str,

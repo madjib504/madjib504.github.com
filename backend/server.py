@@ -3992,6 +3992,43 @@ async def trigger_master_model_migration(admin: dict = Depends(verify_admin_toke
     }
 
 
+@api_router.post("/admin/send-j7-reminders")
+async def trigger_j7_reminders(admin: dict = Depends(verify_admin_token)):
+    """Manually trigger the J+7 incomplete-profile reminder scan.
+
+    The same scan runs automatically every 6 hours; this endpoint lets the
+    OWNER trigger it on demand (e.g., after fixing an SMTP issue).
+    """
+    from services.profile_reminders import find_and_send_reminders
+    stats = await find_and_send_reminders(db)
+    await log_admin_action(admin, "j7_reminder_run", "system", "reminders", stats)
+    return {"success": True, "stats": stats}
+
+
+@api_router.get("/admin/j7-reminders/stats")
+async def j7_reminders_stats(admin: dict = Depends(verify_admin_token)):
+    """Aggregate stats about the J+7 reminder pipeline."""
+    eligible = await db.users.count_documents({
+        "user_type": {"$in": ["partner", "doctor"]},
+        "imported": {"$ne": True},
+        "reminder_j7_sent_at": {"$exists": False},
+    })
+    sent_total = await db.users.count_documents({
+        "reminder_j7_sent_at": {"$exists": True},
+        "reminder_j7_skipped": {"$exists": False},
+    })
+    skipped_complete = await db.users.count_documents({"reminder_j7_skipped": "profile_complete"})
+    skipped_no_email = await db.users.count_documents({"reminder_j7_skipped": "no_real_email"})
+    failed = await db.users.count_documents({"reminder_j7_skipped": "send_failed"})
+    return {
+        "still_eligible_or_too_recent": eligible,
+        "reminders_sent": sent_total,
+        "skipped_profile_complete": skipped_complete,
+        "skipped_no_real_email": skipped_no_email,
+        "send_failed": failed,
+    }
+
+
 @api_router.post("/admin/dedupe-providers")
 async def dedupe_providers(admin: dict = Depends(verify_admin_token)):
     """Delete duplicate fiches (same name, case-insensitive) keeping the first one.
@@ -4124,6 +4161,13 @@ async def startup_storage():
         await ensure_owner_admin_exists()
     except Exception as e:
         logging.error(f"Failed to seed OWNER admin: {e}")
+
+    # Start the J+7 incomplete-profile reminder background loop
+    try:
+        from services.profile_reminders import start_reminder_loop
+        await start_reminder_loop(db)
+    except Exception as e:
+        logging.error(f"Failed to start J+7 reminder loop: {e}")
 
 
 # Register all api routes (must be AFTER all @api_router.* decorators)
