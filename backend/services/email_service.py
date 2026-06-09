@@ -401,6 +401,10 @@ REMINDER_ITEM_LABELS = {
 def _build_j7_reminder_html(
     user_name: str, structure_name: str, missing_items: list, edit_url: str
 ) -> str:
+    # Pull out the video suggestion into a featured block when it's missing
+    video_is_missing = "video_url" in missing_items
+    remaining_items = [m for m in missing_items if m != "video_url"]
+
     items_html = "".join([
         f"""
         <tr>
@@ -417,10 +421,43 @@ def _build_j7_reminder_html(
           </td>
         </tr>
         """
-        for item_key in missing_items
+        for item_key in remaining_items
         for (label_full, desc) in [REMINDER_ITEM_LABELS.get(item_key, (f"⚙️ {item_key}", "À compléter"))]
         for (label_emoji, label_text) in [(label_full.split(' ', 1)[0], label_full.split(' ', 1)[1] if ' ' in label_full else label_full)]
     ])
+    items_section = ""
+    if remaining_items:
+        items_section = f"""
+        <p style="margin:0 0 12px 0;color:#1c1917;font-size:15px;font-weight:bold;">
+          ✏️ Et aussi ces {len(remaining_items)} éléments :
+        </p>
+        <table cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-bottom:8px;">
+          {items_html}
+        </table>
+        """
+
+    # Featured video block — most impactful single addition
+    video_block = ""
+    if video_is_missing:
+        video_block = """
+        <div style="background:linear-gradient(135deg,#7c2d12 0%,#9a3412 100%);border-radius:10px;padding:24px;margin:24px 0;color:#ffffff;">
+          <table cellspacing="0" cellpadding="0" border="0" width="100%">
+            <tr>
+              <td style="vertical-align:top;width:60px;font-size:38px;line-height:1;">🎬</td>
+              <td>
+                <h3 style="margin:0;color:#ffffff;font-size:18px;">Une vidéo de 30 secondes = 3× plus de RDV</h3>
+                <p style="margin:8px 0 0 0;color:#fed7aa;font-size:14px;line-height:1.6;">
+                  Présentez-vous, votre équipe, vos locaux. Les patients ont 3× plus envie de prendre rendez-vous quand ils peuvent vous voir et entendre votre voix avant la consultation. <strong>C'est l'élément qui transforme le plus une fiche en RDV concret.</strong>
+                </p>
+                <p style="margin:10px 0 0 0;color:#fdba74;font-size:12px;">
+                  💡 Filmé en selfie avec votre téléphone — pas besoin de caméra pro.
+                </p>
+              </td>
+            </tr>
+          </table>
+        </div>
+        """
+
     completion_pct = max(0, min(100, 100 - len(missing_items) * 12))
     return f"""
     <!DOCTYPE html>
@@ -451,16 +488,13 @@ def _build_j7_reminder_html(
                   Complétude : <strong style="color:#ea580c;">{completion_pct}%</strong>
                 </p>
 
-                <p style="margin:0 0 12px 0;color:#1c1917;font-size:15px;font-weight:bold;">
-                  ✏️ Ce qu'il vous manque encore ({len(missing_items)} éléments) :
-                </p>
-                <table cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-bottom:8px;">
-                  {items_html}
-                </table>
+                {video_block}
+
+                {items_section}
 
                 <div style="background-color:#fef3c7;border-left:4px solid #d97706;border-radius:6px;padding:14px 16px;margin:24px 0;">
                   <p style="margin:0;color:#78350f;font-size:13px;line-height:1.6;">
-                    💡 <strong>Le saviez-vous ?</strong> Une fiche avec photo + description + horaires reçoit en moyenne <strong>4× plus de demandes de rendez-vous</strong> qu'une fiche incomplète. Et ça ne prend que 60 secondes à finaliser.
+                    💡 <strong>Le saviez-vous ?</strong> Une fiche avec photo + description + horaires reçoit en moyenne <strong>4× plus de demandes de rendez-vous</strong> qu'une fiche incomplète. Et avec une vidéo, c'est <strong>jusqu'à 12× plus</strong>.
                   </p>
                 </div>
 
@@ -511,10 +545,18 @@ async def send_j7_reminder_email(
     sender = os.environ.get("SENDER_EMAIL", "onboarding@resend.dev")
     edit_url = f"{frontend_url}/login"
 
+    # Make the subject dynamic depending on what's missing — video is the most impactful
+    if "video_url" in missing_items:
+        subject = f"🎬 Boostez {structure_name} avec une vidéo de 30s (3× plus de RDV)"
+    elif "profile_image" in missing_items:
+        subject = f"📸 {structure_name} — une photo = 4× plus de RDV"
+    else:
+        subject = f"📝 {structure_name} — il manque {len(missing_items)} éléments pour booster vos RDV"
+
     params = {
         "from": f"keneyakafisa <{sender}>",
         "to": [recipient_email],
-        "subject": f"📸 {structure_name} — il manque encore {len(missing_items)} éléments pour booster vos RDV",
+        "subject": subject,
         "html": _build_j7_reminder_html(user_name, structure_name, missing_items, edit_url),
     }
     try:
