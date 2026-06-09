@@ -208,6 +208,30 @@ const AdminDashboard = () => {
   };
 
   const [seedRunning, setSeedRunning] = useState(false);
+  const [masterRunning, setMasterRunning] = useState(false);
+
+  const runMasterMigration = async () => {
+    setMasterRunning(true);
+    try {
+      const r = await axios.post(`${API}/admin/migrate-master-model`, {}, getAuthHeaders());
+      const s = r.data.stats || {};
+      toast.success(`Master Model V2 appliqué : ${s.doctors_migrated || 0} médecins, ${s.partners_migrated || 0} partenaires.`);
+      alert(
+        `Master Model V2 enrichissement terminé ✅\n\n` +
+        `Médecins enrichis : ${s.doctors_migrated || 0}\n` +
+        `Partenaires enrichis : ${s.partners_migrated || 0}\n` +
+        `Erreurs : ${s.errors || 0}\n\n` +
+        `Total profils médecins : ${r.data.doctor_profiles_in_db}\n` +
+        `Avec master_profile : ${r.data.doctors_with_master}\n\n` +
+        `Total profils partenaires : ${r.data.partner_profiles_in_db}\n` +
+        `Avec master_profile : ${r.data.partners_with_master}`
+      );
+    } catch (err) {
+      toast.error('Échec : ' + (err.response?.data?.detail || err.message));
+    } finally {
+      setMasterRunning(false);
+    }
+  };
   const runSeed = async () => {
     setSeedRunning(true);
     try {
@@ -652,6 +676,29 @@ const AdminDashboard = () => {
                       data-testid="run-seed-btn"
                     >
                       {seedRunning ? 'En cours…' : 'Lancer l\'import'}
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                {/* Master Model V2 migration */}
+                <Card className="bg-slate-800 border-slate-700">
+                  <CardContent className="p-6 flex items-center justify-between flex-wrap gap-4">
+                    <div className="flex items-center gap-3">
+                      <Shield className="w-8 h-8 text-purple-400" />
+                      <div>
+                        <p className="text-white font-semibold">Master Model V2 (modèle unifié)</p>
+                        <p className="text-sm text-slate-400">
+                          Enrichit chaque fiche avec la structure imbriquée (identity, classification, ai_matching, contact, booking, trust). Idempotent.
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      onClick={runMasterMigration}
+                      disabled={masterRunning}
+                      className="bg-purple-700 hover:bg-purple-800 text-white"
+                      data-testid="run-master-model-btn"
+                    >
+                      {masterRunning ? 'En cours…' : 'Appliquer V2'}
                     </Button>
                   </CardContent>
                 </Card>

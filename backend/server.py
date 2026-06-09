@@ -22,6 +22,7 @@ import asyncio
 from services.storage import init_storage, put_object, get_object
 from services.email_service import send_verification_email
 from services.seed_loader import seed_initial_data
+from services.master_model import migrate_all_providers
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -3344,6 +3345,37 @@ async def resend_verification(current_user: User = Depends(get_current_user)):
     return {"success": True, "message": "Email de vérification renvoyé"}
 
 
+@api_router.post("/admin/migrate-master-model")
+async def trigger_master_model_migration(admin: dict = Depends(verify_admin_token)):
+    """Build the nested master_profile object on every doctor & partner fiche.
+    Idempotent — safe to re-run."""
+    stats = await migrate_all_providers(db)
+    return {
+        "success": True,
+        "stats": stats,
+        "doctor_profiles_in_db": await db.doctor_profiles.count_documents({}),
+        "partner_profiles_in_db": await db.partner_profiles.count_documents({}),
+        "doctors_with_master": await db.doctor_profiles.count_documents({"master_profile": {"$exists": True}}),
+        "partners_with_master": await db.partner_profiles.count_documents({"master_profile": {"$exists": True}}),
+    }
+
+
+@api_router.get("/providers/{provider_id}/master")
+async def get_master_profile(provider_id: str):
+    """Return the structured master_profile (V2 model) for any provider."""
+    for kind, col in (("doctor", db.doctor_profiles), ("partner", db.partner_profiles)):
+        doc = await col.find_one({"id": provider_id}, {"_id": 0, "master_profile": 1, "id": 1})
+        if doc:
+            mp = doc.get("master_profile")
+            if not mp:
+                # Build on the fly if missing (so callers always get the V2 shape)
+                full = await col.find_one({"id": provider_id}, {"_id": 0})
+                from services.master_model import build_master_profile
+                mp = build_master_profile(full, kind)
+            return {"id": provider_id, "kind": kind, "master_profile": mp}
+    raise HTTPException(status_code=404, detail="Fiche introuvable")
+
+
 @app.on_event("startup")
 async def startup_storage():
     """Initialize Emergent Object Storage on startup"""
@@ -3359,6 +3391,13 @@ async def startup_storage():
         await seed_initial_data(db)
     except Exception as e:
         logging.error(f"Seed loader failed: {e}")
+
+    # Idempotent master-model V2 enrichment.
+    # Adds the nested `master_profile` field on every doctor/partner record.
+    try:
+        await migrate_all_providers(db)
+    except Exception as e:
+        logging.error(f"Master-model migration failed: {e}")
 
 
 # Register all api routes (must be AFTER all @api_router.* decorators)
