@@ -21,14 +21,18 @@ Build a comprehensive health application in French named "keneyakafisa". The pla
 - [2025-12] Full auth (JWT) - 3 user types, doctor search, booking, admin dashboard, ads, WhatsApp redirect, PWA, partner registration.
 - [2026-02] Social links + video for doctors/partners, location fields, Resend email verification, Maintenance mode, Smart-Search AI orientation, Restructured Home with 3 flows (Patient/Claim/Add Structure), seed_loader for 103 providers.
 - [2026-02] **Master Model V2 nested schema deployed** : `{ identity, classification, ai_matching, contact, booking, trust }` on every doctor & partner fiche.
-  - `services/master_model.py`: build_master_profile() avec mapping enrichi pour pharmacies/labos/cliniques/spas/etc.
-  - Auto-génération des `symptomes_pris_en_charge`, `besoins_pris_en_charge`, `ai_specialty_tags`, `triage_priority`, `emergency_level` selon catégorie/spécialité.
-  - Migration idempotente au boot (`migrate_all_providers`) + lazy persistence sur GET /providers/{id}/master.
-  - `seed_loader.py` populate master_profile à l'insertion.
-  - `/api/structures/add` génère master_profile à la création.
-- [2026-02] **Smart-search V2** : interroge `master_profile.ai_matching.symptomes_pris_en_charge` + `ai_specialty_tags`, inclut partner_profiles (pharmacies/labos), tri par `master_profile.trust.triage_priority`, déduplication par nom.
-- [2026-02] **DB dedupe**: passage de 147/67 doctors/partners à 78/37 (99 doublons supprimés via /api/admin/dedupe-providers).
-- [2026-02] **Urgent symptom routing fixed**: q='urgence' déclenche maintenant mode=orientation + emergency_number=185.
+- [2026-02] **Smart-search V2** : interroge `master_profile.ai_matching.symptomes_pris_en_charge` + `ai_specialty_tags`, inclut partner_profiles, tri par `trust.triage_priority`, déduplication par nom.
+- [2026-02] **DB dedupe**: passage de 147/67 doctors/partners à 78/37 (99 doublons supprimés).
+- [2026-02] **Urgent symptom routing fixed**: q='urgence' déclenche mode=orientation + emergency_number=185.
+- [2026-02] **Espace OWNER (super-admin)** :
+  - Backend: `verify_owner_token` decorator, `log_admin_action()` helper, collection `admin_audit_log`
+  - Endpoints OWNER-only : GET/POST/PATCH/DELETE `/api/admin/owner/admins`, GET `/api/admin/owner/audit-log`
+  - 3 rôles : moderator, support, manager (créables par OWNER). Seed OWNER protégé (cannot disable/delete)
+  - Disabled admin blocked at login + on every authenticated request
+  - Audit log auto sur : admin_created/updated/deleted, maintenance_toggled, user_deleted, delete_all_data, claim_approved/rejected
+  - `DELETE /api/admin/delete-all` désormais réservé OWNER
+  - Frontend: `OwnerAdminPanel.js` (table modérateurs + journal audit), onglet "OWNER" (couronne dorée) visible uniquement si admin_role==='super_admin_owner'
+  - Validation Master Model V2 : claim approval met aussi à jour `master_profile.trust.is_verified`
 
 ## New API Endpoints (V2)
 - GET  /api/providers/{id}/master — fetch the V2 nested profile (lazy persist)
