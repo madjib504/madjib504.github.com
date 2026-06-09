@@ -9,11 +9,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Search, ArrowLeft, Building2, MapPin, CheckCircle2, ChevronRight } from 'lucide-react';
+import { Search, ArrowLeft, Building2, MapPin, CheckCircle2, ChevronRight, Upload, FileText, X as XIcon } from 'lucide-react';
 
-const FUNCTION_OPTIONS = [
-  'Médecin', 'Directeur', 'Responsable', 'Secrétaire', 'Manager',
-  'Propriétaire', 'Coach', 'Thérapeute', 'Assistant(e)', 'Autre',
+const CLAIM_TYPE_OPTIONS = [
+  { value: 'owner', label: 'Propriétaire' },
+  { value: 'manager', label: 'Manager / Directeur' },
+  { value: 'doctor', label: 'Médecin / Praticien' },
+  { value: 'secretary', label: 'Secrétaire / Assistant(e)' },
+  { value: 'admin_rep', label: 'Représentant administratif' },
 ];
 
 const ClaimFiche = () => {
@@ -29,10 +32,52 @@ const ClaimFiche = () => {
     full_name: '',
     phone: '',
     email: '',
-    function_role: 'Médecin',
+    claim_type: 'owner',
     justification: '',
     password: '',
   });
+  const [proofDocs, setProofDocs] = useState([]); // [{ url, name, content_type, size }]
+  const [uploading, setUploading] = useState(false);
+
+  const handleUploadFiles = async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    if (proofDocs.length + files.length > 5) {
+      toast.error('Maximum 5 documents.');
+      return;
+    }
+    setUploading(true);
+    try {
+      const uploaded = [];
+      for (const f of files) {
+        if (f.size > 10 * 1024 * 1024) {
+          toast.error(`${f.name} : trop volumineux (max 10 Mo).`);
+          continue;
+        }
+        const fd = new FormData();
+        fd.append('file', f);
+        const r = await axios.post(`${API}/claims/upload`, fd, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        uploaded.push({
+          url: r.data.url,
+          name: r.data.name,
+          content_type: r.data.content_type,
+          size: r.data.size,
+        });
+      }
+      setProofDocs((prev) => [...prev, ...uploaded]);
+      if (uploaded.length) toast.success(`${uploaded.length} document(s) ajouté(s).`);
+    } catch (err) {
+      toast.error(extractErrorMessage(err, "Erreur lors de l'upload."));
+    } finally {
+      setUploading(false);
+      // reset input so same file can be re-selected
+      e.target.value = '';
+    }
+  };
+
+  const removeDoc = (i) => setProofDocs((prev) => prev.filter((_, idx) => idx !== i));
 
   useEffect(() => {
     const trimmed = query.trim();
@@ -66,13 +111,14 @@ const ClaimFiche = () => {
     try {
       await axios.post(`${API}/claims`, {
         provider_id: selected.id,
-        provider_kind: selected.kind, // 'doctor' | 'partner'
+        provider_kind: selected.kind,
         full_name: form.full_name,
         phone: form.phone,
         email: form.email,
-        function_role: form.function_role,
+        claim_type: form.claim_type,
         justification: form.justification,
         password: form.password,
+        proof_documents: proofDocs,
       });
       setStep(3);
     } catch (err) {
@@ -222,22 +268,78 @@ const ClaimFiche = () => {
                     data-testid="claim-email-input" />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="claim_function">Fonction *</Label>
+                  <Label htmlFor="claim_function">Votre fonction *</Label>
                   <select id="claim_function"
-                    value={form.function_role}
-                    onChange={(e) => setForm({ ...form, function_role: e.target.value })}
+                    value={form.claim_type}
+                    onChange={(e) => setForm({ ...form, claim_type: e.target.value })}
                     className="w-full h-10 px-3 rounded-md border border-stone-200 bg-white text-stone-900"
                     data-testid="claim-function-select">
-                    {FUNCTION_OPTIONS.map((f) => <option key={f} value={f}>{f}</option>)}
+                    {CLAIM_TYPE_OPTIONS.map((f) => <option key={f.value} value={f.value}>{f.label}</option>)}
                   </select>
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="claim_justification">Pièce justificative / précisions (optionnel)</Label>
+                  <Label htmlFor="claim_justification">Message / Justification</Label>
                   <Textarea id="claim_justification" rows={3}
-                    placeholder="Lien ou description d'un document prouvant votre fonction (diplôme, carte d'employé, etc.)"
+                    placeholder="Expliquez votre lien avec cette structure (ex: « Je suis médecin propriétaire depuis 2015, voici ma licence et mon registre de commerce »). Min. 30 caractères pour booster votre score de confiance."
                     value={form.justification}
                     onChange={(e) => setForm({ ...form, justification: e.target.value })}
                     data-testid="claim-justification-input" />
+                </div>
+
+                {/* Documents justificatifs */}
+                <div className="space-y-2">
+                  <Label>Documents justificatifs (PDF / JPG / PNG, max 10 Mo chacun)</Label>
+                  <p className="text-xs text-stone-500 -mt-1">
+                    Ex : carte professionnelle, licence d&apos;exercice, registre de commerce, attestation d&apos;employeur. Max 5 fichiers.
+                  </p>
+                  <label
+                    htmlFor="claim-docs-input"
+                    className={`flex items-center justify-center gap-2 w-full h-20 border-2 border-dashed border-stone-300 rounded-lg cursor-pointer hover:border-blue-500 hover:bg-blue-50/50 transition ${uploading ? 'opacity-50 pointer-events-none' : ''}`}
+                    data-testid="claim-upload-area"
+                  >
+                    <Upload className="w-5 h-5 text-stone-500" />
+                    <span className="text-sm text-stone-600">
+                      {uploading ? 'Envoi en cours…' : 'Cliquer pour ajouter des fichiers'}
+                    </span>
+                    <input
+                      id="claim-docs-input"
+                      type="file"
+                      multiple
+                      accept="application/pdf,image/jpeg,image/png,image/webp"
+                      className="hidden"
+                      onChange={handleUploadFiles}
+                      disabled={uploading || proofDocs.length >= 5}
+                      data-testid="claim-docs-input"
+                    />
+                  </label>
+
+                  {proofDocs.length > 0 && (
+                    <ul className="space-y-1.5" data-testid="claim-uploaded-list">
+                      {proofDocs.map((d, i) => (
+                        <li
+                          key={i}
+                          className="flex items-center justify-between gap-2 px-3 py-2 bg-stone-100 rounded-md text-sm"
+                        >
+                          <span className="flex items-center gap-2 min-w-0">
+                            <FileText className="w-4 h-4 text-blue-700 flex-shrink-0" />
+                            <span className="truncate text-stone-700">{d.name}</span>
+                            <span className="text-xs text-stone-500 flex-shrink-0">
+                              {(d.size / 1024).toFixed(0)} Ko
+                            </span>
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => removeDoc(i)}
+                            className="text-red-500 hover:text-red-700 flex-shrink-0"
+                            aria-label={`Supprimer ${d.name}`}
+                            data-testid={`claim-doc-remove-${i}`}
+                          >
+                            <XIcon className="w-4 h-4" />
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="claim_password">Mot de passe pour votre compte *</Label>

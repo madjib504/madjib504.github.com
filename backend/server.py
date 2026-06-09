@@ -2928,19 +2928,117 @@ async def search_providers(q: str, limit: int = 20):
 
 # ============ CLAIMS (revendication d'une fiche existante) ============
 
+CLAIM_TYPES = {"owner", "manager", "doctor", "secretary", "admin_rep"}
+
+
+def compute_trust_score(claim: dict, user: dict, provider: dict) -> int:
+    """Compute a 0-100 trust score for a claim based on heuristics.
+
+    Factors:
+      +30 has at least one proof document
+      +15 multiple documents (>= 2)
+      +20 email looks professional (not free/auto-generated domain)
+      +15 name similarity ≥ 50% between user.name and provider.name
+      +10 phone matches provider phone or whatsapp (last 8 digits)
+      +10 justification non-empty (≥ 30 chars)
+    """
+    score = 0
+
+    docs = claim.get("proof_documents") or []
+    if len(docs) >= 1:
+        score += 30
+    if len(docs) >= 2:
+        score += 15
+
+    email = (user.get("email") or "").lower()
+    if email and "@keneyakafisa.app" not in email:
+        free_domains = ("gmail.com", "yahoo.com", "hotmail.com", "outlook.com",
+                        "icloud.com", "yahoo.fr", "live.com")
+        if not any(email.endswith("@" + d) for d in free_domains):
+            score += 20
+
+    user_name = (user.get("name") or "").lower()
+    provider_name = (provider.get("name") or provider.get("company_name") or "").lower()
+    if user_name and provider_name:
+        user_tokens = set(re.findall(r"[a-zà-ÿ]{3,}", user_name))
+        prov_tokens = set(re.findall(r"[a-zà-ÿ]{3,}", provider_name))
+        if user_tokens and prov_tokens:
+            overlap = len(user_tokens & prov_tokens) / max(len(user_tokens), 1)
+            if overlap >= 0.5:
+                score += 15
+
+    def _digits(s):
+        return re.sub(r"\D", "", s or "")[-8:]
+    user_phone = _digits(claim.get("phone") or user.get("whatsapp_number"))
+    prov_phones = [_digits(p) for p in [
+        provider.get("telephone"),
+        provider.get("whatsapp_number"),
+        (provider.get("master_profile") or {}).get("contact", {}).get("telephone"),
+    ] if p]
+    if user_phone and any(user_phone == p for p in prov_phones if p):
+        score += 10
+
+    if len((claim.get("justification") or "").strip()) >= 30:
+        score += 10
+
+    return max(0, min(100, score))
+
+
+@api_router.post("/claims/upload")
+async def upload_claim_document(file: UploadFile = File(...)):
+    """Upload a single proof document (PDF or image) for an in-progress claim."""
+    allowed = {
+        "application/pdf",
+        "image/jpeg", "image/jpg", "image/png", "image/webp", "image/heic", "image/heif",
+    }
+    if file.content_type not in allowed:
+        raise HTTPException(status_code=400, detail="Format non supporté. Utilisez PDF, JPG, PNG ou WebP.")
+    content = await file.read()
+    if len(content) > 10 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="Le fichier ne doit pas dépasser 10 Mo.")
+    ext = (file.filename.rsplit('.', 1)[-1] if '.' in (file.filename or '') else 'bin').lower()
+    if ext not in ("pdf", "jpg", "jpeg", "png", "webp", "heic", "heif"):
+        ext = "bin"
+    file_path = f"keneyakafisa/claims/{datetime.now(timezone.utc).strftime('%Y%m')}/{uuid.uuid4()}.{ext}"
+    try:
+        put_object(file_path, content, file.content_type)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur upload: {e}")
+    return {
+        "success": True,
+        "url": f"/api/media/{file_path}",
+        "name": (file.filename or "document")[:80],
+        "content_type": file.content_type,
+        "size": len(content),
+    }
+
+
 @api_router.post("/claims")
 async def create_claim(payload: dict):
     """Submit a claim request for an existing provider fiche (no auth required).
-    Creates a pending claim that admin must validate.
-    Also creates a user account (locked) so the user can log in once approved."""
+
+    payload supports the new V2 fields:
+      - claim_type : owner | manager | doctor | secretary | admin_rep (replaces function_role)
+      - proof_documents : list of { url, name, content_type } previously uploaded via /api/claims/upload
+    """
     provider_id = payload.get("provider_id")
-    provider_kind = payload.get("provider_kind")  # 'doctor' | 'partner'
+    provider_kind = payload.get("provider_kind")
     full_name = (payload.get("full_name") or "").strip()
     phone = (payload.get("phone") or "").strip()
     email = (payload.get("email") or "").strip().lower()
-    function_role = payload.get("function_role") or "Autre"
-    justification = payload.get("justification") or ""
+    # Backward compat : function_role kept as alias of claim_type
+    claim_type = (payload.get("claim_type") or payload.get("function_role") or "owner").strip().lower()
+    justification = payload.get("justification") or payload.get("message") or ""
     password = payload.get("password")
+    proof_documents = payload.get("proof_documents") or []
+
+    if claim_type not in CLAIM_TYPES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"claim_type invalide. Autorisés : {sorted(CLAIM_TYPES)}"
+        )
+    if not isinstance(proof_documents, list) or len(proof_documents) > 5:
+        raise HTTPException(status_code=400, detail="proof_documents doit être une liste de 5 fichiers max.")
 
     if not provider_id or provider_kind not in ("doctor", "partner") or not full_name or not phone or not password:
         raise HTTPException(status_code=400, detail="Champs requis manquants.")
@@ -2952,23 +3050,29 @@ async def create_claim(payload: dict):
     if (provider.get("claim_status") or "") == "verified":
         raise HTTPException(status_code=400, detail="Cette fiche est déjà revendiquée.")
 
-    # Generate a unique email if not provided
+    # Block duplicate pending claim for the same provider+phone/email
+    dup = await db.claims.find_one({
+        "provider_id": provider_id,
+        "status": "pending",
+        "$or": [{"phone": phone}, {"email": email} if email else {"_": "_"}]
+    }, {"_id": 0, "id": 1})
+    if dup:
+        raise HTTPException(status_code=400, detail="Une demande en attente existe déjà pour cette fiche avec ces coordonnées.")
+
     if not email:
         slug = re.sub(r"[^a-z0-9]+", "-", full_name.lower()).strip("-") or "claim"
         email = f"claim-{slug}-{secrets.token_hex(3)}@keneyakafisa.app"
 
-    # Ensure no user exists with that email
     if await db.users.find_one({"email": email}, {"_id": 0, "id": 1}):
         raise HTTPException(status_code=400, detail="Un compte avec cet email existe déjà. Connectez-vous.")
 
-    # Create the (locked-until-approved) user account
     user_id = str(uuid.uuid4())
     new_user_doc = {
         "id": user_id,
         "email": email,
         "name": full_name,
         "user_type": "partner",
-        "partner_role": (function_role or "owner").lower(),
+        "partner_role": claim_type,
         "password": hash_password(password),
         "whatsapp_number": phone,
         "verified": False,
@@ -2978,8 +3082,9 @@ async def create_claim(payload: dict):
     }
     await db.users.insert_one(new_user_doc)
 
+    claim_id = str(uuid.uuid4())
     claim_doc = {
-        "id": str(uuid.uuid4()),
+        "id": claim_id,
         "provider_id": provider_id,
         "provider_kind": provider_kind,
         "provider_name": provider.get("name") or provider.get("company_name"),
@@ -2987,20 +3092,25 @@ async def create_claim(payload: dict):
         "full_name": full_name,
         "phone": phone,
         "email": email,
-        "function_role": function_role,
+        "claim_type": claim_type,
+        "function_role": claim_type,  # legacy alias
         "justification": justification,
+        "proof_documents": proof_documents,
         "status": "pending",
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
+    # Compute trust score
+    claim_doc["trust_score"] = compute_trust_score(claim_doc, new_user_doc, provider)
     await db.claims.insert_one(claim_doc)
 
-    # Mark the provider fiche as claim_pending
     await collection.update_one(
         {"id": provider_id},
-        {"$set": {"claim_status": "claim_pending"}}
+        {"$set": {
+            "claim_status": "claim_pending",
+            "master_profile.trust.claim_status": "claim_pending",
+        }}
     )
 
-    # Admin notification
     await db.admin_notifications.insert_one({
         "id": str(uuid.uuid4()),
         "type": "claim_request",
@@ -3010,12 +3120,17 @@ async def create_claim(payload: dict):
         "user_email": email,
         "user_phone": phone,
         "provider_name": claim_doc["provider_name"],
-        "message": f"{full_name} demande à revendiquer la fiche : {claim_doc['provider_name']}",
+        "message": f"{full_name} demande à revendiquer la fiche : {claim_doc['provider_name']} (trust {claim_doc['trust_score']})",
         "read": False,
         "created_at": datetime.now(timezone.utc).isoformat(),
     })
 
-    return {"success": True, "claim_id": claim_doc["id"], "status": "pending"}
+    return {
+        "success": True,
+        "claim_id": claim_id,
+        "status": "pending",
+        "trust_score": claim_doc["trust_score"],
+    }
 
 
 @api_router.get("/admin/claims")
@@ -3026,6 +3141,73 @@ async def list_claims(status: Optional[str] = "pending", admin: dict = Depends(v
         query["status"] = status
     claims = await db.claims.find(query, {"_id": 0}).sort("created_at", -1).to_list(200)
     return claims
+
+
+@api_router.get("/admin/claims/stats")
+async def claims_stats(admin: dict = Depends(verify_admin_token)):
+    """KPI stats for the admin claims dashboard."""
+    total_doctors = await db.doctor_profiles.count_documents({})
+    total_partners = await db.partner_profiles.count_documents({})
+    claimed_doctors = await db.doctor_profiles.count_documents({"claim_status": "verified"})
+    claimed_partners = await db.partner_profiles.count_documents({"claim_status": "verified"})
+    pending_claims = await db.claims.count_documents({"status": "pending"})
+    approved_claims = await db.claims.count_documents({"status": "approved"})
+    rejected_claims = await db.claims.count_documents({"status": "rejected"})
+    return {
+        "providers_total": total_doctors + total_partners,
+        "providers_doctors": total_doctors,
+        "providers_partners": total_partners,
+        "providers_claimed": claimed_doctors + claimed_partners,
+        "claims_pending": pending_claims,
+        "claims_approved": approved_claims,
+        "claims_rejected": rejected_claims,
+    }
+
+
+@api_router.get("/admin/claims/{claim_id}")
+async def get_claim_detail(claim_id: str, admin: dict = Depends(verify_admin_token)):
+    """Return a claim with joined provider snapshot + user info."""
+    claim = await db.claims.find_one({"id": claim_id}, {"_id": 0})
+    if not claim:
+        raise HTTPException(status_code=404, detail="Claim introuvable")
+
+    collection = db.doctor_profiles if claim.get("provider_kind") == "doctor" else db.partner_profiles
+    provider = await collection.find_one(
+        {"id": claim.get("provider_id")},
+        {"_id": 0, "id": 1, "name": 1, "company_name": 1, "telephone": 1,
+         "whatsapp_number": 1, "email": 1, "city": 1, "neighborhood": 1,
+         "country": 1, "specialties": 1, "activity_type": 1, "claim_status": 1,
+         "is_verified": 1, "master_profile": 1, "created_at": 1}
+    )
+    user = await db.users.find_one(
+        {"id": claim.get("user_id")},
+        {"_id": 0, "password": 0}
+    )
+
+    # Other previous claims from the same phone/email (helps spot fraud)
+    other_claims = []
+    if claim.get("phone") or claim.get("email"):
+        or_filters = []
+        if claim.get("phone"):
+            or_filters.append({"phone": claim["phone"]})
+        if claim.get("email"):
+            or_filters.append({"email": claim["email"]})
+        if or_filters:
+            other_claims = await db.claims.find(
+                {"$or": or_filters, "id": {"$ne": claim_id}},
+                {"_id": 0, "id": 1, "provider_name": 1, "status": 1, "created_at": 1}
+            ).sort("created_at", -1).limit(10).to_list(10)
+
+    # Recompute trust on the fly so it reflects current data
+    fresh_trust = compute_trust_score(claim, user or {}, provider or {})
+
+    return {
+        "claim": claim,
+        "provider": provider,
+        "user": user,
+        "other_claims": other_claims,
+        "trust_score_current": fresh_trust,
+    }
 
 
 @api_router.put("/admin/claims/{claim_id}/decide")

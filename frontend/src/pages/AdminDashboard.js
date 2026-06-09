@@ -10,9 +10,10 @@ import {
   TrendingUp, Search, Eye, Trash2, CheckCircle, XCircle,
   Lock, LogOut, Download, RefreshCw, ChevronLeft, ChevronRight,
   Shield, AlertTriangle, AlertCircle, Bell, MessageCircle, X, UserPlus,
-  Crown
+  Crown, ShieldCheck
 } from 'lucide-react';
 import OwnerAdminPanel from '../components/OwnerAdminPanel';
+import AdminClaimsPanel from '../components/AdminClaimsPanel';
 
 const API = process.env.REACT_APP_BACKEND_URL + '/api';
 
@@ -609,6 +610,7 @@ const AdminDashboard = () => {
           {[
             { id: 'overview', label: 'Vue d\'ensemble', icon: TrendingUp },
             { id: 'users', label: 'Utilisateurs', icon: Users },
+            { id: 'claims', label: 'Revendications', icon: ShieldCheck },
             { id: 'payments', label: 'Paiements', icon: CreditCard },
             { id: 'appointments', label: 'Rendez-vous', icon: Calendar },
             ...(currentAdminRole === 'super_admin_owner'
@@ -1045,6 +1047,11 @@ const AdminDashboard = () => {
             {/* OWNER Tab — only visible to super_admin_owner */}
             {activeTab === 'owner' && currentAdminRole === 'super_admin_owner' && (
               <OwnerAdminPanel token={localStorage.getItem('admin_token')} />
+            )}
+
+            {/* Claims Management — visible to all admins */}
+            {activeTab === 'claims' && (
+              <AdminClaimsPanel token={localStorage.getItem('admin_token')} />
             )}
           </>
         )}
