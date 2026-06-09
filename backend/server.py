@@ -2454,33 +2454,74 @@ class AdminLogin(BaseModel):
     password: str
 
 
-def verify_admin_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    """Vérifier le token admin (compatible avec l'ancien format ET le nouveau)."""
+async def verify_admin_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Vérifier le token admin (compatible avec l'ancien format ET le nouveau).
+    Bloque aussi les admins désactivés (is_active=False)."""
     try:
         token = credentials.credentials
         payload = jwt.decode(token, ADMIN_SECRET, algorithms=[ALGORITHM])
         if payload.get("role") != "admin":
             raise HTTPException(status_code=403, detail="Accès admin requis")
-        return payload
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="Token admin expiré")
     except jwt.InvalidTokenError:
         raise HTTPException(status_code=401, detail="Token admin invalide")
+
+    # Hard-block disabled admins (only checked for DB-stored admins, not legacy env-only)
+    admin_id = payload.get("admin_id")
+    if admin_id and admin_id != payload.get("username"):
+        admin_doc = await db.admins.find_one(
+            {"id": admin_id}, {"_id": 0, "is_active": 1, "admin_role": 1}
+        )
+        if admin_doc and admin_doc.get("is_active") is False:
+            raise HTTPException(status_code=403, detail="Compte admin désactivé")
+    return payload
+
+
+async def verify_owner_token(admin: dict = Depends(verify_admin_token)):
+    """Décorateur OWNER-only : seul l'admin_role 'super_admin_owner' passe."""
+    if admin.get("admin_role") != "super_admin_owner":
+        raise HTTPException(
+            status_code=403,
+            detail="Accès réservé au super-admin OWNER de la plateforme"
+        )
+    return admin
+
+
+async def log_admin_action(admin: dict, action: str, target_type: str = "", target_id: str = "", details: dict = None):
+    """Append a row to admin_audit_log. Non-blocking — never raise."""
+    try:
+        await db.admin_audit_log.insert_one({
+            "id": str(uuid.uuid4()),
+            "actor_admin_id": admin.get("admin_id") or admin.get("username") or "unknown",
+            "actor_username": admin.get("username") or "unknown",
+            "actor_display_name": admin.get("display_name") or "",
+            "actor_role": admin.get("admin_role") or "",
+            "action": action,
+            "target_type": target_type or "",
+            "target_id": target_id or "",
+            "details": details or {},
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        })
+    except Exception as e:
+        logging.error(f"audit_log insert failed: {e}")
 
 
 async def ensure_owner_admin_exists():
     """Garantit qu'au moins 1 OWNER existe dans la collection `admins` (DB)."""
     owner_display_name = "N'guessan Armandine"
     existing = await db.admins.find_one(
-        {"admin_role": "super_admin_owner"}, {"_id": 0, "id": 1, "display_name": 1}
+        {"admin_role": "super_admin_owner"}, {"_id": 0, "id": 1, "display_name": 1, "is_active": 1}
     )
     if existing:
         # Update legacy display_name if it was the default placeholder
+        updates = {}
         if existing.get("display_name") in (None, "OWNER (root)", ADMIN_USERNAME):
-            await db.admins.update_one(
-                {"id": existing["id"]},
-                {"$set": {"display_name": owner_display_name}}
-            )
+            updates["display_name"] = owner_display_name
+        if existing.get("is_active") is None:
+            updates["is_active"] = True
+        if updates:
+            await db.admins.update_one({"id": existing["id"]}, {"$set": updates})
         return
     # Seed initial OWNER from env vars (login = MADJIB / 48851132kl)
     owner_doc = {
@@ -2490,6 +2531,7 @@ async def ensure_owner_admin_exists():
         "admin_role": "super_admin_owner",
         "display_name": owner_display_name,
         "is_seed_owner": True,
+        "is_active": True,
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
     await db.admins.insert_one(owner_doc)
@@ -2507,11 +2549,18 @@ async def admin_login(data: AdminLogin):
     admin_doc = await db.admins.find_one({"username": admin_username}, {"_id": 0})
 
     if admin_doc:
+        if admin_doc.get("is_active") is False:
+            raise HTTPException(status_code=403, detail="Compte admin désactivé. Contactez l'OWNER de la plateforme.")
         if not verify_password(data.password, admin_doc["password"]):
             raise HTTPException(status_code=401, detail="Identifiants admin incorrects")
         role = admin_doc.get("admin_role", "super_admin_owner")
         display = admin_doc.get("display_name") or admin_username
         admin_id = admin_doc.get("id")
+        # Track last login
+        await db.admins.update_one(
+            {"id": admin_id},
+            {"$set": {"last_login_at": datetime.now(timezone.utc).isoformat()}}
+        )
     elif admin_username == ADMIN_USERNAME and data.password == ADMIN_PASSWORD:
         # Legacy fallback: create the OWNER on the fly so future logins are DB-based
         await ensure_owner_admin_exists()
@@ -2549,6 +2598,153 @@ async def verify_admin(admin: dict = Depends(verify_admin_token)):
         "admin_role": admin.get("admin_role", "super_admin_owner"),
         "display_name": admin.get("display_name", admin.get("username")),
     }
+
+
+# ============ OWNER-ONLY : GESTION DES ADMINS (modérateurs) ============
+
+ALLOWED_ADMIN_ROLES = {"moderator", "support", "manager"}
+
+
+@api_router.get("/admin/owner/admins")
+async def list_admins(owner: dict = Depends(verify_owner_token)):
+    """List tous les admins (OWNER + modérateurs). Réservé OWNER."""
+    admins = await db.admins.find(
+        {}, {"_id": 0, "password": 0}
+    ).sort("created_at", 1).to_list(200)
+    return {"admins": admins, "total": len(admins)}
+
+
+@api_router.post("/admin/owner/admins")
+async def create_admin(payload: dict, owner: dict = Depends(verify_owner_token)):
+    """Créer un nouveau modérateur. Réservé OWNER.
+
+    payload = { username, password, display_name, admin_role (moderator|support|manager) }
+    """
+    username = (payload.get("username") or "").strip()
+    password = payload.get("password") or ""
+    display_name = (payload.get("display_name") or "").strip() or username
+    admin_role = (payload.get("admin_role") or "moderator").strip().lower()
+
+    if not username or len(username) < 3:
+        raise HTTPException(status_code=400, detail="Le nom d'utilisateur doit faire au moins 3 caractères.")
+    if not password or len(password) < 8:
+        raise HTTPException(status_code=400, detail="Le mot de passe doit faire au moins 8 caractères.")
+    if admin_role not in ALLOWED_ADMIN_ROLES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Rôle invalide. Autorisés : {sorted(ALLOWED_ADMIN_ROLES)}."
+        )
+    if await db.admins.find_one({"username": username}, {"_id": 0, "id": 1}):
+        raise HTTPException(status_code=400, detail="Ce nom d'utilisateur est déjà pris.")
+
+    new_admin = {
+        "id": str(uuid.uuid4()),
+        "username": username,
+        "password": hash_password(password),
+        "admin_role": admin_role,
+        "display_name": display_name,
+        "is_active": True,
+        "is_seed_owner": False,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_by_admin_id": owner.get("admin_id"),
+        "created_by_username": owner.get("username"),
+    }
+    await db.admins.insert_one(new_admin)
+    await log_admin_action(
+        owner, "admin_created", "admin", new_admin["id"],
+        {"username": username, "admin_role": admin_role, "display_name": display_name}
+    )
+    safe_admin = {k: v for k, v in new_admin.items() if k not in ("password", "_id")}
+    return {"success": True, "admin": safe_admin}
+
+
+@api_router.patch("/admin/owner/admins/{admin_id}")
+async def update_admin(admin_id: str, payload: dict, owner: dict = Depends(verify_owner_token)):
+    """Modifier un modérateur : display_name, admin_role, is_active, password.
+    Le seed OWNER ne peut être ni désactivé ni voir son rôle changé.
+    """
+    target = await db.admins.find_one({"id": admin_id}, {"_id": 0})
+    if not target:
+        raise HTTPException(status_code=404, detail="Admin introuvable")
+
+    updates = {}
+    audit_details = {"target_username": target.get("username")}
+
+    if "display_name" in payload:
+        updates["display_name"] = (payload.get("display_name") or "").strip() or target.get("display_name")
+        audit_details["new_display_name"] = updates["display_name"]
+
+    if "admin_role" in payload:
+        new_role = (payload.get("admin_role") or "").strip().lower()
+        if new_role not in ALLOWED_ADMIN_ROLES and new_role != "super_admin_owner":
+            raise HTTPException(status_code=400, detail=f"Rôle invalide. Autorisés : {sorted(ALLOWED_ADMIN_ROLES)}.")
+        if target.get("is_seed_owner") and new_role != "super_admin_owner":
+            raise HTTPException(status_code=400, detail="Impossible de changer le rôle du seed OWNER.")
+        if new_role == "super_admin_owner" and not target.get("is_seed_owner"):
+            raise HTTPException(status_code=400, detail="Impossible de promouvoir un admin au rôle super_admin_owner.")
+        updates["admin_role"] = new_role
+        audit_details["new_role"] = new_role
+
+    if "is_active" in payload:
+        new_active = bool(payload.get("is_active"))
+        if target.get("is_seed_owner") and not new_active:
+            raise HTTPException(status_code=400, detail="Impossible de désactiver le seed OWNER.")
+        updates["is_active"] = new_active
+        audit_details["is_active"] = new_active
+
+    if "password" in payload and payload["password"]:
+        new_pwd = payload["password"]
+        if len(new_pwd) < 8:
+            raise HTTPException(status_code=400, detail="Le mot de passe doit faire au moins 8 caractères.")
+        updates["password"] = hash_password(new_pwd)
+        audit_details["password_changed"] = True
+
+    if not updates:
+        raise HTTPException(status_code=400, detail="Aucun champ à mettre à jour.")
+
+    await db.admins.update_one({"id": admin_id}, {"$set": updates})
+    await log_admin_action(owner, "admin_updated", "admin", admin_id, audit_details)
+
+    refreshed = await db.admins.find_one({"id": admin_id}, {"_id": 0, "password": 0})
+    return {"success": True, "admin": refreshed}
+
+
+@api_router.delete("/admin/owner/admins/{admin_id}")
+async def delete_admin(admin_id: str, owner: dict = Depends(verify_owner_token)):
+    """Supprimer un modérateur. Le seed OWNER est protégé."""
+    target = await db.admins.find_one({"id": admin_id}, {"_id": 0})
+    if not target:
+        raise HTTPException(status_code=404, detail="Admin introuvable")
+    if target.get("is_seed_owner"):
+        raise HTTPException(status_code=400, detail="Impossible de supprimer le seed OWNER.")
+    if target.get("id") == owner.get("admin_id"):
+        raise HTTPException(status_code=400, detail="Impossible de se supprimer soi-même.")
+
+    await db.admins.delete_one({"id": admin_id})
+    await log_admin_action(
+        owner, "admin_deleted", "admin", admin_id,
+        {"target_username": target.get("username"), "target_role": target.get("admin_role")}
+    )
+    return {"success": True}
+
+
+@api_router.get("/admin/owner/audit-log")
+async def get_audit_log(
+    owner: dict = Depends(verify_owner_token),
+    limit: int = 100,
+    actor_admin_id: Optional[str] = None,
+    action: Optional[str] = None,
+):
+    """Liste les 100 dernières actions admin (filtrable). Réservé OWNER."""
+    query = {}
+    if actor_admin_id:
+        query["actor_admin_id"] = actor_admin_id
+    if action:
+        query["action"] = action
+    limit = max(1, min(500, limit))
+    rows = await db.admin_audit_log.find(query, {"_id": 0}).sort("created_at", -1).limit(limit).to_list(limit)
+    total = await db.admin_audit_log.count_documents(query)
+    return {"entries": rows, "total": total, "limit": limit}
 
 
 @api_router.get("/admin/stats")
@@ -2646,6 +2842,7 @@ async def toggle_maintenance(payload: dict, admin: dict = Depends(verify_admin_t
         {"$set": {"key": "maintenance", "enabled": enabled, "updated_at": datetime.now(timezone.utc).isoformat()}},
         upsert=True
     )
+    await log_admin_action(admin, "maintenance_toggled", "system", "maintenance", {"enabled": enabled})
     return {"success": True, "enabled": enabled}
 
 
@@ -2847,7 +3044,13 @@ async def decide_claim(claim_id: str, payload: dict, admin: dict = Depends(verif
         )
         await collection.update_one(
             {"id": claim["provider_id"]},
-            {"$set": {"claim_status": "verified", "claimed_by_user_id": claim["user_id"], "is_verified": True}}
+            {"$set": {
+                "claim_status": "verified",
+                "claimed_by_user_id": claim["user_id"],
+                "is_verified": True,
+                "master_profile.trust.is_verified": True,
+                "master_profile.trust.claim_status": "verified",
+            }}
         )
         await db.claims.update_one(
             {"id": claim_id},
@@ -2861,13 +3064,20 @@ async def decide_claim(claim_id: str, payload: dict, admin: dict = Depends(verif
         )
         await collection.update_one(
             {"id": claim["provider_id"]},
-            {"$set": {"claim_status": "seeded"}}
+            {"$set": {
+                "claim_status": "seeded",
+                "master_profile.trust.claim_status": "seeded",
+            }}
         )
         await db.claims.update_one(
             {"id": claim_id},
             {"$set": {"status": "rejected", "decided_at": datetime.now(timezone.utc).isoformat(), "decision_reason": reason}}
         )
 
+    await log_admin_action(
+        admin, f"claim_{action}d", "claim", claim_id,
+        {"provider_id": claim["provider_id"], "provider_kind": claim["provider_kind"], "reason": reason}
+    )
     return {"success": True, "status": new_claim_status}
 
 
@@ -3067,7 +3277,11 @@ async def delete_user(user_id: str, admin: dict = Depends(verify_admin_token)):
     # Si c'est un médecin, supprimer aussi son profil
     if user.get("user_type") == "doctor":
         await db.doctor_profiles.delete_one({"user_id": user_id})
-    
+
+    await log_admin_action(
+        admin, "user_deleted", "user", user_id,
+        {"email": user.get("email"), "user_type": user.get("user_type"), "name": user.get("name")}
+    )
     return {"success": True, "message": "Utilisateur supprimé"}
 
 
@@ -3075,7 +3289,10 @@ async def delete_user(user_id: str, admin: dict = Depends(verify_admin_token)):
 async def delete_all_data(admin: dict = Depends(verify_admin_token)):
     """
     Supprimer TOUTES les données (utilisateurs, médecins, etc.)
+    Réservé OWNER pour éviter les catastrophes.
     """
+    if admin.get("admin_role") != "super_admin_owner":
+        raise HTTPException(status_code=403, detail="Action réservée à l'OWNER de la plateforme.")
     results = {}
     
     # Supprimer tous les utilisateurs
@@ -3109,7 +3326,8 @@ async def delete_all_data(admin: dict = Depends(verify_admin_token)):
     # Supprimer tous les points fidélité
     r = await db.loyalty_points.delete_many({})
     results["loyalty_points"] = r.deleted_count
-    
+
+    await log_admin_action(admin, "delete_all_data", "system", "all", {"deleted_counts": results})
     return {"success": True, "deleted": results}
 
 

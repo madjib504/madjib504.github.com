@@ -9,8 +9,10 @@ import {
   Users, UserCheck, Stethoscope, Calendar, CreditCard, 
   TrendingUp, Search, Eye, Trash2, CheckCircle, XCircle,
   Lock, LogOut, Download, RefreshCw, ChevronLeft, ChevronRight,
-  Shield, AlertTriangle, AlertCircle, Bell, MessageCircle, X, UserPlus
+  Shield, AlertTriangle, AlertCircle, Bell, MessageCircle, X, UserPlus,
+  Crown
 } from 'lucide-react';
+import OwnerAdminPanel from '../components/OwnerAdminPanel';
 
 const API = process.env.REACT_APP_BACKEND_URL + '/api';
 
@@ -33,6 +35,7 @@ const AdminDashboard = () => {
   const [maintenanceEnabled, setMaintenanceEnabled] = useState(false);
   const [maintenanceToggling, setMaintenanceToggling] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [currentAdminRole, setCurrentAdminRole] = useState(null);
 
   useEffect(() => {
     checkAuth();
@@ -50,10 +53,11 @@ const AdminDashboard = () => {
     const token = localStorage.getItem('admin_token');
     if (token) {
       try {
-        await axios.get(`${API}/admin/verify`, {
+        const res = await axios.get(`${API}/admin/verify`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setIsAuthenticated(true);
+        setCurrentAdminRole(res.data?.admin_role || null);
       } catch (error) {
         localStorage.removeItem('admin_token');
       }
@@ -68,6 +72,7 @@ const AdminDashboard = () => {
       if (response.data.success) {
         localStorage.setItem('admin_token', response.data.token);
         setIsAuthenticated(true);
+        setCurrentAdminRole(response.data.admin_role || null);
         toast.success('Connexion admin réussie');
       }
     } catch (error) {
@@ -78,6 +83,7 @@ const AdminDashboard = () => {
   const handleLogout = () => {
     localStorage.removeItem('admin_token');
     setIsAuthenticated(false);
+    setCurrentAdminRole(null);
     toast.success('Déconnexion réussie');
   };
 
@@ -604,14 +610,18 @@ const AdminDashboard = () => {
             { id: 'overview', label: 'Vue d\'ensemble', icon: TrendingUp },
             { id: 'users', label: 'Utilisateurs', icon: Users },
             { id: 'payments', label: 'Paiements', icon: CreditCard },
-            { id: 'appointments', label: 'Rendez-vous', icon: Calendar }
+            { id: 'appointments', label: 'Rendez-vous', icon: Calendar },
+            ...(currentAdminRole === 'super_admin_owner'
+              ? [{ id: 'owner', label: 'OWNER', icon: Crown }]
+              : [])
           ].map((tab) => (
             <button
               key={tab.id}
+              data-testid={`admin-tab-${tab.id}`}
               onClick={() => { setActiveTab(tab.id); setCurrentPage(1); }}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap ${
                 activeTab === tab.id 
-                  ? 'bg-red-600 text-white' 
+                  ? (tab.id === 'owner' ? 'bg-amber-500 text-slate-900' : 'bg-red-600 text-white')
                   : 'bg-slate-800 text-slate-400 hover:text-white'
               }`}
             >
@@ -1030,6 +1040,11 @@ const AdminDashboard = () => {
                   </div>
                 </CardContent>
               </Card>
+            )}
+
+            {/* OWNER Tab — only visible to super_admin_owner */}
+            {activeTab === 'owner' && currentAdminRole === 'super_admin_owner' && (
+              <OwnerAdminPanel token={localStorage.getItem('admin_token')} />
             )}
           </>
         )}
