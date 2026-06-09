@@ -271,6 +271,119 @@ CLAIM_ROLE_LABELS = {
 }
 
 
+def _build_structure_added_html(
+    user_name: str, structure_name: str, category: str,
+    email: str, role_label: str, dashboard_url: str
+) -> str:
+    return f"""
+    <!DOCTYPE html>
+    <html lang="fr">
+    <head><meta charset="UTF-8" /></head>
+    <body style="margin:0;padding:0;font-family:Arial,Helvetica,sans-serif;background-color:#f5f5f4;">
+      <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color:#f5f5f4;padding:32px 0;">
+        <tr><td align="center">
+          <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" style="max-width:600px;background-color:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.05);">
+            <tr>
+              <td style="background:linear-gradient(135deg,#1e3a8a 0%,#1e40af 100%);padding:40px 32px;text-align:center;">
+                <div style="display:inline-block;background:rgba(255,255,255,0.2);width:64px;height:64px;border-radius:50%;text-align:center;line-height:64px;font-size:32px;margin-bottom:12px;">🎉</div>
+                <h1 style="margin:0;color:#ffffff;font-size:26px;font-weight:bold;">Bienvenue sur keneyakafisa</h1>
+                <p style="margin:8px 0 0 0;color:#bfdbfe;font-size:14px;">Votre structure est en ligne</p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:40px 32px;">
+                <h2 style="margin:0 0 12px 0;color:#1c1917;font-size:20px;">Bonjour {user_name} 👋</h2>
+                <p style="margin:0 0 16px 0;color:#44403c;font-size:16px;line-height:1.6;">
+                  Votre structure <strong>{structure_name}</strong> ({category}) a été ajoutée avec succès sur la plateforme keneyakafisa. Elle est <strong style="color:#059669;">automatiquement vérifiée ✓</strong> car vous l'avez créée vous-même.
+                </p>
+
+                <div style="background-color:#eff6ff;border-left:4px solid #1e40af;border-radius:6px;padding:16px;margin:20px 0;">
+                  <p style="margin:0 0 8px 0;color:#1e3a8a;font-size:14px;font-weight:bold;">🔐 Vos identifiants de connexion</p>
+                  <table cellspacing="0" cellpadding="4" border="0" style="margin-top:6px;font-size:14px;">
+                    <tr><td style="color:#475569;padding-right:12px;">Email :</td><td style="color:#0f172a;font-family:monospace;font-weight:bold;">{email}</td></tr>
+                    <tr><td style="color:#475569;padding-right:12px;">Rôle :</td><td style="color:#0f172a;font-weight:bold;">{role_label}</td></tr>
+                    <tr><td style="color:#475569;padding-right:12px;">Mot de passe :</td><td style="color:#0f172a;font-style:italic;">(celui que vous avez choisi à l'inscription)</td></tr>
+                  </table>
+                </div>
+
+                <div style="background-color:#f0fdf4;border-radius:6px;padding:16px;margin:20px 0;">
+                  <p style="margin:0 0 10px 0;color:#065f46;font-size:14px;font-weight:bold;">Que faire maintenant ?</p>
+                  <ul style="margin:0;padding-left:20px;color:#065f46;font-size:14px;line-height:1.8;">
+                    <li>Complétez votre profil : photo, vidéo de présentation, horaires, équipe</li>
+                    <li>Configurez vos services et tarifs</li>
+                    <li>Activez la prise de rendez-vous en ligne</li>
+                    <li>Recevez vos premiers patients via la recherche IA</li>
+                  </ul>
+                </div>
+
+                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                  <tr><td align="center" style="padding:24px 0 12px 0;">
+                    <a href="{dashboard_url}" style="display:inline-block;background-color:#1e3a8a;color:#ffffff;text-decoration:none;padding:16px 40px;border-radius:9999px;font-size:16px;font-weight:bold;">
+                      Accéder à mon dashboard →
+                    </a>
+                  </td></tr>
+                </table>
+
+                <p style="margin:24px 0 0 0;color:#78716c;font-size:13px;line-height:1.6;">
+                  💡 <strong>Astuce</strong> : ajoutez votre photo de couverture, votre logo et au moins 3 photos de votre établissement — les fiches complètes reçoivent 4× plus de demandes de rendez-vous.
+                </p>
+              </td>
+            </tr>
+            <tr>
+              <td style="background-color:#fafaf9;padding:20px 32px;text-align:center;border-top:1px solid #e7e5e4;">
+                <p style="margin:0;color:#78716c;font-size:12px;">
+                  © {os.environ.get('CURRENT_YEAR', '2026')} keneyakafisa — Votre santé, notre priorité.
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td></tr>
+      </table>
+    </body>
+    </html>
+    """
+
+
+async def send_structure_added_email(
+    recipient_email: str,
+    user_name: str,
+    structure_name: str,
+    category: str,
+    claim_type: str = "owner",
+) -> bool:
+    """Send welcome email when a new structure is self-added via /api/structures/add."""
+    api_key = os.environ.get("RESEND_API_KEY")
+    if not api_key:
+        logger.warning("RESEND_API_KEY not configured; skipping structure-added email")
+        return False
+    if not recipient_email or recipient_email.endswith("@keneyakafisa.app"):
+        logger.info(f"Skipping structure email to auto-generated address: {recipient_email}")
+        return False
+
+    resend.api_key = api_key
+    frontend_url = os.environ.get("FRONTEND_URL", "").rstrip("/")
+    sender = os.environ.get("SENDER_EMAIL", "onboarding@resend.dev")
+    role_label = CLAIM_ROLE_LABELS.get(claim_type, "Propriétaire")
+    dashboard_url = f"{frontend_url}/login"
+
+    params = {
+        "from": f"keneyakafisa <{sender}>",
+        "to": [recipient_email],
+        "subject": f"🎉 Bienvenue sur keneyakafisa — {structure_name} est en ligne",
+        "html": _build_structure_added_html(
+            user_name, structure_name, category or "Autre",
+            recipient_email, role_label, dashboard_url,
+        ),
+    }
+    try:
+        result = await asyncio.to_thread(resend.Emails.send, params)
+        logger.info(f"Structure-added email sent to {recipient_email}: id={result.get('id')}")
+        return True
+    except Exception as e:
+        logger.error(f"Failed to send structure-added email to {recipient_email}: {e}")
+        return False
+
+
 async def send_claim_decision_email(
     recipient_email: str,
     user_name: str,

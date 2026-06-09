@@ -20,7 +20,7 @@ import base64
 import aiofiles
 import asyncio
 from services.storage import init_storage, put_object, get_object
-from services.email_service import send_verification_email, send_claim_decision_email
+from services.email_service import send_verification_email, send_claim_decision_email, send_structure_added_email
 from services.seed_loader import seed_initial_data
 from services.master_model import migrate_all_providers
 
@@ -3371,6 +3371,18 @@ async def add_structure(payload: dict):
         "read": False,
         "created_at": datetime.now(timezone.utc).isoformat(),
     })
+
+    # Fire-and-forget welcome email (skips auto-generated emails)
+    try:
+        asyncio.create_task(send_structure_added_email(
+            recipient_email=email,
+            user_name=full_name,
+            structure_name=structure_name,
+            category=payload.get("categorie") or payload.get("activity_type") or "Autre",
+            claim_type=(payload.get("function_role") or "owner").lower(),
+        ))
+    except Exception as ex_mail:
+        logging.error(f"structure-added email scheduling failed: {ex_mail}")
 
     # Log the user in immediately
     token = create_access_token({"sub": user_id})
