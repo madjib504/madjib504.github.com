@@ -50,25 +50,36 @@ const Search = () => {
     setLoading(true);
     try {
       const kw = (filters.keyword || '').trim();
-      const hasOtherFilter =
-        (filters.specialty && filters.specialty !== 'all') ||
-        (filters.medical_type && filters.medical_type !== 'all' && filters.medical_type !== 'autre') ||
-        filters.location ||
-        (filters.min_rating && filters.min_rating !== 'all') ||
-        (filters.home_service && filters.home_service !== 'all') ||
-        (filters.structure_type && filters.structure_type !== 'all') ||
-        filters.custom_search;
 
-      // Use smart-search only when the user has typed a keyword and no other filter
-      if (kw && !hasOtherFilter) {
+      // Use smart-search as soon as the user types a keyword.
+      // It detects symptoms and falls back to directory search otherwise.
+      if (kw) {
         const r = await axios.get(`${API}/search/smart`, { params: { q: kw, limit: 60 } });
-        setDoctors(r.data.results || []);
+        let results = r.data.results || [];
+        // Apply client-side filters on top of smart results
+        if (filters.medical_type && filters.medical_type !== 'all' && filters.medical_type !== 'autre') {
+          results = results.filter((d) => (d.medical_type || '').toLowerCase() === filters.medical_type);
+        }
+        if (filters.specialty && filters.specialty !== 'all') {
+          results = results.filter((d) => (d.specialties || []).some((s) => s.toLowerCase().includes(filters.specialty.toLowerCase())));
+        }
+        if (filters.location) {
+          const loc = filters.location.toLowerCase();
+          results = results.filter((d) =>
+            (d.city || '').toLowerCase().includes(loc) ||
+            (d.neighborhood || '').toLowerCase().includes(loc)
+          );
+        }
+        if (filters.min_rating && filters.min_rating !== 'all') {
+          results = results.filter((d) => (d.rating || 0) >= parseFloat(filters.min_rating));
+        }
+        setDoctors(results);
         setOrientation(r.data.orientation || null);
         setSearchMode(r.data.mode || 'directory');
         return;
       }
 
-      // Otherwise use the classical /doctors/search with filters
+      // No keyword → classical /doctors/search with filters
       const params = new URLSearchParams();
       if (filters.specialty && filters.specialty !== 'all') params.append('specialty', filters.specialty);
 
@@ -84,7 +95,6 @@ const Search = () => {
       if (filters.min_rating && filters.min_rating !== 'all') params.append('min_rating', filters.min_rating);
       if (filters.home_service && filters.home_service !== 'all') params.append('home_service', filters.home_service);
       if (filters.structure_type && filters.structure_type !== 'all') params.append('structure_type', filters.structure_type);
-      if (filters.keyword) params.append('keyword', filters.keyword);
 
       const response = await axios.get(`${API}/doctors/search?${params.toString()}`);
       setDoctors(response.data);
