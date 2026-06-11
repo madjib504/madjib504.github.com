@@ -85,6 +85,10 @@ def _build_master_profile_v2(rec: dict, coords: dict | None) -> dict:
             "triage_priority": trust.get("triage_priority", 50),
             "emergency_level": trust.get("emergency_level", 0),
         },
+        "commercial": {
+            "tier": "free",
+            "tier_until": None,
+        },
         "updated_at": datetime.now(timezone.utc).isoformat(),
         "model_version": 2,
     }

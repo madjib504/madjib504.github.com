@@ -25,6 +25,7 @@ from services.seed_loader import seed_initial_data
 from services.master_model import migrate_all_providers
 from services.v2_seed_loader import seed_v2_specialties
 from services.geocoding import migrate_all_coordinates
+from services.badge import inject_badges, trust_score_bonus, compute_badges
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -1579,14 +1580,16 @@ async def smart_search(q: str = "", limit: int = 30):
         direct_dedup.append(p)
     direct = direct_dedup
 
-    # Rank by triage_priority/verified status from master_profile
+    # Rank by triage_priority/verified status from master_profile + badge bonus
     def _rank(p):
         mp = p.get("master_profile") or {}
         trust = mp.get("trust") or {}
         triage = -(trust.get("triage_priority") or 0)
         verified_bonus = 0 if (p.get("claim_status") == "verified" or trust.get("is_verified")) else 1
         rating = -(p.get("rating") or 0)
-        return (verified_bonus, triage, rating)
+        # Modest bonus (max -18) so paid Premium doesn't dominate organic
+        badge_bonus = -trust_score_bonus(p)
+        return (verified_bonus, triage, badge_bonus, rating)
     direct.sort(key=_rank)
     direct = direct[:limit]
 
@@ -1634,10 +1637,11 @@ async def smart_search(q: str = "", limit: int = 30):
             seen_ids.add(sid)
             merged.append(src)
         merged.sort(key=_rank)
+        results = [inject_badges(p) for p in merged[:limit]]
         return {
             "mode": "orientation",
             "query": q,
-            "results": merged[:limit],
+            "results": results,
             "orientation": {
                 "urgency_level": orient["urgency_level"],
                 "urgency_label": orient["urgency_label"],
@@ -1662,12 +1666,12 @@ async def smart_search(q: str = "", limit: int = 30):
             return {
                 "mode": "hybrid",
                 "query": q,
-                "results": direct,
+                "results": [inject_badges(p) for p in direct],
                 "orientation": {
                     "urgency_level": orient["urgency_level"],
                     "urgency_label": orient["urgency_label"],
                     "suggestions": orient_suggestions,
-                    "extra_providers": orient_providers[:8],
+                    "extra_providers": [inject_badges(p) for p in orient_providers[:8]],
                     "legal_notice": (
                         "Cet outil est un assistant d'orientation et ne remplace pas une "
                         "consultation médicale. En cas de symptômes graves, contactez les "
@@ -1680,7 +1684,7 @@ async def smart_search(q: str = "", limit: int = 30):
     return {
         "mode": "directory",
         "query": q,
-        "results": direct,
+        "results": [inject_badges(p) for p in direct],
         "orientation": None,
     }
 
@@ -2968,6 +2972,7 @@ async def search_providers(q: str, limit: int = 20):
             "neighborhood": d.get("neighborhood"),
             "claim_status": d.get("claim_status") or ("seeded" if d.get("imported") else None),
             "imported": bool(d.get("imported")),
+            "badges": compute_badges(d),
         })
     for p in partners:
         results.append({
@@ -2979,6 +2984,7 @@ async def search_providers(q: str, limit: int = 20):
             "neighborhood": p.get("neighborhood"),
             "claim_status": p.get("claim_status") or ("seeded" if p.get("imported") else None),
             "imported": bool(p.get("imported")),
+            "badges": compute_badges(p),
         })
     return results
 
@@ -4177,17 +4183,61 @@ async def get_master_profile(provider_id: str):
     If missing, builds it on the fly AND persists it (lazy migration).
     """
     for kind, col in (("doctor", db.doctor_profiles), ("partner", db.partner_profiles)):
-        doc = await col.find_one({"id": provider_id}, {"_id": 0, "master_profile": 1, "id": 1})
+        doc = await col.find_one({"id": provider_id}, {"_id": 0})
         if doc:
             mp = doc.get("master_profile")
             if not mp:
-                full = await col.find_one({"id": provider_id}, {"_id": 0})
                 from services.master_model import build_master_profile
-                mp = build_master_profile(full, kind)
+                mp = build_master_profile(doc, kind)
                 # Persist so subsequent calls are cached
                 await col.update_one({"id": provider_id}, {"$set": {"master_profile": mp}})
-            return {"id": provider_id, "kind": kind, "master_profile": mp}
+                doc["master_profile"] = mp
+            badges = compute_badges(doc)
+            return {
+                "id": provider_id,
+                "kind": kind,
+                "master_profile": mp,
+                "badges": badges,
+                "is_sponsored": bool(badges.get("commercial")),
+            }
     raise HTTPException(status_code=404, detail="Fiche introuvable")
+
+
+@api_router.get("/stats/claims-monthly")
+async def claims_monthly_stats():
+    """Public social-proof counter: how many fiches were claimed this month.
+
+    Counts pending+verified claims in the current calendar month. Used in the
+    /search footer to encourage providers to claim their profile.
+    """
+    from datetime import datetime, timezone
+    now = datetime.now(timezone.utc)
+    month_start = datetime(now.year, now.month, 1, tzinfo=timezone.utc).isoformat()
+
+    # Count from the claims collection (real user-driven claims)
+    month_claims = await db.claims.count_documents({
+        "created_at": {"$gte": month_start},
+        "status": {"$in": ["pending", "approved", "verified"]},
+    })
+
+    # Add the all-time verified count for "trust" line
+    verified_doctors = await db.doctor_profiles.count_documents(
+        {"$or": [{"claim_status": "verified"}, {"master_profile.trust.is_verified": True}]}
+    )
+    verified_partners = await db.partner_profiles.count_documents(
+        {"$or": [{"claim_status": "verified"}, {"master_profile.trust.is_verified": True}]}
+    )
+    total_providers = (
+        await db.doctor_profiles.count_documents({})
+        + await db.partner_profiles.count_documents({})
+    )
+
+    return {
+        "month": now.strftime("%Y-%m"),
+        "claims_this_month": month_claims,
+        "verified_total": verified_doctors + verified_partners,
+        "providers_total": total_providers,
+    }
 
 
 @app.on_event("startup")

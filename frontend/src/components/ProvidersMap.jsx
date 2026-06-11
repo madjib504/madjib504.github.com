@@ -4,6 +4,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Link } from 'react-router-dom';
 import { Star, Calendar, MapPin, Crosshair, Loader2 } from 'lucide-react';
+import ProviderBadge from '@/components/ProviderBadge';
 
 // --- Fix the default-icon bug in CRA: Leaflet's marker images aren't auto-resolved
 //     by Webpack 5. Re-bind them to the public CDN.
@@ -206,8 +207,13 @@ export default function ProvidersMap({
                   <div className="font-semibold text-sm text-stone-900 leading-tight">
                     {title}
                   </div>
+                  {m.badges && (
+                    <div className="mt-1">
+                      <ProviderBadge badges={m.badges} size="xs" sponsored />
+                    </div>
+                  )}
                   {specialty && (
-                    <div className="text-xs text-stone-600 mt-0.5">
+                    <div className="text-xs text-stone-600 mt-1">
                       {specialty}
                     </div>
                   )}

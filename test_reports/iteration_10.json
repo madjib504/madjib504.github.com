@@ -1,0 +1,36 @@
+{
+  "summary": "Backend-only testing of 2-layer badge system (TRUST + COMMERCIAL) and /api/stats/claims-monthly. New test file /app/backend/tests/test_badge_system.py with 17 cases — ALL PASS. Regression: iteration_9 V2-seed+geocode suite re-run, 17/17 still PASS. Verified end-to-end: (a) /api/search/smart?q=urologie returns `badges` (trust+commercial) and `is_sponsored` on every result; (b) uro-ci-001 carries trust=verified/emerald/level=3 AND commercial=premium/purple AND is_sponsored=true; (c) /api/providers/{id}/master returns same badges + is_sponsored; (d) /api/providers/search?q=urologie includes badges on every result; (e) /api/stats/claims-monthly is public (no auth), returns {month yyyy-mm, claims_this_month>=0, verified_total>=0, providers_total>0}; (f) badges are idempotent across repeated calls; (g) ranking sanity: verified+premium (uro-ci-001) is well-ranked (top half) but does NOT dominate — top-3 is not 100% sponsored; (h) unit tests on compute_badges confirm expired tier_until falls back to free, missing master_profile.commercial does NOT throw 500, verified flag overrides claim_status=pending, trust_score_bonus capped at 18.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_badge_system.py",
+    "/app/test_reports/pytest/badge_system_results.xml"
+  ],
+  "action_items": [
+    "None required — every spec item in the review request passes.",
+    "Optional: surface a `badges_legend` GET endpoint so the frontend can display the legend without duplicating the label/color map (currently hardcoded in services/badge.py only).",
+    "Optional: add a structured 'sponsored' disclaimer field (e.g. badges.disclaimer_text) so the UI can show a translatable 'Cette fiche est sponsorisée' line without inferring it from is_sponsored."
+  ],
+  "critical_code_review_comments": [
+    "services/badge.py is clean (160 lines), well-documented, has a single source of truth for labels/colors and the +18 ranking bonus cap is explicit and defensible. _commercial_tier() correctly auto-expires past tier_until via fromisoformat with 'Z'→'+00:00' fix.",
+    "server.py L1591 uses `-trust_score_bonus(p)` as a ranking delta (negative because lower _rank() score = better) — verified by ranking sanity test: uro-ci-001 (verified+premium, +18 bonus) sits in top half but does NOT force #1, so proximity/triage_priority remain dominant. This matches the product transparency principle stated in the review brief.",
+    "compute_badges() is fully defensive: missing master_profile, missing commercial, malformed tier_until, unknown tier strings — all return safe defaults (trust=seeded, commercial=None). Confirmed by 7 unit tests including retrocompat case.",
+    "/api/stats/claims-monthly correctly uses ISO string for $gte on `created_at`. Note: this assumes claims.created_at is stored as ISO string (string comparison works only because ISO-8601 is lexicographically ordered). If a future writer ever stores a BSON Date instead, the comparison will silently return 0. Consider documenting this convention or coercing to a single type at write-time.",
+    "/api/providers/{id}/master correctly returns `is_sponsored: bool(badges.get('commercial'))` — matches is_sponsored definition in inject_badges() so list and detail endpoints stay consistent.",
+    "server.py is now 4299 lines (+50 since iteration_9). Modularization still recommended — /api/stats/* would be a natural fit for a routers/stats.py module alongside the suggested routers/admin_seed.py.",
+    "Two `from datetime import ...` imports inside functions (badge.py L86 indirectly via fromisoformat, server.py L4213). Move to module-level imports to avoid micro-cost per request — purely cosmetic, no functional impact."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_badge_system.py (new, 17 pytest cases — pure read-only, no DB mutation)"
+  ],
+  "success_rate": {"backend": "100% (17/17 new + 17/17 regression)", "frontend": "not tested (scope=backend only)"},
+  "test_credentials": "Not needed — all tested endpoints are public. OWNER MADJIB/48851132kl from /app/memory/test_credentials.md remains valid and unused in this iteration.",
+  "seed_data_creation": "None. Tests are pure-read and operate on existing V2 seed (uro-ci-001..005 manually pre-configured by main agent per review brief).",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Badge system test suite at /app/backend/tests/test_badge_system.py covers: API-level checks against REACT_APP_BACKEND_URL (must be exported when running pytest manually) AND unit-level checks on services.badge.compute_badges/trust_score_bonus (sys.path-injected). Test fixtures: 1 session-scoped requests.Session. Test data dependency: V2 seed records uro-ci-001 (verified+premium) MUST exist — re-run /api/admin/run-v2-seed and re-mark uro-ci-001 if a future test agent finds it missing. The ranking sanity test asserts uro-ci-001 sits in top-half of search/smart?q=urologie — if the seed adds many more verified-tier-free urology providers, this assertion may need adjusting. No regressions detected against iteration_9 (test_v2_seed_geocoding.py: 17/17 still pass).",
+  "rca of the issue": "No bugs found. All 11 spec items in the review request are verified end-to-end: (1) /api/search/smart returns badges+is_sponsored ✓; (2) trust badge mapping seeded/pending/verified ✓; (3) commercial badge mapping free/boost/premium/premium_plus ✓; (4) is_sponsored consistent with commercial!=null ✓; (5) /api/providers/{id}/master returns badges for uro-ci-001 ✓; (6) /api/providers/search includes badges ✓; (7) /api/stats/claims-monthly public, all fields present and non-negative, providers_total>0 ✓; (8) badge idempotence across 2 calls ✓; (9) ranking: verified+premium well-placed but does not dominate top ✓; (10) expired tier_until → commercial=null ✓; (11) missing master_profile.commercial → no 500, commercial=null ✓."
+}

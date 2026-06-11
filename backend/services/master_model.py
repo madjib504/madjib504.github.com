@@ -521,6 +521,10 @@ def build_master_profile(record: dict, provider_kind: str) -> dict:
             "triage_priority": triage_priority,
             "emergency_level": emergency_level,
         },
+        "commercial": {
+            "tier": (record.get("master_profile") or {}).get("commercial", {}).get("tier") or "free",
+            "tier_until": (record.get("master_profile") or {}).get("commercial", {}).get("tier_until") or None,
+        },
         "updated_at": datetime.now(timezone.utc).isoformat(),
         "model_version": 2,
     }

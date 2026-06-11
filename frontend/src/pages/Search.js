@@ -10,6 +10,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Search as SearchIcon, MapPin, Star, Stethoscope, Leaf, Navigation, Calendar, Map as MapIcon, List as ListIcon } from 'lucide-react';
 import NearbyDoctors from '@/components/NearbyDoctors';
 import ProvidersMap from '@/components/ProvidersMap';
+import ProviderBadge from '@/components/ProviderBadge';
+import ClaimsSocialProof from '@/components/ClaimsSocialProof';
 
 const Search = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -493,7 +495,7 @@ const Search = () => {
                           <Card
                             key={doctor.id}
                             data-testid={`doctor-card-${doctor.id}`}
-                            className="bg-white rounded-xl border border-stone-100 hover:shadow-md transition-all"
+                            className={`bg-white rounded-xl border ${doctor.is_sponsored ? 'border-purple-200' : 'border-stone-100'} hover:shadow-md transition-all`}
                           >
                             <CardContent className="p-3">
                               <div className="flex items-start justify-between gap-2">
@@ -504,6 +506,11 @@ const Search = () => {
                                   {badge.label}
                                 </span>
                               </div>
+                              {doctor.badges && (
+                                <div className="mt-1.5">
+                                  <ProviderBadge badges={doctor.badges} size="xs" sponsored />
+                                </div>
+                              )}
                               {typeof doctor._distance_km === 'number' && (
                                 <div
                                   className="inline-flex items-center text-[10px] font-semibold text-blue-700 bg-blue-50 border border-blue-100 px-1.5 py-0.5 rounded-full mt-1.5"
@@ -554,7 +561,7 @@ const Search = () => {
                     <Card
                       key={doctor.id}
                       data-testid={`doctor-card-${doctor.id}`}
-                      className="bg-white rounded-xl border border-stone-100 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 overflow-hidden"
+                      className={`bg-white rounded-xl border ${doctor.is_sponsored ? 'border-purple-200 ring-1 ring-purple-100' : 'border-stone-100'} hover:shadow-lg transition-all duration-300 hover:-translate-y-1 overflow-hidden`}
                     >
                       <CardContent className="p-0">
                         <div className="h-40 bg-gradient-to-br from-blue-100 to-sky-100 relative overflow-hidden">
@@ -589,6 +596,11 @@ const Search = () => {
                           <h3 className="text-lg font-semibold text-stone-900 mb-1">
                             {displayName(doctor)}
                           </h3>
+                          {doctor.badges && (
+                            <div className="mb-2">
+                              <ProviderBadge badges={doctor.badges} size="xs" sponsored />
+                            </div>
+                          )}
                           <div className="flex flex-wrap gap-1 mb-2">
                             {doctor.specialties?.slice(0, 2).map((spec) => (
                               <span
@@ -644,6 +656,9 @@ const Search = () => {
                 })}
               </div>
                 )}
+
+                {/* Social proof banner — always after results */}
+                <ClaimsSocialProof />
               </>
             )}
           </>
