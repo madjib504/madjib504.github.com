@@ -28,6 +28,7 @@ import ClaimFiche from '@/pages/ClaimFiche';
 import RegisterAddStructure from '@/pages/RegisterAddStructure';
 import EmailVerificationBanner from '@/components/EmailVerificationBanner';
 import MaintenancePage from '@/pages/MaintenancePage';
+import PartnerPricing from '@/pages/PartnerPricing';
 import { SOSButton } from '@/components/HealthTools';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -119,6 +120,8 @@ function AppContent({ user, setUser, loading }) {
         <Route path="/register/patient" element={<RegisterPatient />} />
         <Route path="/register/claim" element={<ClaimFiche />} />
         <Route path="/register/add-structure" element={<RegisterAddStructure />} />
+        <Route path="/partner/pricing" element={<PartnerPricing />} />
+        <Route path="/pricing" element={<Navigate to="/partner/pricing" replace />} />
       </Routes>
     </Layout>
   );

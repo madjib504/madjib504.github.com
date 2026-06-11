@@ -53,6 +53,13 @@ Build a comprehensive health application in French named "keneyakafisa". The pla
   - Nouveau endpoint **GET /api/stats/claims-monthly** (public, social proof : compteurs claims du mois / vérifiés / total)
   - Bannière `<ClaimsSocialProof>` sous résultats `/search` : « 8 fiches revendiquées ce mois · 13 établissements vérifiés sur 182 » + CTA « Revendiquer ma fiche »
   - Tests : 17 cas dédiés + 17 régressions = **34/34 PASS**
+- [2026-02] **Page Tarifs publique `/partner/pricing`** : conversion B2B clé en main pour les providers.
+  - 3 plans côte-à-côte : Annuaire (Gratuit) / Mis en avant (3 000 XOF / 7 jours) / Partenaire Officiel (15 000 XOF / mois, recommandé)
+  - **Calculateur ROI interactif** : sliders vues/jour, taux conversion, prix consultation ; bascule entre les 3 plans ; affiche RDV/jour, revenu/jour, revenu/mois, bénéfice net et ROI en %
+  - FAQ (5 questions sur le paiement, transparence du tri, vérification gratuite)
+  - Trust strip (Tri transparent / Vérification gratuite / Sans engagement)
+  - Lien depuis la bannière Social Proof + route Navigate `/pricing → /partner/pricing`
+- [2026-02] **Refonte Home Hero** : remplacement du titre/sous-titre + ajout d'une section « ⚡ Accès rapide » universelle (Trouver un professionnel / Décrire mon besoin / Explorer autour de moi) au-dessus des cartes d'inscription. Message d'accueil orienté patient avec ton clair et apaisant.
 
 ## New API Endpoints (V2)
 - GET  /api/providers/{id}/master — fetch the V2 nested profile (lazy persist)

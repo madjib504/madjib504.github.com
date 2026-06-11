@@ -6,7 +6,7 @@ import {
   Menu, X, Search, Stethoscope, Calendar, MessageSquare, Video, 
   Heart, Shield, Users, ChevronRight, Home, 
   CreditCard, BookOpen, Award, FileText, Phone, LogOut, User,
-  Clock,
+  Clock, MapPin,
   Megaphone, ChevronLeft, ExternalLink, Building2,
   Share2, Headphones, Gift, MessageCircle, Zap, FolderOpen, Link2, Plus
 } from 'lucide-react';
@@ -396,67 +396,131 @@ const HomePage = () => {
         </div>
 
         {/* Main Content */}
-        <div className="text-center z-10 max-w-3xl mx-auto">
+        <div className="text-center z-10 max-w-4xl mx-auto">
           {/* Logo */}
-          <div className="flex items-center justify-center gap-3 mb-8">
+          <div className="flex items-center justify-center gap-3 mb-6">
             <div className="bg-white/10 backdrop-blur-sm p-4 rounded-2xl">
               <Stethoscope className="w-12 h-12 text-white" />
             </div>
           </div>
 
           {/* Title */}
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-serif font-bold text-white mb-6 leading-tight" data-testid="hero-title">
-            keneyakafisa
+          <h1
+            className="text-4xl md:text-5xl lg:text-6xl font-serif font-bold text-white mb-5 leading-tight"
+            data-testid="hero-title"
+          >
+            Bienvenue sur Keneyakafisa
           </h1>
-          
-          <p className="text-xl md:text-2xl text-blue-100 mb-4 font-light">
-            Votre Santé, Notre Priorité
+
+          <p className="text-base md:text-lg text-blue-100 mb-5 max-w-3xl mx-auto leading-relaxed">
+            Votre point d&apos;accès intelligent à la santé, au bien-être et à
+            l&apos;accompagnement médical et paramédical.
           </p>
 
-          <p className="text-base md:text-lg text-blue-200/80 mb-12 max-w-2xl mx-auto">
-            Connectez-vous avec les meilleurs spécialistes en médecine moderne, traditionnelle africaine, chinoise et spécialistes de bien-être physique et émotionnel
+          <p className="text-sm md:text-base text-blue-200/90 mb-5 max-w-3xl mx-auto leading-relaxed">
+            Trouvez rapidement les professionnels, structures et services adaptés à votre situation
+            — sans confusion, sans perte de temps.
           </p>
 
-          {/* Main CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-            {user ? (
-              <>
-                <Link to={dashboardLink} data-testid="cta-dashboard-btn">
-                  <Button className="bg-white text-blue-900 hover:bg-blue-50 rounded-full px-10 py-7 text-lg font-semibold shadow-2xl hover:shadow-white/20 transition-all w-full sm:w-auto">
-                    <Home className="w-5 h-5 mr-2" />
-                    Mon Dashboard
-                  </Button>
-                </Link>
-                <Link to="/search" data-testid="cta-search-btn">
-                  <Button className="bg-blue-700/50 backdrop-blur-sm text-white border-2 border-white/30 hover:bg-blue-600/50 hover:border-white/50 rounded-full px-10 py-7 text-lg font-semibold transition-all w-full sm:w-auto">
-                    <Search className="w-5 h-5 mr-2" />
-                    Rechercher
-                  </Button>
-                </Link>
-              </>
-            ) : (
-              <div id="inscription-section" className="grid grid-cols-1 md:grid-cols-3 gap-5 max-w-5xl mx-auto w-full scroll-mt-24">
-                {/* 1. Patient */}
-                <Link to="/register/patient" data-testid="cta-patient-btn" className="block">
-                  <div className="h-full p-7 rounded-2xl bg-white text-stone-900 shadow-2xl hover:shadow-white/30 hover:-translate-y-1 transition-all border-2 border-transparent hover:border-blue-300 text-left">
-                    <div className="w-12 h-12 mb-4 rounded-full bg-blue-100 flex items-center justify-center">
-                      <Users className="w-6 h-6 text-blue-900" />
-                    </div>
-                    <h3 className="text-xl font-serif font-bold mb-2">Je cherche un professionnel</h3>
-                    <p className="text-stone-600 text-sm mb-4 leading-relaxed">
-                      Créez votre compte patient pour rechercher un professionnel, prendre rendez-vous et gérer votre santé.
-                    </p>
-                    <span className="inline-flex items-center gap-2 text-blue-900 font-semibold text-sm">
-                      Créer un compte Patient →
-                    </span>
+          <p className="text-sm md:text-base text-blue-200/80 mb-3 max-w-3xl mx-auto leading-relaxed">
+            Décrivez simplement votre symptôme, votre besoin ou votre préoccupation.
+            Keneyakafisa vous oriente vers les solutions les plus pertinentes près de chez vous.
+          </p>
+
+          <p className="text-sm md:text-base text-white/90 italic mb-10 max-w-3xl mx-auto">
+            Votre santé mérite une orientation claire, fiable et immédiate.
+          </p>
+
+          {/* Quick Access — 3 primary actions, universal */}
+          <div className="mb-6" data-testid="quick-access">
+            <div className="inline-flex items-center gap-2 bg-yellow-400/20 border border-yellow-300/40 text-yellow-100 text-xs font-semibold px-3 py-1.5 rounded-full mb-5 uppercase tracking-wider">
+              <Zap className="w-3.5 h-3.5" />
+              Accès rapide
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-4xl mx-auto">
+              <Link to="/search" data-testid="quick-find-pro" className="block group">
+                <div className="h-full p-5 rounded-2xl bg-white/10 backdrop-blur-md text-white border border-white/20 hover:bg-white/20 hover:border-white/40 hover:-translate-y-1 transition-all text-left">
+                  <div className="w-11 h-11 mb-3 rounded-full bg-white/15 flex items-center justify-center">
+                    <Search className="w-5 h-5 text-white" />
                   </div>
-                </Link>
+                  <h3 className="text-base font-semibold mb-1">Trouver un professionnel</h3>
+                  <p className="text-blue-100/80 text-xs leading-relaxed">
+                    Médecins modernes, traditionnels, bien-être — par spécialité ou par nom.
+                  </p>
+                  <span className="inline-flex items-center gap-1 text-yellow-200 text-xs font-semibold mt-3 group-hover:gap-2 transition-all">
+                    Rechercher <ChevronRight className="w-3.5 h-3.5" />
+                  </span>
+                </div>
+              </Link>
 
-                {/* 2. Claim */}
-                <Link to="/register/claim" data-testid="cta-claim-btn" className="block">
-                  <div className="h-full p-7 rounded-2xl bg-gradient-to-br from-blue-700 to-blue-900 text-white shadow-2xl hover:shadow-blue-500/40 hover:-translate-y-1 transition-all border-2 border-blue-400/30 text-left">
-                    <div className="w-12 h-12 mb-4 rounded-full bg-white/15 flex items-center justify-center backdrop-blur-sm">
-                      <Stethoscope className="w-6 h-6 text-white" />
+              <Link to="/search" data-testid="quick-describe-need" className="block group">
+                <div className="h-full p-5 rounded-2xl bg-white text-stone-900 hover:-translate-y-1 hover:shadow-2xl transition-all text-left border-2 border-yellow-300">
+                  <div className="w-11 h-11 mb-3 rounded-full bg-yellow-100 flex items-center justify-center">
+                    <MessageCircle className="w-5 h-5 text-yellow-700" />
+                  </div>
+                  <h3 className="text-base font-semibold mb-1">Décrire mon besoin</h3>
+                  <p className="text-stone-600 text-xs leading-relaxed">
+                    Tapez votre symptôme, l&apos;IA vous oriente vers la bonne spécialité.
+                  </p>
+                  <span className="inline-flex items-center gap-1 text-blue-900 text-xs font-semibold mt-3 group-hover:gap-2 transition-all">
+                    Commencer <ChevronRight className="w-3.5 h-3.5" />
+                  </span>
+                </div>
+              </Link>
+
+              <Link to="/search?nearby=1" data-testid="quick-nearby" className="block group">
+                <div className="h-full p-5 rounded-2xl bg-white/10 backdrop-blur-md text-white border border-white/20 hover:bg-white/20 hover:border-white/40 hover:-translate-y-1 transition-all text-left">
+                  <div className="w-11 h-11 mb-3 rounded-full bg-white/15 flex items-center justify-center">
+                    <MapPin className="w-5 h-5 text-white" />
+                  </div>
+                  <h3 className="text-base font-semibold mb-1">Explorer autour de moi</h3>
+                  <p className="text-blue-100/80 text-xs leading-relaxed">
+                    Carte interactive des structures de santé près de votre position.
+                  </p>
+                  <span className="inline-flex items-center gap-1 text-yellow-200 text-xs font-semibold mt-3 group-hover:gap-2 transition-all">
+                    Voir la carte <ChevronRight className="w-3.5 h-3.5" />
+                  </span>
+                </div>
+              </Link>
+            </div>
+          </div>
+
+          {/* Connected user shortcut */}
+          {user && (
+            <div className="flex flex-col sm:flex-row gap-3 justify-center mb-12 mt-6">
+              <Link to={dashboardLink} data-testid="cta-dashboard-btn">
+                <Button className="bg-white text-blue-900 hover:bg-blue-50 rounded-full px-8 py-5 text-base font-semibold shadow-xl transition-all w-full sm:w-auto">
+                  <Home className="w-5 h-5 mr-2" />
+                  Mon Dashboard
+                </Button>
+              </Link>
+            </div>
+          )}
+
+          {/* Onboarding flows for guests */}
+          {!user && (
+            <div id="inscription-section" className="grid grid-cols-1 md:grid-cols-3 gap-5 max-w-5xl mx-auto w-full scroll-mt-24 mt-10">
+              {/* 1. Patient */}
+              <Link to="/register/patient" data-testid="cta-patient-btn" className="block">
+                <div className="h-full p-7 rounded-2xl bg-white text-stone-900 shadow-2xl hover:shadow-white/30 hover:-translate-y-1 transition-all border-2 border-transparent hover:border-blue-300 text-left">
+                  <div className="w-12 h-12 mb-4 rounded-full bg-blue-100 flex items-center justify-center">
+                    <Users className="w-6 h-6 text-blue-900" />
+                  </div>
+                  <h3 className="text-xl font-serif font-bold mb-2">Je cherche un professionnel</h3>
+                  <p className="text-stone-600 text-sm mb-4 leading-relaxed">
+                    Créez votre compte patient pour rechercher un professionnel, prendre rendez-vous et gérer votre santé.
+                  </p>
+                  <span className="inline-flex items-center gap-2 text-blue-900 font-semibold text-sm">
+                    Créer un compte Patient →
+                  </span>
+                </div>
+              </Link>
+
+              {/* 2. Claim */}
+              <Link to="/register/claim" data-testid="cta-claim-btn" className="block">
+                <div className="h-full p-7 rounded-2xl bg-gradient-to-br from-blue-700 to-blue-900 text-white shadow-2xl hover:shadow-blue-500/40 hover:-translate-y-1 transition-all border-2 border-blue-400/30 text-left">
+                  <div className="w-12 h-12 mb-4 rounded-full bg-white/15 flex items-center justify-center backdrop-blur-sm">
+                    <Stethoscope className="w-6 h-6 text-white" />
                     </div>
                     <h3 className="text-xl font-serif font-bold mb-2">Je suis un professionnel</h3>
                     <p className="text-blue-100/90 text-sm mb-4 leading-relaxed">
@@ -485,7 +549,6 @@ const HomePage = () => {
                 </Link>
               </div>
             )}
-          </div>
 
           {/* Quick Stats */}
           <div className="flex flex-wrap justify-center gap-8 text-blue-100/80 text-sm">

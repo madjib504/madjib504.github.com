@@ -69,11 +69,21 @@ export default function ClaimsSocialProof() {
           </div>
         </div>
         <Link
-          to="/claim"
+          to="/register/claim"
           className="inline-flex items-center justify-center px-4 py-2.5 rounded-full bg-blue-900 hover:bg-blue-800 text-white text-sm font-semibold shadow-md whitespace-nowrap"
           data-testid="claim-cta-from-search"
         >
           Revendiquer ma fiche
+        </Link>
+      </div>
+      <div className="mt-3 text-xs text-stone-600 text-center sm:text-left">
+        Curieux des tarifs ?{' '}
+        <Link
+          to="/partner/pricing"
+          className="text-blue-700 font-semibold hover:underline"
+          data-testid="pricing-link-from-search"
+        >
+          Découvrez nos plans de mise en avant →
         </Link>
       </div>
     </div>
