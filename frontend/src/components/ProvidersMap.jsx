@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useRef } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Link } from 'react-router-dom';
-import { Star, Calendar, MapPin } from 'lucide-react';
+import { Star, Calendar, MapPin, Crosshair, Loader2 } from 'lucide-react';
 
 // --- Fix the default-icon bug in CRA: Leaflet's marker images aren't auto-resolved
 //     by Webpack 5. Re-bind them to the public CDN.
@@ -38,24 +38,64 @@ const makeIcon = (color) =>
 const DOCTOR_ICON = makeIcon('#1d4ed8');     // blue-700
 const PARTNER_ICON = makeIcon('#15803d');    // green-700
 
-// --- Auto-fit map to markers when results change
-function AutoFitBounds({ points }) {
+// User pulsing dot
+const USER_ICON = L.divIcon({
+  className: 'kk-user-marker',
+  html: `
+    <div style="position:relative;width:22px;height:22px;">
+      <div style="
+        position:absolute;inset:0;border-radius:50%;
+        background:rgba(37,99,235,.25);
+        animation:kkPulse 2s ease-out infinite;"></div>
+      <div style="
+        position:absolute;left:5px;top:5px;width:12px;height:12px;
+        background:#2563eb;border:2px solid white;border-radius:50%;
+        box-shadow:0 1px 3px rgba(0,0,0,.4);"></div>
+    </div>
+    <style>
+      @keyframes kkPulse {
+        0%   { transform:scale(0.5); opacity:0.9; }
+        100% { transform:scale(2.2); opacity:0;   }
+      }
+    </style>`,
+  iconSize: [22, 22],
+  iconAnchor: [11, 11],
+});
+
+// --- Auto-fit map to markers + user position when they change
+function AutoFitBounds({ points, userPos }) {
   const map = useMap();
   useEffect(() => {
-    if (!points || points.length === 0) return;
-    if (points.length === 1) {
-      map.setView(points[0], 14);
+    const all = [...(points || [])];
+    if (userPos) all.push(userPos);
+    if (all.length === 0) return;
+    if (all.length === 1) {
+      map.setView(all[0], 14);
       return;
     }
-    const bounds = L.latLngBounds(points);
-    map.fitBounds(bounds, { padding: [40, 40], maxZoom: 14 });
-  }, [points, map]);
+    const bounds = L.latLngBounds(all);
+    map.fitBounds(bounds, { padding: [50, 50], maxZoom: 14 });
+  }, [points, userPos, map]);
+  return null;
+}
+
+// --- Recenter helper: lets parent imperatively recenter on user
+function RecenterOnUser({ userPos }) {
+  const map = useMap();
+  useEffect(() => {
+    if (userPos) map.setView(userPos, 13, { animate: true });
+  }, [userPos, map]);
   return null;
 }
 
 const ABIDJAN_CENTER = [5.36, -4.0083];
 
-export default function ProvidersMap({ providers = [], height = '60vh' }) {
+export default function ProvidersMap({
+  providers = [],
+  height = '60vh',
+  userPos = null,
+  onLocate,
+}) {
   // Filter providers having usable coordinates
   const markers = useMemo(
     () =>
@@ -71,6 +111,34 @@ export default function ProvidersMap({ providers = [], height = '60vh' }) {
   );
 
   const points = useMemo(() => markers.map((m) => [m._lat, m._lng]), [markers]);
+
+  const [locating, setLocating] = useState(false);
+  const [locateError, setLocateError] = useState(null);
+
+  const handleLocate = useCallback(() => {
+    if (!('geolocation' in navigator)) {
+      setLocateError("Votre navigateur ne supporte pas la géolocalisation.");
+      return;
+    }
+    setLocating(true);
+    setLocateError(null);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const p = [pos.coords.latitude, pos.coords.longitude];
+        setLocating(false);
+        if (onLocate) onLocate(p, pos.coords.accuracy);
+      },
+      (err) => {
+        setLocating(false);
+        setLocateError(
+          err.code === 1
+            ? "Autorisez la géolocalisation pour utiliser cette fonction."
+            : "Impossible de récupérer votre position. Réessayez."
+        );
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+    );
+  }, [onLocate]);
 
   const containerRef = useRef(null);
 
@@ -89,7 +157,7 @@ export default function ProvidersMap({ providers = [], height = '60vh' }) {
   return (
     <div
       ref={containerRef}
-      className="rounded-xl overflow-hidden border border-stone-200 shadow-sm"
+      className="relative rounded-xl overflow-hidden border border-stone-200 shadow-sm"
       style={{ height }}
       data-testid="providers-map"
     >
@@ -103,7 +171,19 @@ export default function ProvidersMap({ providers = [], height = '60vh' }) {
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        <AutoFitBounds points={points} />
+        {userPos ? <RecenterOnUser userPos={userPos} /> : <AutoFitBounds points={points} userPos={userPos} />}
+        {userPos && (
+          <>
+            <Marker position={userPos} icon={USER_ICON}>
+              <Popup>📍 Vous êtes ici</Popup>
+            </Marker>
+            <Circle
+              center={userPos}
+              radius={2000}
+              pathOptions={{ color: '#2563eb', fillColor: '#2563eb', fillOpacity: 0.07, weight: 1 }}
+            />
+          </>
+        )}
         {markers.map((m) => {
           const isDoctor =
             (m.provider_kind || m.kind || '').toLowerCase() === 'doctor' ||
@@ -113,13 +193,14 @@ export default function ProvidersMap({ providers = [], height = '60vh' }) {
           const specialty =
             (m.specialties && m.specialties[0]) || m.activity_type || '';
           const place = m.neighborhood || m.city || '';
+          const distLabel =
+            typeof m._distance_km === 'number'
+              ? m._distance_km < 1
+                ? `${Math.round(m._distance_km * 1000)} m`
+                : `${m._distance_km.toFixed(1)} km`
+              : null;
           return (
-            <Marker
-              key={m.id}
-              position={[m._lat, m._lng]}
-              icon={icon}
-              eventHandlers={{}}
-            >
+            <Marker key={m.id} position={[m._lat, m._lng]} icon={icon}>
               <Popup>
                 <div className="min-w-[200px]" data-testid={`map-popup-${m.id}`}>
                   <div className="font-semibold text-sm text-stone-900 leading-tight">
@@ -134,6 +215,11 @@ export default function ProvidersMap({ providers = [], height = '60vh' }) {
                     <div className="flex items-center text-xs text-stone-500 mt-1">
                       <MapPin className="w-3 h-3 mr-1" />
                       {place}
+                    </div>
+                  )}
+                  {distLabel && (
+                    <div className="text-xs font-semibold text-blue-700 mt-1">
+                      📍 À {distLabel} de vous
                     </div>
                   )}
                   {m.rating > 0 && (
@@ -167,6 +253,38 @@ export default function ProvidersMap({ providers = [], height = '60vh' }) {
           );
         })}
       </MapContainer>
+
+      {/* "Locate me" floating button — sits on the map overlay */}
+      <div className="absolute top-3 right-3 z-[400] flex flex-col items-end gap-2">
+        <button
+          type="button"
+          onClick={handleLocate}
+          disabled={locating}
+          data-testid="locate-me-btn"
+          className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium shadow-md backdrop-blur-sm transition-colors ${
+            locating
+              ? 'bg-stone-200/90 text-stone-500 cursor-wait'
+              : userPos
+              ? 'bg-blue-600 text-white hover:bg-blue-700'
+              : 'bg-white/95 text-stone-800 hover:bg-white'
+          }`}
+        >
+          {locating ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <Crosshair className="w-4 h-4" />
+          )}
+          <span>{userPos ? 'Vous êtes ici' : 'Autour de moi'}</span>
+        </button>
+        {locateError && (
+          <div
+            className="max-w-[260px] bg-red-50 border border-red-200 text-red-800 text-xs px-3 py-2 rounded-md shadow"
+            data-testid="locate-error"
+          >
+            {locateError}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

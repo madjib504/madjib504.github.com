@@ -47,6 +47,8 @@ const Search = () => {
   const [orientation, setOrientation] = useState(null);
   const [searchMode, setSearchMode] = useState('directory');
   const [viewMode, setViewMode] = useState('list'); // 'list' | 'map' | 'split'
+  const [userPos, setUserPos] = useState(null); // [lat, lng] from HTML5 Geolocation
+  const [sortByDistance, setSortByDistance] = useState(true);
 
   const searchDoctors = async (overrideKw) => {
     setLoading(true);
@@ -166,16 +168,55 @@ const Search = () => {
     return `Dr. ${raw}`;
   };
 
+  // Haversine distance in km between two [lat,lng] points
+  const haversineKm = (a, b) => {
+    const toRad = (d) => (d * Math.PI) / 180;
+    const R = 6371;
+    const dLat = toRad(b[0] - a[0]);
+    const dLng = toRad(b[1] - a[1]);
+    const lat1 = toRad(a[0]);
+    const lat2 = toRad(b[0]);
+    const s =
+      Math.sin(dLat / 2) ** 2 +
+      Math.sin(dLng / 2) ** 2 * Math.cos(lat1) * Math.cos(lat2);
+    return 2 * R * Math.asin(Math.sqrt(s));
+  };
+
   // Client-side dedup by name (case-insensitive) — safety net in case API returns dups
   const uniqueDoctors = (() => {
     const seen = new Set();
-    return (doctors || []).filter(d => {
+    const list = (doctors || []).filter((d) => {
       const key = ((d.name || '') + '').trim().toLowerCase();
       if (!key || seen.has(key)) return false;
       seen.add(key);
       return true;
     });
+    // Attach distance & optionally sort by proximity
+    if (userPos) {
+      const enriched = list.map((d) => {
+        const lat = d?.coordinates?.latitude;
+        const lng = d?.coordinates?.longitude;
+        if (typeof lat === 'number' && typeof lng === 'number') {
+          return { ...d, _distance_km: haversineKm(userPos, [lat, lng]) };
+        }
+        return d;
+      });
+      if (sortByDistance) {
+        enriched.sort((a, b) => {
+          const da = typeof a._distance_km === 'number' ? a._distance_km : Infinity;
+          const db = typeof b._distance_km === 'number' ? b._distance_km : Infinity;
+          return da - db;
+        });
+      }
+      return enriched;
+    }
+    return list;
   })();
+
+  const formatDistance = (km) => {
+    if (typeof km !== 'number') return null;
+    return km < 1 ? `${Math.round(km * 1000)} m` : `${km.toFixed(1)} km`;
+  };
 
   const getMedicalTypeBadge = (type) => {
     const badges = {
@@ -377,9 +418,25 @@ const Search = () => {
               <>
                 {/* View toggle: List / Map / Split */}
                 <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
-                  <p className="text-sm text-stone-600">
-                    <span className="font-semibold text-stone-900">{uniqueDoctors.length}</span> résultat{uniqueDoctors.length > 1 ? 's' : ''}
-                  </p>
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <p className="text-sm text-stone-600">
+                      <span className="font-semibold text-stone-900">{uniqueDoctors.length}</span> résultat{uniqueDoctors.length > 1 ? 's' : ''}
+                    </p>
+                    {userPos && (
+                      <label
+                        className="inline-flex items-center gap-1.5 text-xs text-stone-600 bg-blue-50 border border-blue-200 px-2.5 py-1 rounded-full cursor-pointer hover:bg-blue-100"
+                        data-testid="sort-distance-toggle"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={sortByDistance}
+                          onChange={(e) => setSortByDistance(e.target.checked)}
+                          className="w-3 h-3 accent-blue-600"
+                        />
+                        Trier par proximité
+                      </label>
+                    )}
+                  </div>
                   <div
                     className="inline-flex rounded-lg border border-stone-200 bg-white p-0.5 shadow-sm"
                     role="tablist"
@@ -410,14 +467,24 @@ const Search = () => {
 
                 {/* MAP view */}
                 {viewMode === 'map' && (
-                  <ProvidersMap providers={uniqueDoctors} height="70vh" />
+                  <ProvidersMap
+                    providers={uniqueDoctors}
+                    height="70vh"
+                    userPos={userPos}
+                    onLocate={(p) => setUserPos(p)}
+                  />
                 )}
 
                 {/* SPLIT view: map on top (mobile) / left (desktop), list below/right */}
                 {viewMode === 'split' && (
                   <div className="grid lg:grid-cols-5 gap-4">
                     <div className="lg:col-span-3 lg:sticky lg:top-4 lg:self-start">
-                      <ProvidersMap providers={uniqueDoctors} height="70vh" />
+                      <ProvidersMap
+                        providers={uniqueDoctors}
+                        height="70vh"
+                        userPos={userPos}
+                        onLocate={(p) => setUserPos(p)}
+                      />
                     </div>
                     <div className="lg:col-span-2 grid grid-cols-1 gap-3 max-h-[70vh] overflow-y-auto pr-1" data-testid="doctors-grid-split">
                       {uniqueDoctors.map((doctor) => {
@@ -437,6 +504,14 @@ const Search = () => {
                                   {badge.label}
                                 </span>
                               </div>
+                              {typeof doctor._distance_km === 'number' && (
+                                <div
+                                  className="inline-flex items-center text-[10px] font-semibold text-blue-700 bg-blue-50 border border-blue-100 px-1.5 py-0.5 rounded-full mt-1.5"
+                                  data-testid={`distance-${doctor.id}`}
+                                >
+                                  📍 {formatDistance(doctor._distance_km)}
+                                </div>
+                              )}
                               <div className="flex flex-wrap gap-1 mt-1.5">
                                 {doctor.specialties?.slice(0, 2).map((spec) => (
                                   <span key={spec} className="bg-stone-100 text-stone-600 text-[10px] px-2 py-0.5 rounded-full">
@@ -501,6 +576,14 @@ const Search = () => {
                           <div className={`absolute top-3 right-3 px-2.5 py-1 rounded-full text-xs font-medium ${badge.color}`}>
                             {badge.label}
                           </div>
+                          {typeof doctor._distance_km === 'number' && (
+                            <div
+                              className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-xs font-semibold bg-white/95 text-blue-700 shadow-sm border border-blue-100 backdrop-blur-sm"
+                              data-testid={`distance-list-${doctor.id}`}
+                            >
+                              📍 {formatDistance(doctor._distance_km)}
+                            </div>
+                          )}
                         </div>
                         <div className="p-4">
                           <h3 className="text-lg font-semibold text-stone-900 mb-1">
