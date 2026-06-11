@@ -44,6 +44,15 @@ Build a comprehensive health application in French named "keneyakafisa". The pla
 - [2026-02] **Géolocalisation GPS curée Google-Maps (offline, sans clé API)** : `services.geocoding` héberge 30 landmarks (CHU Cocody/Treichville/Yopougon, PISAM, Clinique Farah…) + centroïdes précis des communes d'Abidjan (Cocody-Angré, Riviera 1/2/3, Plateau, Yopougon-Sicogi, Marcory Zone 4, Adjamé-Liberté, Abobo, Koumassi…) + autres villes CI (Bouaké, San Pedro, Yamoussoukro, Korhogo). Migration automatique au boot remplace les 100% de placeholders (5.3167, -4.0333). Résultat : 0 placeholder restant, 100% des 182 fiches géocodées (26 landmark + 127 neighborhood + 21 city + 7 country-fallback=Abidjan). Champ `geo.precision` = landmark|neighborhood|city|country.
 - [2026-02] **Carte interactive Leaflet/OpenStreetMap** : nouveau composant `/components/ProvidersMap.jsx` (gratuit, sans clé API). Page `/search` propose un toggle **Liste / Mixte / Carte** au-dessus des résultats. Auto-fit des bounds, markers colorés (bleu doctor, vert partner), popups cliquables avec "Voir" + "Rdv".
 - [2026-02] **Géolocalisation "Autour de moi"** : bouton flottant sur la carte → `navigator.geolocation` → marker pulsant + cercle 2 km. Distance Haversine calculée pour chaque fournisseur, affichée en pastille bleue (liste, mixte, popup). Toggle "Trier par proximité" (coché par défaut quand l'utilisateur s'est géolocalisé).
+- [2026-02] **Système Badges Phase 1 (2-couches)** : nouveau service `services/badge.py` + composant React `ProviderBadge.jsx`.
+  - **Trust badge** (toujours visible) : Annuaire (slate) → Revendiqué (amber) → Identité vérifiée (emerald)
+  - **Commercial badge** (optionnel Phase 1 placeholder, Phase 2 activé) : Mis en avant (orange) / Partenaire Officiel (purple) / Partenaire Officiel+ (violet)
+  - Champ DB `master_profile.commercial.{tier, tier_until}` créé partout (défaut `free`) avec **auto-expiration** quand `tier_until` est passé
+  - **Trust score bonus modéré** (+15 verified, +5 pending, +3 premium) — capé à +18 pour garantir que le tri organique reste prioritaire face au paid
+  - Badges injectés dans `/api/search/smart`, `/api/providers/search`, `/api/providers/{id}/master` ; champ `is_sponsored` pour transparence patient
+  - Nouveau endpoint **GET /api/stats/claims-monthly** (public, social proof : compteurs claims du mois / vérifiés / total)
+  - Bannière `<ClaimsSocialProof>` sous résultats `/search` : « 8 fiches revendiquées ce mois · 13 établissements vérifiés sur 182 » + CTA « Revendiquer ma fiche »
+  - Tests : 17 cas dédiés + 17 régressions = **34/34 PASS**
 
 ## New API Endpoints (V2)
 - GET  /api/providers/{id}/master — fetch the V2 nested profile (lazy persist)
