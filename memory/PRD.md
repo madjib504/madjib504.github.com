@@ -21,8 +21,7 @@ Build a comprehensive health application in French named "keneyakafisa". The pla
 - [2025-12] Full auth (JWT) - 3 user types, doctor search, booking, admin dashboard, ads, WhatsApp redirect, PWA, partner registration.
 - [2026-02] Social links + video for doctors/partners, location fields, Resend email verification, Maintenance mode, Smart-Search AI orientation, Restructured Home with 3 flows (Patient/Claim/Add Structure), seed_loader for 103 providers.
 - [2026-02] **Master Model V2 nested schema deployed** : `{ identity, classification, ai_matching, contact, booking, trust }` on every doctor & partner fiche.
-- [2026-02] **Smart-search V2** : interroge `master_profile.ai_matching.symptomes_pris_en_charge` + `ai_specialty_tags`, inclut partner_profiles, tri par `trust.triage_priority`, déduplication par nom.
-- [2026-02] **DB dedupe permanente** : seed_loader vérifie aussi par name avant insert + endpoint `/api/admin/dedupe-providers`. Plus de doublons après restart.
+- [2026-02] **Smart-search V2** : interroge `master_profile.ai_matching.symptomes_pris_en_charge` + `ai_specialty_tags`, inclut partner_profiles, tri par `trust.triage_priority`, déduplication par nom.- [2026-02] **DB dedupe permanente** : seed_loader vérifie aussi par name avant insert + endpoint `/api/admin/dedupe-providers`. Plus de doublons après restart.
 - [2026-02] **Urgent symptom routing fixed**: q='urgence' déclenche mode=orientation + emergency_number=185.
 - [2026-02] **Espace OWNER (super-admin)** : verify_owner_token, audit log auto, 5 endpoints OWNER, 3 rôles modérateurs, seed OWNER protégé.
 - [2026-02] **"Dr." retiré devant les structures** : helper isStructure() + displayName() — pas de "Dr." devant les cliniques/cabinets/pharmacies.
@@ -43,6 +42,7 @@ Build a comprehensive health application in French named "keneyakafisa". The pla
 - [2026-02] **Emails Resend automatisés** : welcome (`/structures/add`), claim decision (approve/reject), J+7 profile-completion reminder (cron `services.profile_reminders`).
 - [2026-02] **62 nouveaux fournisseurs V2 (Urologie, Dermato, Gynéco, Cardio, Endocrino, Pédiatrie, Neuro, ORL, Beauté)** ingérés via `services.v2_seed_loader.seed_v2_specialties()` → DB partner_profiles passe de 42 à 104, idempotent au démarrage.
 - [2026-02] **Géolocalisation GPS curée Google-Maps (offline, sans clé API)** : `services.geocoding` héberge 30 landmarks (CHU Cocody/Treichville/Yopougon, PISAM, Clinique Farah…) + centroïdes précis des communes d'Abidjan (Cocody-Angré, Riviera 1/2/3, Plateau, Yopougon-Sicogi, Marcory Zone 4, Adjamé-Liberté, Abobo, Koumassi…) + autres villes CI (Bouaké, San Pedro, Yamoussoukro, Korhogo). Migration automatique au boot remplace les 100% de placeholders (5.3167, -4.0333). Résultat : 0 placeholder restant, 100% des 182 fiches géocodées (26 landmark + 127 neighborhood + 21 city + 7 country-fallback=Abidjan). Champ `geo.precision` = landmark|neighborhood|city|country.
+- [2026-02] **Carte interactive Leaflet/OpenStreetMap** : nouveau composant `/components/ProvidersMap.jsx` (gratuit, sans clé API). Page `/search` propose un toggle **Liste / Mixte / Carte** au-dessus des résultats. Auto-fit des bounds, markers colorés (bleu doctor, vert partner), popups cliquables avec "Voir" + "Rdv".
 
 ## New API Endpoints (V2)
 - GET  /api/providers/{id}/master — fetch the V2 nested profile (lazy persist)

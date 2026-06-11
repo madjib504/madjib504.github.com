@@ -7,8 +7,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
-import { Search as SearchIcon, MapPin, Star, Stethoscope, Leaf, Navigation, Calendar } from 'lucide-react';
+import { Search as SearchIcon, MapPin, Star, Stethoscope, Leaf, Navigation, Calendar, Map as MapIcon, List as ListIcon } from 'lucide-react';
 import NearbyDoctors from '@/components/NearbyDoctors';
+import ProvidersMap from '@/components/ProvidersMap';
 
 const Search = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -45,6 +46,7 @@ const Search = () => {
 
   const [orientation, setOrientation] = useState(null);
   const [searchMode, setSearchMode] = useState('directory');
+  const [viewMode, setViewMode] = useState('list'); // 'list' | 'map' | 'split'
 
   const searchDoctors = async (overrideKw) => {
     setLoading(true);
@@ -372,6 +374,104 @@ const Search = () => {
                 </p>
               </div>
             ) : (
+              <>
+                {/* View toggle: List / Map / Split */}
+                <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
+                  <p className="text-sm text-stone-600">
+                    <span className="font-semibold text-stone-900">{uniqueDoctors.length}</span> résultat{uniqueDoctors.length > 1 ? 's' : ''}
+                  </p>
+                  <div
+                    className="inline-flex rounded-lg border border-stone-200 bg-white p-0.5 shadow-sm"
+                    role="tablist"
+                    data-testid="view-mode-toggle"
+                  >
+                    {[
+                      { v: 'list',  label: 'Liste', Icon: ListIcon },
+                      { v: 'split', label: 'Mixte', Icon: Navigation },
+                      { v: 'map',   label: 'Carte', Icon: MapIcon },
+                    ].map(({ v, label, Icon }) => (
+                      <button
+                        key={v}
+                        type="button"
+                        onClick={() => setViewMode(v)}
+                        data-testid={`view-mode-${v}`}
+                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md transition-colors ${
+                          viewMode === v
+                            ? 'bg-blue-900 text-white shadow-sm'
+                            : 'text-stone-600 hover:bg-stone-100'
+                        }`}
+                      >
+                        <Icon className="w-4 h-4" />
+                        <span className="hidden sm:inline">{label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* MAP view */}
+                {viewMode === 'map' && (
+                  <ProvidersMap providers={uniqueDoctors} height="70vh" />
+                )}
+
+                {/* SPLIT view: map on top (mobile) / left (desktop), list below/right */}
+                {viewMode === 'split' && (
+                  <div className="grid lg:grid-cols-5 gap-4">
+                    <div className="lg:col-span-3 lg:sticky lg:top-4 lg:self-start">
+                      <ProvidersMap providers={uniqueDoctors} height="70vh" />
+                    </div>
+                    <div className="lg:col-span-2 grid grid-cols-1 gap-3 max-h-[70vh] overflow-y-auto pr-1" data-testid="doctors-grid-split">
+                      {uniqueDoctors.map((doctor) => {
+                        const badge = getMedicalTypeBadge(doctor.medical_type);
+                        return (
+                          <Card
+                            key={doctor.id}
+                            data-testid={`doctor-card-${doctor.id}`}
+                            className="bg-white rounded-xl border border-stone-100 hover:shadow-md transition-all"
+                          >
+                            <CardContent className="p-3">
+                              <div className="flex items-start justify-between gap-2">
+                                <h3 className="text-sm font-semibold text-stone-900 leading-tight">
+                                  {displayName(doctor)}
+                                </h3>
+                                <span className={`text-[10px] px-2 py-0.5 rounded-full whitespace-nowrap ${badge.color}`}>
+                                  {badge.label}
+                                </span>
+                              </div>
+                              <div className="flex flex-wrap gap-1 mt-1.5">
+                                {doctor.specialties?.slice(0, 2).map((spec) => (
+                                  <span key={spec} className="bg-stone-100 text-stone-600 text-[10px] px-2 py-0.5 rounded-full">
+                                    {spec}
+                                  </span>
+                                ))}
+                              </div>
+                              {(doctor.neighborhood || doctor.city) && (
+                                <div className="flex items-center text-xs text-stone-500 mt-1.5">
+                                  <MapPin className="w-3 h-3 mr-1" />
+                                  {doctor.neighborhood || doctor.city}
+                                </div>
+                              )}
+                              <div className="flex gap-1.5 mt-2">
+                                <Link to={`/doctor/${doctor.id}`} className="flex-1">
+                                  <Button variant="outline" className="w-full rounded-md text-xs h-8" data-testid={`view-profile-btn-${doctor.id}`}>
+                                    Voir
+                                  </Button>
+                                </Link>
+                                <Link to={`/booking/${doctor.id}`}>
+                                  <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-md text-xs h-8 px-3" data-testid={`book-btn-${doctor.id}`}>
+                                    <Calendar className="w-3.5 h-3.5" />
+                                  </Button>
+                                </Link>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* LIST view (original cards grid) */}
+                {viewMode === 'list' && (
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4" data-testid="doctors-grid">
                 {uniqueDoctors.map((doctor) => {
                   const badge = getMedicalTypeBadge(doctor.medical_type);
@@ -460,6 +560,8 @@ const Search = () => {
                   );
                 })}
               </div>
+                )}
+              </>
             )}
           </>
         )}
