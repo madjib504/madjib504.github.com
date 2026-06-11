@@ -40,6 +40,9 @@ Build a comprehensive health application in French named "keneyakafisa". The pla
   - Approve met aussi à jour `master_profile.trust.is_verified=true`
   - UI Admin : nouvel onglet "Revendications" avec KPI cards + filtres + table + modal détail (provider/demandeur/documents/trust/approve-reject)
   - UI Claimant : ClaimFiche.js avec upload drag-and-drop multi-fichiers + claim_type normalisé
+- [2026-02] **Emails Resend automatisés** : welcome (`/structures/add`), claim decision (approve/reject), J+7 profile-completion reminder (cron `services.profile_reminders`).
+- [2026-02] **62 nouveaux fournisseurs V2 (Urologie, Dermato, Gynéco, Cardio, Endocrino, Pédiatrie, Neuro, ORL, Beauté)** ingérés via `services.v2_seed_loader.seed_v2_specialties()` → DB partner_profiles passe de 42 à 104, idempotent au démarrage.
+- [2026-02] **Géolocalisation GPS curée Google-Maps (offline, sans clé API)** : `services.geocoding` héberge 30 landmarks (CHU Cocody/Treichville/Yopougon, PISAM, Clinique Farah…) + centroïdes précis des communes d'Abidjan (Cocody-Angré, Riviera 1/2/3, Plateau, Yopougon-Sicogi, Marcory Zone 4, Adjamé-Liberté, Abobo, Koumassi…) + autres villes CI (Bouaké, San Pedro, Yamoussoukro, Korhogo). Migration automatique au boot remplace les 100% de placeholders (5.3167, -4.0333). Résultat : 0 placeholder restant, 100% des 182 fiches géocodées (26 landmark + 127 neighborhood + 21 city + 7 country-fallback=Abidjan). Champ `geo.precision` = landmark|neighborhood|city|country.
 
 ## New API Endpoints (V2)
 - GET  /api/providers/{id}/master — fetch the V2 nested profile (lazy persist)
@@ -47,11 +50,15 @@ Build a comprehensive health application in French named "keneyakafisa". The pla
 - POST /api/admin/dedupe-providers — admin idempotent dedupe by name
 - GET  /api/admin/master-model/stats — coverage + top categories
 - GET  /api/search/smart?q=... — V2 search uses master_profile.ai_matching
+- POST /api/admin/run-v2-seed (OWNER) — idempotent V2 specialty seed
+- POST /api/admin/geocode/refresh (OWNER) — force=true|false, re-applies curated GPS coords
+- GET  /api/admin/geocode/audit — counts by precision per collection
 
 ## Pending / In Progress
-- Google Maps Geolocation (BLOCKED - waiting for user API key)
+- Google Maps **live** API (BLOCKED - user has chosen curated offline geocoding for now). Could be plugged in via `services.geocoding.resolve_coordinates` upgrade if user provides a key later.
 - WhatsApp CallMeBot automation (BLOCKED - waiting for user key)
 - Public Partner profile page
+- Surface geocode audit numbers (landmark/neighborhood/city/country counts) on AdminDashboard ("Géo" KPI card)
 
 ## Phase 2 (Upcoming)
 - P1: Teleconsultation Video (Twilio Video)
