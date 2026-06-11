@@ -1,0 +1,37 @@
+{
+  "summary": "Backend-only testing of V2 specialty seed loader + curated GPS geocoding (placeholder purge) + 3 new OWNER endpoints. 17/17 pytest cases PASS. Verified: (a) /api/admin/run-v2-seed is idempotent (inserted=0, skipped_exists=62, partner_profiles_in_db=104); (b) /api/admin/geocode/refresh w/ and w/o force returns doctors_failed=0 + partners_failed=0; (c) /api/admin/geocode/audit shows placeholder_left=0 on BOTH collections (doctor_profiles=78, partner_profiles=104); (d) security: missing token and non-admin token are rejected with 401/403 on all three endpoints; (e) /api/search/smart?q=urologie returns >=5 results with real (non-placeholder) coords; (f) landmark coords for CHU de Cocody (5.3528,-3.9908), CHU de Treichville (5.2925,-4.0085), Clinique Farah (5.349,-3.9897), PISAM (5.3008,-3.9869) exact match via search; (g) legacy /api/admin/run-seed remains idempotent (imported_doctor=0, imported_partner=0).",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "/api/admin/geocode/refresh", "issue": "On a no-force re-run, 7 doctors + 21 partners are still re-processed because needs_geocoding() flags every doc with precision=city|country for retry even when no better data exists. End state is identical; only the update_one call is wasted. Consider caching last-resolution-input hash to skip pure no-ops."}
+    ]
+  },
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_v2_seed_geocoding.py",
+    "/app/test_reports/pytest/v2_seed_geocoding_results.xml"
+  ],
+  "action_items": [
+    "None required — every spec item in the review request passes.",
+    "Optional: surface the audit numbers (landmark/neighborhood/city/country/placeholder_left) on the admin dashboard so OWNER can see geo coverage at a glance.",
+    "Optional micro-opt: in services.geocoding.needs_geocoding(), don't flag docs whose previous precision was 'city' or 'country' UNLESS the resolver can now do better — saves the no-op writes seen on refresh{force:false}."
+  ],
+  "critical_code_review_comments": [
+    "services/geocoding.py: clean, fully offline, well-graded (landmark>neighborhood>city>country). _norm() strips diacritics correctly. PLACEHOLDER_COORDS tuple includes both rounded and full-precision variants of the fake coord (5.3167,-4.0333) — good.",
+    "services/v2_seed_loader.py: dedupe query is robust (id, master_profile.identity.id, slug, name regex, company_name regex) AND checks both partner_profiles and doctor_profiles — idempotency confirmed by 2nd run skipping all 62.",
+    "server.py @app.on_event('startup'): both seed_v2_specialties() and migrate_all_coordinates() run automatically. Boot is therefore self-healing — placeholders can never persist on a fresh container.",
+    "POST /api/admin/geocode/refresh declares the body as `payload: dict | None = None`. FastAPI parses {} correctly but `null`/missing-body returns 422 in strict mode; the test confirms {} works. Consider Pydantic model `RefreshPayload(force: bool = False)` for cleaner OpenAPI.",
+    "server.py is now 4249 lines (+141 since iteration_8). Modularization still recommended; geocode/audit + v2-seed endpoints would be a natural fit for a routers/admin_seed.py module.",
+    "verify_owner_token correctly gates run-v2-seed and refresh; audit uses verify_admin_token (admin OK, owner OK) — matches the spec which says audit is admin-token, not owner-only."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_v2_seed_geocoding.py (new, 17 tests, no DB-state mutation beyond force-refresh)"
+  ],
+  "success_rate": {"backend": "100% (17/17)", "frontend": "not tested (scope=backend only)"},
+  "test_credentials": "OWNER MADJIB / 48851132kl from /app/memory/test_credentials.md — login confirmed (admin_role=super_admin_owner).",
+  "seed_data_creation": "None. Tests are read-mostly. The force-refresh test mutates `geo.updated_at` + re-writes coordinates to identical values; no new docs are inserted.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Full V2-seed + geocode test suite lives at /app/backend/tests/test_v2_seed_geocoding.py and uses REACT_APP_BACKEND_URL (must be exported when running pytest manually; e.g. `REACT_APP_BACKEND_URL=https://keneyakafisa-health.preview.emergentagent.com pytest backend/tests/test_v2_seed_geocoding.py -v`). Final DB state at end of iteration: doctor_profiles=78 (5 landmark, 66 neighborhood, 1 city, 6 country), partner_profiles=104 (21 landmark, 62 neighborhood, 20 city, 1 country). 0 placeholders in either collection. OWNER token works on all three new endpoints. /api/search/smart proven to surface V2 seed records.",
+  "rca of the issue": "No bugs found. All 12 spec items in the review request are verified end-to-end."
+}

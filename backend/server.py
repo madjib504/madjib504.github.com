@@ -23,6 +23,8 @@ from services.storage import init_storage, put_object, get_object
 from services.email_service import send_verification_email, send_claim_decision_email, send_structure_added_email
 from services.seed_loader import seed_initial_data
 from services.master_model import migrate_all_providers
+from services.v2_seed_loader import seed_v2_specialties
+from services.geocoding import migrate_all_coordinates
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -2873,6 +2875,61 @@ async def trigger_seed(admin: dict = Depends(verify_admin_token)):
     }
 
 
+@api_router.post("/admin/run-v2-seed")
+async def trigger_v2_seed(admin: dict = Depends(verify_owner_token)):
+    """OWNER only — manual trigger for V2 specialty providers seed."""
+    stats = await seed_v2_specialties(db)
+    return {
+        "success": True,
+        "stats": stats,
+        "partner_profiles_in_db": await db.partner_profiles.count_documents({}),
+    }
+
+
+@api_router.post("/admin/geocode/refresh")
+async def trigger_geocode_refresh(
+    payload: dict | None = None,
+    admin: dict = Depends(verify_owner_token),
+):
+    """OWNER only — re-geocode providers using curated Google-Maps coords.
+
+    Body (optional):
+        { "force": true }   → re-geocode even docs that already have good coords
+    """
+    force = bool((payload or {}).get("force"))
+    stats = await migrate_all_coordinates(db, force=force)
+    return {"success": True, "force": force, "stats": stats}
+
+
+@api_router.get("/admin/geocode/audit")
+async def geocode_audit(admin: dict = Depends(verify_admin_token)):
+    """Quick QA endpoint — counts of geocoded providers by precision."""
+    async def _audit(coll: str) -> dict:
+        precisions = {"landmark": 0, "neighborhood": 0, "city": 0, "country": 0, "none": 0}
+        total = 0
+        placeholder = 0
+        async for d in db[coll].find({}, {"_id": 0, "geo": 1, "coordinates": 1}):
+            total += 1
+            geo = d.get("geo") or {}
+            prec = geo.get("precision")
+            if prec in precisions:
+                precisions[prec] += 1
+            else:
+                precisions["none"] += 1
+            c = d.get("coordinates") or {}
+            try:
+                if (round(float(c.get("latitude")), 4), round(float(c.get("longitude")), 4)) == (5.3167, -4.0333):
+                    placeholder += 1
+            except (TypeError, ValueError):
+                pass
+        return {"total": total, "by_precision": precisions, "placeholder_left": placeholder}
+
+    return {
+        "doctor_profiles": await _audit("doctor_profiles"),
+        "partner_profiles": await _audit("partner_profiles"),
+    }
+
+
 # ============ PROVIDERS SEARCH (for CLAIM flow) ============
 
 @api_router.get("/providers/search")
@@ -4155,6 +4212,19 @@ async def startup_storage():
         await migrate_all_providers(db)
     except Exception as e:
         logging.error(f"Master-model migration failed: {e}")
+
+    # Idempotent V2 specialty seed (Urologie, Beauté, Dermato, Gynéco, Cardio, ORL…).
+    try:
+        await seed_v2_specialties(db)
+    except Exception as e:
+        logging.error(f"V2 specialty seed failed: {e}")
+
+    # Idempotent GPS migration: replace placeholder coords with curated
+    # Google-Maps coordinates for every provider.
+    try:
+        await migrate_all_coordinates(db)
+    except Exception as e:
+        logging.error(f"Coordinate migration failed: {e}")
 
     # Ensure the initial OWNER admin exists in the `admins` collection.
     try:
