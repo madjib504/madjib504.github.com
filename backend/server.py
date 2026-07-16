@@ -13,6 +13,7 @@ import random
 import string
 
 from products_data import PRODUCTS_BY_SHOP
+from providers import providers_status, aliexpress, rakuten
 
 
 ROOT_DIR = Path(__file__).parent
@@ -358,6 +359,23 @@ async def get_config():
         "service_fee_pct": SERVICE_FEE_PCT,
         "local_delivery_xof": LOCAL_DELIVERY_FCFA,
         "intl_shipping_xof": INTL_SHIPPING_FCFA,
+    }
+
+
+@api_router.get("/providers/status")
+async def get_providers_status():
+    """Report which external merchant API integrations are active."""
+    return providers_status()
+
+
+@api_router.get("/providers/search")
+async def providers_search(q: str):
+    """Live product search across configured providers (falls back to empty list)."""
+    ae_results = await aliexpress.search_products(q)
+    rk_results = await rakuten.search_products(q)
+    return {
+        "aliexpress": {"active": aliexpress.is_configured(), "results": ae_results},
+        "rakuten": {"active": rakuten.is_configured(), "results": rk_results},
     }
 
 

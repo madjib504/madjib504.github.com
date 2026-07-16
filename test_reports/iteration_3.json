@@ -1,0 +1,34 @@
+{
+  "summary": "Iteration 3 (backend-only): provider scaffolding for AliExpress + Rakuten validated. Backend starts cleanly with empty AE_*/RAKUTEN_* env vars (no crash), httpx is installed (v0.28.1), and both provider endpoints return the expected fallback shape. 12/12 new pytest cases pass on the public URL, plus 32/32 pre-existing regression tests still pass (44/44 total, 6.42s). Verified: (1) GET /api/providers/status returns exactly {aliexpress, rakuten, fallback_catalog}; both providers report configured=false with valid signup URLs (portals.aliexpress.com, rakutenadvertising.com); fallback_catalog.active=true with products_count=140. (2) GET /api/providers/search?q=iphone returns {aliexpress:{active:false,results:[]}, rakuten:{active:false,results:[]}} with 200 and no upstream calls (is_configured() short-circuits before httpx). (3) Missing q parameter correctly returns 422. (4) Regression: /api/shops returns 24 shops, /api/products returns 140 items with no _id leak, /api/config, /api/auth/send-otp+verify-otp, /api/cart, /api/orders all work.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": [], "react_native_issues": []},
+  "test_report_links": [
+    "/app/backend/tests/test_providers.py",
+    "/app/test_reports/pytest/iter3_results.xml"
+  ],
+  "action_items": [
+    "None blocking. Scaffolding is correct and safe: is_configured() guards prevent any outbound HTTP call while env vars are empty.",
+    "When user obtains AliExpress credentials (AE_APP_KEY / AE_APP_SECRET / AE_ACCESS_TOKEN), note the current aliexpress.affiliate.product.query call in providers.py is missing the required HMAC-SHA256 `sign` parameter and `timestamp`/`sign_method` — the current code will 401 against the real API. Add signature computation per MERCHANT_API_SETUP.md before going live.",
+    "Rakuten client-credentials token flow looks correct but `scope_id` should be the Rakuten advertiser 'sid' — worth double-checking against docs when live keys are added.",
+    "Consider narrowing the bare `except Exception:` in providers.py to log errors (currently swallowed silently) so production issues are observable."
+  ],
+  "critical_code_review_comments": [
+    "providers_status() computes fallback_catalog.active = not (ae.is_configured() AND rk.is_configured()). That is correct as long as we only need fallback when BOTH are down. If desired semantics is 'fallback active whenever any provider is down', switch to `or`. Currently OK because catalog is always additive.",
+    "AliExpress signature (`sign`) is missing in search_products — will fail once real keys are added. Requires HMAC-SHA256 of sorted params + timestamp + sign_method=hmac-sha256.",
+    "httpx clients are created per-request. Fine for low traffic, but for real integration reuse a module-level AsyncClient to benefit from connection pooling.",
+    "RakutenService._cached_token has no expiry check — token could go stale. Add exp check based on `expires_in` from token response.",
+    "server.py providers_search does not validate `q` length; long queries could increase upstream cost when providers are configured. Add max length (e.g., 100).",
+    "No mongodb _id leakage: /api/products explicitly excludes {'_id': 0} — confirmed in regression test."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_providers.py (new)",
+    "/app/test_reports/iteration_3.json (new)",
+    "/app/test_reports/pytest/iter3_results.xml (new)"
+  ],
+  "success_rate": {"backend": "100% (12/12 new + 32/32 regression = 44/44)", "frontend": "not tested (per request)"},
+  "seed_data_creation": "None new. Existing shop (24) + product (140) seed remains unchanged.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Public URL: https://cross-border-mall.preview.emergentagent.com. Provider endpoints: GET /api/providers/status (no auth), GET /api/providers/search?q=<term> (no auth). All AE_*/RAKUTEN_* env vars in /app/backend/.env are empty strings so is_configured() returns False on both. To test live path in future iterations, populate the env vars and re-run test_providers.py — currently failing tests will indicate wired implementation. httpx==0.28.1 confirmed installed in requirements.txt.",
+  "rca_of_issue": "N/A — scaffolding iteration, no bug to RCA. Verified defensive design: providers.py.search_products() returns [] immediately when is_configured() is False, so no network I/O is attempted with blank credentials and no exception surfaces to the API layer."
+}
