@@ -1,0 +1,174 @@
+{
+  "project_name": "Ivorian Cross-Border Concierge App",
+  "theme": "Neo-Brutalist Premium mixed with Soft Utility",
+  "typography": {
+    "strategy": "Load custom fonts via expo-font with local assets (.ttf/.otf) in /assets/fonts. DO NOT use @expo-google-fonts packages.",
+    "fonts": {
+      "heading": "Manrope-Bold",
+      "body": "Manrope-Regular",
+      "medium": "Manrope-Medium"
+    },
+    "scale": {
+      "h1": { "fontSize": 32, "lineHeight": 40, "letterSpacing": -1, "fontFamily": "Manrope-Bold" },
+      "h2": { "fontSize": 24, "lineHeight": 32, "letterSpacing": -0.5, "fontFamily": "Manrope-Bold" },
+      "h3": { "fontSize": 20, "lineHeight": 28, "fontFamily": "Manrope-Bold" },
+      "body_large": { "fontSize": 18, "lineHeight": 26, "fontFamily": "Manrope-Regular" },
+      "body_base": { "fontSize": 16, "lineHeight": 24, "fontFamily": "Manrope-Regular" },
+      "body_small": { "fontSize": 14, "lineHeight": 20, "fontFamily": "Manrope-Regular" },
+      "label": { "fontSize": 12, "lineHeight": 16, "textTransform": "uppercase", "letterSpacing": 1, "fontFamily": "Manrope-Medium" }
+    }
+  },
+  "colors": {
+    "archetype": "The Performance Pro & Earthy Mix (Trust + Action)",
+    "primary": {
+      "DEFAULT": "#FF6B00",
+      "light": "#FFF0E5",
+      "dark": "#CC5500",
+      "description": "Vibrant Orange for primary CTAs (resonates with Mobile Money in CI)."
+    },
+    "secondary": {
+      "DEFAULT": "#0F172A",
+      "light": "#1E293B",
+      "description": "Deep Slate/Navy for Trust and Premium feel."
+    },
+    "background": {
+      "default": "#F8FAFC",
+      "paper": "#FFFFFF",
+      "sheet": "#FFFFFF"
+    },
+    "text": {
+      "primary": "#0F172A",
+      "secondary": "#475569",
+      "tertiary": "#94A3B8",
+      "inverse": "#FFFFFF"
+    },
+    "status": {
+      "success": "#10B981",
+      "success_bg": "#D1FAE5",
+      "warning": "#F59E0B",
+      "warning_bg": "#FEF3C7",
+      "error": "#EF4444",
+      "error_bg": "#FEE2E2"
+    },
+    "border": "#E2E8F0"
+  },
+  "visual_enhancers": {
+    "radii": {
+      "sm": 8,
+      "md": 12,
+      "lg": 16,
+      "xl": 24,
+      "pill": 9999
+    },
+    "shadows": {
+      "sm": { "shadowColor": "#0F172A", "shadowOffset": { "width": 0, "height": 2 }, "shadowOpacity": 0.05, "shadowRadius": 4, "elevation": 2 },
+      "md": { "shadowColor": "#0F172A", "shadowOffset": { "width": 0, "height": 4 }, "shadowOpacity": 0.08, "shadowRadius": 8, "elevation": 4 },
+      "lg": { "shadowColor": "#0F172A", "shadowOffset": { "width": 0, "height": 8 }, "shadowOpacity": 0.1, "shadowRadius": 16, "elevation": 8 }
+    },
+    "borders": {
+      "default": { "borderWidth": 1, "borderColor": "#E2E8F0" },
+      "active": { "borderWidth": 2, "borderColor": "#FF6B00" }
+    }
+  },
+  "spacing_and_layout": {
+    "scale": {
+      "xs": 4, "sm": 8, "md": 12, "lg": 16, "xl": 24, "2xl": 32, "3xl": 48
+    },
+    "safe_area": "Use react-native-safe-area-context for all top/bottom paddings to avoid notches.",
+    "screen_padding": 16
+  },
+  "component_specs": {
+    "button": {
+      "primary": "Height 56, bg #FF6B00, radius 16, justify center, align items center. Text: body_large, white, bold.",
+      "secondary": "Height 56, bg #FFF0E5, radius 16. Text: #FF6B00, bold.",
+      "outline": "Height 56, border 2px #E2E8F0, radius 16. Text: #0F172A."
+    },
+    "card_shop": {
+      "container": "bg #FFFFFF, radius 16, shadow sm, padding 16. Flex row for horizontal list, column for grid.",
+      "logo_wrapper": "bg #F8FAFC, radius 12, align items center, justify center, aspect ratio 1."
+    },
+    "bottom_sheet": {
+      "style": "bg #FFFFFF, borderTopLeftRadius 24, borderTopRightRadius 24, shadow lg."
+    },
+    "input": {
+      "style": "Height 56, bg #F8FAFC, borderWidth 1, borderColor #E2E8F0, radius 12, paddingHorizontal 16, fontSize 16."
+    }
+  },
+  "screen_by_screen_layouts": {
+    "OTP_Login": {
+      "layout": "Column. Top: Logo and welcoming header ('Bienvenue'). Middle: Phone number input with +225 country code prefixed, Send OTP button. Bottom: 'Continuer sans compte' (optional).",
+      "details": "Mock auth. Use standard keyboard. Primary CTA sticking to the keyboard."
+    },
+    "Home_Countries": {
+      "header": "Sticky header with User profile icon, Location (Abidjan, CI), Cart icon.",
+      "hero": "Banner: 'Achetez partout, livré à Abidjan' (bg #0F172A, text white).",
+      "filters": "Horizontal ScrollView of Country Chips (France, USA, Chine).",
+      "shop_grid": "2-column grid of Shop Cards (Shein, Amazon, Zara, H&M, etc.)."
+    },
+    "Shop_Detail_Calculator": {
+      "header": "Solid or Blurred header over shop banner (safe area padded), Back button.",
+      "layout": "ScrollView. Shop logo & Description. 'How it works' brief. 'Visiter la boutique' external link button.",
+      "calculator_card": "Sticky or inline card: Input price in original currency (EUR/USD/CNY). Auto-calculates XOF including import fee + local delivery. Clear breakdown row by row.",
+      "add_to_cart": "Form to paste external product URL, select size/qty, and save to cart."
+    },
+    "Cart": {
+      "layout": "List of saved products. Each item: Thumbnail, Name, URL, Original Price, Converted Price (XOF).",
+      "bottom_summary": "Fixed bottom view (paddingBottom: safeArea): Subtotal, Shipping, Total (XOF). 'Passer à la caisse' primary button."
+    },
+    "Checkout_Mobile_Money": {
+      "layout": "Stepper: 1. Address in CI, 2. Payment Method.",
+      "payment_methods": "Grid of mock buttons for Orange Money, MTN, Moov, Wave. Selecting one expands to show phone input & 'Payer' CTA.",
+      "success_modal": "Centered success icon, 'Commande confirmée'."
+    },
+    "Orders_Tracking": {
+      "layout": "Tabbed view: En cours / Historique.",
+      "tracking_card": "Shows Order ID, Shop. Stepper component for status: Achat en cours -> Expédié -> En transit -> Arrivé à Abidjan -> Livreur en route -> Livré.",
+      "courier_call_action": "If status is 'Livreur en route', highlight a prominent 'Appeler le livreur' button with a phone icon."
+    }
+  },
+  "motion": {
+    "interactions": "All touchables MUST use TouchableOpacity or Pressable with opacity reduction on press.",
+    "modals": "Use standard React Native Modal or custom bottom sheets for Calculator and Payment flows to keep context."
+  },
+  "accessibility": {
+    "touch_targets": "Minimum 48x48px for all interactive elements.",
+    "contrast": "Ensure #0F172A text on #F8FAFC, and #FFFFFF on #FF6B00.",
+    "test_ids": "All interactive elements MUST include testID / data-testid attributes to facilitate robust automated testing. E.g., testID='login-submit-button'.",
+    "screen_reader": "Add accessibilityLabel to icon-only buttons (e.g., Back button, Cart)."
+  },
+  "media": {
+    "image_urls": [
+      {
+        "url": "https://images.unsplash.com/photo-1483985988355-763728e1935b",
+        "category": "hero_banner",
+        "description": "Woman holding shopping bags, representing global fashion/shopping. Use in Home hero or auth background."
+      },
+      {
+        "url": "https://images.pexels.com/photos/12725403/pexels-photo-12725403.jpeg",
+        "category": "courier_tracking",
+        "description": "Delivery person holding package. Use in tracking screen when package is ready or delivered."
+      },
+      {
+        "url": "https://images.pexels.com/photos/33692749/pexels-photo-33692749.jpeg",
+        "category": "import_transit",
+        "description": "Cargo containers. Use for 'En transit' state or import explanation banners."
+      }
+    ],
+    "icons": "Use lucide-react-native for all icons (ShoppingCart, User, MapPin, Phone, ArrowRight, ChevronDown, Package). StrokeWidth 2."
+  },
+  "instructions_to_main_agent": {
+    "framework": "React Native with Expo. Share guidelines for .js files.",
+    "styling": "Use standard React Native StyleSheet objects. Avoid HTML/CSS syntax.",
+    "fonts": "DO NOT use @expo-google-fonts. Assume local font files in assets/fonts and use expo-font 'useFonts' hook.",
+    "layout_rules": "Always wrap main screens in SafeAreaView or use react-native-safe-area-context. No completely transparent headers over scrolling content."
+  },
+  "UNIVERSAL_GUIDELINES_FOR_MAIN_AGENT": [
+    "You tend to converge toward generic outputs. Avoid this: make creative, distinctive mobile UI that surprises and delights.",
+    "Create depth through layered design elements with subtle shadows (elevation in RN).",
+    "Use 2-3x more spacing than feels comfortable. Cramped designs look cheap. Padding 16px is minimum for screen edges.",
+    "Every interaction needs feedback - press states, loading spinners on buttons.",
+    "Main agent relies on image URLs provided. Do not use placeholder URLs.",
+    "All interactive and key informational elements MUST include a `testID` (and `data-testid`) attribute to facilitate robust automated testing.",
+    "DO NOT use generic centered layouts for everything. Left-align text for better readability."
+  ]
+}
