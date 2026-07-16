@@ -17,6 +17,23 @@ export type Shop = {
   delivery_days_max: number;
 };
 
+export type Product = {
+  id: string;
+  shop_id: string;
+  shop_name: string;
+  shop_country: "FR" | "US" | "CN";
+  name: string;
+  description: string;
+  category: string;
+  price: number;
+  currency: "EUR" | "USD" | "CNY";
+  images: string[];
+  sizes: string[];
+  colors: string[];
+  rating: number;
+  reviews: number;
+};
+
 export type User = {
   id: string;
   phone: string;
@@ -125,14 +142,36 @@ export const api = {
   listShops: (country?: string) =>
     request<Shop[]>(`/shops${country ? `?country=${country}` : ""}`),
   getShop: (id: string) => request<Shop>(`/shops/${id}`),
+  listShopProducts: (shopId: string) =>
+    request<Product[]>(`/shops/${shopId}/products`),
+  listProducts: (params: { country?: string; category?: string; q?: string } = {}) => {
+    const qs = new URLSearchParams();
+    if (params.country) qs.set("country", params.country);
+    if (params.category) qs.set("category", params.category);
+    if (params.q) qs.set("q", params.q);
+    const s = qs.toString();
+    return request<Product[]>(`/products${s ? `?${s}` : ""}`);
+  },
+  getProduct: (id: string) => request<Product>(`/products/${id}`),
   quote: (original_price: number, original_currency: string, country: string, quantity = 1) =>
     request<Quote>("/quote", {
       method: "POST",
       body: JSON.stringify({ original_price, original_currency, country, quantity }),
     }),
   getCart: () => request<CartItem[]>("/cart", {}, true),
-  addToCart: (item: Omit<CartItem, "id" | "user_id" | "created_at">) =>
-    request<CartItem>("/cart", { method: "POST", body: JSON.stringify(item) }, true),
+  addToCart: (item: {
+    shop_id: string;
+    product_id?: string | null;
+    product_url?: string;
+    product_name: string;
+    original_price: number;
+    original_currency: string;
+    size?: string | null;
+    color?: string | null;
+    quantity?: number;
+    image_url?: string | null;
+    notes?: string | null;
+  }) => request<CartItem>("/cart", { method: "POST", body: JSON.stringify(item) }, true),
   removeCartItem: (id: string) => request<{ ok: boolean }>(`/cart/${id}`, { method: "DELETE" }, true),
   cartSummary: () =>
     request<{ items_count: number; breakdown: Record<string, number>; total_xof: number }>(

@@ -1,0 +1,42 @@
+{
+  "summary": "Iteration 2 fully validated. Backend: 11/11 new pytest cases passing (products list/filter/search, single product, per-shop products with counts >=8 for Zara/Amazon/SHEIN, cart with new optional product_id, backwards-compat cart without product_id, full checkout+advance regression). Frontend E2E on 390x844 mobile viewport: Home shop tiles all render with ShopLogo initials fallback (Z/F/H/S) on colored circles because logo.clearbit.com is blocked in preview (ERR_NAME_NOT_RESOLVED) — bug fix confirmed working. Search flow (testID search-button -> /search -> search-input 'iPhone' -> 2 results -> country chip US -> product tap -> product detail) works end-to-end. Shop detail now displays a 2-column product grid (8 Zara products) with price EUR + FCFA equivalent and rating. Product detail shows image, shop/category badge, name, rating+reviews, price card (original + total FCFA delivered), fee breakdown (Prix produit/Importation 15%/Service 8%/Expédition int'l/Livraison Abidjan), size chips, color chips, qty stepper, and sticky bottom bar. Add-to-cart from search flow succeeds and cart-item is created (cart-item count = 1). All previous flows (login OTP, cart, checkout, tracking) still pass.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "product/[id]", "issues": ["Sticky bottom CTA shows 'Sélectionnez les options' until a size AND color are picked, then flips to 'Ajouter au panier'. Behaviour is correct but there is no inline hint telling the user which chip is missing — consider highlighting the missing group in red or a tooltip."]}
+    ],
+    "react_native_issues": [
+      {"component": "styles.* (shadow props)", "issue": "React Native Web logs 'shadow* style props are deprecated. Use boxShadow.' — still present after iteration 1. Non-blocking. Reference: multiple StyleSheet.create blocks across /app/frontend/app/*.tsx and /app/frontend/src/components/*.tsx."},
+      {"component": "pointerEvents prop", "issue": "React Native Web logs 'props.pointerEvents is deprecated. Use style.pointerEvents'. Non-blocking, likely from expo-router internals."}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_products_and_regression.py",
+    "/app/test_reports/pytest/iter2_results.xml"
+  ],
+  "action_items": [
+    "None blocking. All acceptance criteria pass.",
+    "(Optional) Add a visible hint on product detail when user taps 'Sélectionnez les options' without picking size/color.",
+    "(Optional) Migrate shadow* styles -> boxShadow to silence RN-Web warnings."
+  ],
+  "critical_code_review_comments": [
+    "server.py list_products query uses regex on name only — searches don't match description or category. Consider $or across [name, description, category] for a richer 'like SkanShopper' feel.",
+    "products seeded once (count check); if products_data.py is edited, seed will not refresh. Consider a dev-only refresh endpoint or version key on seed.",
+    "ShopLogo fallback deterministic-hashes shop name -> palette index; Clearbit URL failing in preview environment triggers fallback via onError, working as designed. Reference: /app/frontend/src/components/ShopLogo.tsx.",
+    "list_products limit default=200; no pagination. Fine for ~180-product catalog but should be paginated once real APIs are wired.",
+    "No mongodb _id leakage detected on any /products endpoint (all queries include {'_id': 0})."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_products_and_regression.py (new)",
+    "/app/test_reports/iteration_2.json (new)",
+    "/app/test_reports/pytest/iter2_results.xml (new)"
+  ],
+  "success_rate": {"backend": "100% (11/11 new tests)", "frontend": "100% of new + regression flows verified"},
+  "seed_data_creation": "Backend seeds 24 shops + ~140 products on startup (idempotent count-check). Test suite creates TEST_-prefixed users, cart items, and one order per run using randomized Ivorian phone numbers.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Public URL: https://cross-border-mall.preview.emergentagent.com. OTP=1234. Key testIDs: search-button (home), search-input, search-clear, search-country-{FR|US|CN}, search-result-{id}, product-card-{id} (shop screen), size-{s}, color-{c}, qty-plus/minus, add-to-cart-button. Clearbit logo URLs fail in preview env -> ShopLogo fallback renders initials on colored circles (this is the intended fix, not a bug). Run backend tests: EXPO_PUBLIC_BACKEND_URL=<url> pytest /app/backend/tests/ -v.",
+  "rca_of_issue": "N/A — no bugs found. Original reported issue (blank shop logos) is resolved by ShopLogo component which shows initials on a deterministic-color circle when the remote logo fails to load. Confirmed live: Clearbit domain resolves to ERR_NAME_NOT_RESOLVED in the preview environment and the fallback UI renders correctly on every shop tile."
+}

@@ -15,6 +15,7 @@ import { Trash2, ArrowRight, ShoppingBag } from "lucide-react-native";
 
 import { api, CartItem, CURRENCY_SYMBOL, formatXof, Shop } from "@/src/api";
 import { colors, spacing, radii, shadow } from "@/src/theme";
+import ShopLogo from "@/src/components/ShopLogo";
 
 export default function CartScreen() {
   const router = useRouter();
@@ -114,11 +115,7 @@ export default function CartScreen() {
                     {it.image_url ? (
                       <Image source={{ uri: it.image_url }} style={styles.thumbImg} />
                     ) : shop ? (
-                      <Image
-                        source={{ uri: shop.logo_url }}
-                        style={{ width: "60%", height: "60%" }}
-                        resizeMode="contain"
-                      />
+                      <ShopLogo name={shop.name} uri={shop.logo_url} size={72} radius={12} />
                     ) : null}
                   </View>
                   <View style={{ flex: 1 }}>

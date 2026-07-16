@@ -12,6 +12,8 @@ from datetime import datetime, timezone
 import random
 import string
 
+from products_data import PRODUCTS_BY_SHOP
+
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -87,9 +89,27 @@ class Shop(BaseModel):
     delivery_days_max: int
 
 
+class Product(BaseModel):
+    id: str
+    shop_id: str
+    shop_name: str
+    shop_country: Literal["FR", "US", "CN"]
+    name: str
+    description: str
+    category: str
+    price: float
+    currency: Literal["EUR", "USD", "CNY"]
+    images: List[str]
+    sizes: List[str] = []
+    colors: List[str] = []
+    rating: float = 4.5
+    reviews: int = 0
+
+
 class CartItemIn(BaseModel):
     shop_id: str
-    product_url: str
+    product_id: Optional[str] = None
+    product_url: Optional[str] = ""
     product_name: str
     original_price: float
     original_currency: Literal["EUR", "USD", "CNY"]
@@ -272,6 +292,38 @@ async def seed_shops():
         await db.shops.insert_many(docs)
 
 
+async def seed_products():
+    count = await db.products.count_documents({})
+    if count > 0:
+        return
+    shops = await db.shops.find({}, {"_id": 0}).to_list(500)
+    shop_by_name = {s["name"]: s for s in shops}
+    docs = []
+    for shop_name, prods in PRODUCTS_BY_SHOP.items():
+        shop = shop_by_name.get(shop_name)
+        if not shop:
+            continue
+        for p in prods:
+            docs.append({
+                "id": str(uuid.uuid4()),
+                "shop_id": shop["id"],
+                "shop_name": shop["name"],
+                "shop_country": shop["country"],
+                "name": p["name"],
+                "description": p.get("description", ""),
+                "category": p.get("category", "Autre"),
+                "price": float(p["price"]),
+                "currency": shop["currency"],
+                "images": p.get("images", []),
+                "sizes": p.get("sizes", []),
+                "colors": p.get("colors", []),
+                "rating": float(p.get("rating", 4.5)),
+                "reviews": int(p.get("reviews", 0)),
+            })
+    if docs:
+        await db.products.insert_many(docs)
+
+
 # ---------- Helpers ----------
 def compute_quote(original_price: float, currency: str, country: str, qty: int = 1) -> QuoteOut:
     rate = EXCHANGE_RATES[currency]
@@ -392,6 +444,38 @@ async def get_shop(shop_id: str):
     if not doc:
         raise HTTPException(status_code=404, detail="Boutique introuvable")
     return Shop(**doc)
+
+
+@api_router.get("/shops/{shop_id}/products", response_model=List[Product])
+async def list_shop_products(shop_id: str):
+    docs = await db.products.find({"shop_id": shop_id}, {"_id": 0}).to_list(500)
+    return [Product(**d) for d in docs]
+
+
+@api_router.get("/products", response_model=List[Product])
+async def list_products(
+    country: Optional[str] = None,
+    category: Optional[str] = None,
+    q: Optional[str] = None,
+    limit: int = 200,
+):
+    query: dict = {}
+    if country and country in ("FR", "US", "CN"):
+        query["shop_country"] = country
+    if category:
+        query["category"] = category
+    if q:
+        query["name"] = {"$regex": q, "$options": "i"}
+    docs = await db.products.find(query, {"_id": 0}).limit(limit).to_list(limit)
+    return [Product(**d) for d in docs]
+
+
+@api_router.get("/products/{product_id}", response_model=Product)
+async def get_product(product_id: str):
+    doc = await db.products.find_one({"id": product_id}, {"_id": 0})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Produit introuvable")
+    return Product(**doc)
 
 
 @api_router.post("/quote", response_model=QuoteOut)
@@ -553,7 +637,8 @@ logger = logging.getLogger(__name__)
 @app.on_event("startup")
 async def on_startup():
     await seed_shops()
-    logger.info("Shops seeded.")
+    await seed_products()
+    logger.info("Shops and products seeded.")
 
 
 @app.on_event("shutdown")

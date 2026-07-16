@@ -12,10 +12,11 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { MapPin, Star, ShoppingCart } from "lucide-react-native";
+import { MapPin, Star, ShoppingCart, Search } from "lucide-react-native";
 
 import { api, COUNTRY_FLAGS, COUNTRY_LABELS, Shop } from "@/src/api";
 import { colors, spacing, radii, shadow } from "@/src/theme";
+import ShopLogo from "@/src/components/ShopLogo";
 
 const COUNTRIES: (Shop["country"] | "ALL")[] = ["ALL", "FR", "US", "CN"];
 
@@ -56,7 +57,7 @@ export default function HomeScreen() {
       activeOpacity={0.8}
     >
       <View style={styles.logoWrap}>
-        <Image source={{ uri: item.logo_url }} style={styles.logoImg} resizeMode="contain" />
+        <ShopLogo name={item.name} uri={item.logo_url} size={100} radius={12} />
         <View style={styles.flagBadge}>
           <Text style={styles.flagText}>{COUNTRY_FLAGS[item.country]}</Text>
         </View>
@@ -143,6 +144,19 @@ export default function HomeScreen() {
                   </View>
                 </View>
               </View>
+
+              {/* Search bar */}
+              <TouchableOpacity
+                testID="search-button"
+                style={styles.searchBar}
+                onPress={() => router.push("/search")}
+                activeOpacity={0.7}
+              >
+                <Search size={18} color={colors.textTertiary} />
+                <Text style={styles.searchPlaceholder}>
+                  Rechercher un produit, une boutique...
+                </Text>
+              </TouchableOpacity>
 
               {/* Chip row */}
               <ScrollView
@@ -276,6 +290,19 @@ const styles = StyleSheet.create({
     position: "relative",
     overflow: "hidden",
   },
+  searchBar: {
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.md,
+    height: 48,
+    backgroundColor: colors.paper,
+    borderRadius: radii.pill,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: spacing.lg,
+    gap: spacing.sm,
+    ...shadow.sm,
+  },
+  searchPlaceholder: { fontSize: 14, color: colors.textTertiary, flex: 1 },
   logoImg: { width: "60%", height: "60%" },
   flagBadge: {
     position: "absolute",
